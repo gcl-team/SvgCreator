@@ -148,6 +148,55 @@ public class SvgWriterTests
         Assert.Equal(normal.EdgeFrequency / 2, thick.EdgeFrequency, 3);
     }
 
+    private static (XElement Root, XElement Cancel, double Width, double WaveStartX) Postmark(params CurveContour[] contours)
+    {
+        var root = XDocument.Parse(SvgWriter.Write(200, 100, contours, "#c0392b", OutputStyle.Postmark)).Root!;
+        var cancel = root.Elements(Svg + "g").Single(g => (string?)g.Attribute("class") == "postmark-cancel");
+        var d = (string)cancel.Element(Svg + "path")!.Attribute("d")!;
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var startX = double.Parse(d[1..d.IndexOf(' ', StringComparison.Ordinal)], inv);
+        return (root, cancel, double.Parse((string)root.Attribute("width")!, inv), startX);
+    }
+
+    [Fact]
+    public void Write_PostmarkWithCircularFrame_OverlapsWavesOnTheCircle()
+    {
+        // A ring of radius 40 centred at (100, 50): the drawing's frame.
+        var (root, cancel, width, startX) = Postmark(
+            new CurveContour(1, false, [], new Ellipse(new(100, 50), 41, 41, 0)),
+            new CurveContour(1, true, [], new Ellipse(new(100, 50), 39, 39, 0)));
+
+        Assert.Empty(cancel.Elements(Svg + "rect"));
+        Assert.Equal(6, ((string)cancel.Element(Svg + "path")!.Attribute("d")!).Count(c => c == 'M'));
+        Assert.InRange(startX, 100, 141);                 // starts inside the circle's right side
+        Assert.Equal(200, width);                         // the waves already fit: no widening needed
+        Assert.Equal("#c0392b", (string?)cancel.Attribute("stroke"));
+        Assert.Equal("none", (string?)cancel.Attribute("fill"));
+        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1)", (string?)g.Attribute("filter")));
+    }
+
+    [Fact]
+    public void Write_PostmarkWithoutCircle_FramesWholeCanvasWithRectangle()
+    {
+        var (_, cancel, width, startX) = Postmark(Square);
+
+        var rect = Assert.Single(cancel.Elements(Svg + "rect"));
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var right = double.Parse((string)rect.Attribute("x")!, inv) + double.Parse((string)rect.Attribute("width")!, inv);
+        Assert.InRange(right, 190, 200);                  // inset just inside the original canvas
+        Assert.InRange(startX, 100, right);               // waves overlap the frame's right side
+        Assert.InRange(width, 201, 200 * 1.35);
+    }
+
+    [Fact]
+    public void Write_PostmarkSmallEllipse_IsNotTreatedAsFrame()
+    {
+        // An eye-sized ellipse must not become the postmark: fall back to the rectangular frame.
+        var (_, cancel, _, _) = Postmark(new CurveContour(1, false, [], new Ellipse(new(50, 50), 8, 6, 0)));
+
+        Assert.Single(cancel.Elements(Svg + "rect"));
+    }
+
     [Fact]
     public void Write_EscapesFillColor()
     {

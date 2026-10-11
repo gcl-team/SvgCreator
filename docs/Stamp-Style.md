@@ -1,4 +1,4 @@
-# Stamp style
+# Stamp and postmark styles
 
 **Goal:** an optional output that looks like a rubber-stamp impression: rough edges and worn ink. It's built only from native SVG filter primitives, with no image processing.
 
@@ -58,3 +58,43 @@ Roughening the geometry itself would have been worse on every count:
 - **Scale by line thickness, not image size.** The original plan scaled the texture with the canvas, ×4 for a 2032 px image. That gave 10 px edge displacement on lines only 2–4 px wide, so they frayed. In Lines mode, stroke width comes from `LineSigma` (pixels, at any resolution), so the texture scales with `LineSigma` instead: frequencies are divided by it, displacement is multiplied by it.
 - **The seed is deterministic.** The same `StampSeed` always gives the same file, so tests are stable and AOT output matches JIT output. Change it (`--stamp-seed 2`) for a differently worn impression.
 - **Unique filter ids.** The id includes the seed (`svgcreator-stamp-1`). Element ids are global when several SVGs are placed inline in one HTML page, so a generic id could make one SVG pick up another's filter.
+
+## Postmark style
+
+`--style postmark` is the stamp impression **plus a postal cancellation**: parallel wavy lines across the stamp.
+
+```sh
+svgcreator input.png --style postmark --ink-color "#c0392b"
+```
+
+Code: `src/SvgCreator/Svg/SvgWriter.Postmark.cs`
+
+### The frame
+
+- **A circle was recognized** ([Shape Recognition](Shape-Recognition.md)): the largest ellipse becomes the postmark's frame, if it's at least 25% of the image's shorter side. That rule stops an eye or an ornament from being picked. On image03, that's the ring at (254, 258) with r = 244.5.
+- **No circle** (e.g. a character portrait): a native `<rect>` border, inset slightly from the canvas edges, turns the **whole picture into the stamp**. It frames the canvas rather than the drawing's bounding box, because portraits are often cropped at the image edge.
+
+### The cancellation lines
+
+- **6 parallel waves** spanning the middle 60% of the frame's height.
+- **Like real cancellations, they overlap the stamp.** They start half a frame-radius *inside* the frame's right side and run 0.6 radius *past* it.
+- **Everything scales with the frame's half-height:** spacing, wavelength, amplitude, and stroke width (1.8%, which is about the ring's own stroke).
+- **Each wave costs a few bytes per hump.** A quadratic Bézier whose control point is offset by 2A peaks at height A, and SVG's `t` command repeats a quadratic by mirroring the previous control point. So one `q` followed by `t`s draws a sine-like wave: `M377.4 110q22.6-35.5 45.2 0t45.2 0t45.2 0…`.
+- **They're generated, not traced,** so they sit in their own `<g class="postmark-cancel">` (with the `<rect>` frame, if any), separate from the drawing. The same stamp filter applies to both groups, so the whole mark looks equally worn.
+
+### Size: overlap rather than beside
+
+The first version put the waves fully *beside* the frame. That widened image01 from 2032 to **3304 px** (+63%). macOS Quick Look then rendered it blank, probably because a filter over that large an area exceeded what it can handle. Overlapping the frame, as real postmarks do, limits growth to the overhang:
+
+| Image | Canvas width |
+|---|---|
+| image01 (rect frame) | 2032 → 2461 (+21%) |
+| image02 (rect frame) | 1796 → 2220 (+24%) |
+| image03 (circle frame) | 512 → 658 (+28%) |
+
+The canvas is only widened when the waves would otherwise run off the edge. A circle in the middle of a wide canvas needs no extra space.
+
+### Previewing note
+
+Quick Look crops wide SVGs to a square thumbnail, so the frame's edges and the waves' ends looked cut off in previews. The geometry was checked numerically instead: the frame is inside the original canvas, the waves start inside the frame, and they end within the widened canvas. A browser shows the full mark.
+

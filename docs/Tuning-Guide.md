@@ -15,6 +15,7 @@ The defaults were tuned on 512–2000 px anime illustrations. Start with them, a
 | Sharp tips get rounded | `CornerAngle` (`--corner-angle`) | Raise it, e.g. 150, so more turns count as corners |
 | A round shape should stay curves (or a circle wasn't recognized as you expected) | `DetectEllipses` (`--ellipses false`) | Turn off to keep everything as Bézier curves |
 | Want a rubber-stamp / seal look | `Style` (`--style stamp`) | Native SVG filter adds rough edges and worn ink; pair with `--ink-color "#c0392b"` for a red seal |
+| Want a postal cancellation look | `Style` (`--style postmark`) | Stamp + wavy cancellation lines over the circular frame, or a rectangular frame around the picture when there's no circle. Widens the canvas ~20–30% |
 | Different stamp wear pattern | `StampSeed` (`--stamp-seed`) | Any other non-negative number |
 | Want coloured ink | `FillColor` (`--ink-color`) | Hex (`#c0392b`, `#c0392b80` with alpha), a CSS name (`navy`), or `rgb()`/`hsl()`. Anything else is rejected |
 | The input is already clean black-on-white line art | `Mode` (`--mode Threshold`), `Threshold` (`-t`) | Use Threshold mode |

@@ -130,6 +130,17 @@ public class SvgConverterTests
     }
 
     [Fact]
+    public void Convert_PostmarkStyle_AddsCancellationAndWidensCanvas()
+    {
+        using var png = TestImages.PngWithBlackRect(40, 20, new SKRect(5, 5, 15, 15));
+
+        var doc = XDocument.Parse(new SvgConverter().Convert(png, new SvgConversionOptions { Style = OutputStyle.Postmark }));
+
+        Assert.Single(doc.Descendants(Svg + "g"), g => (string?)g.Attribute("class") == "postmark-cancel");
+        Assert.True(int.Parse((string)doc.Root!.Attribute("width")!, System.Globalization.CultureInfo.InvariantCulture) > 40);
+    }
+
+    [Fact]
     public void Convert_InvalidStyleOrSeed_Throws()
     {
         using var png = TestImages.PngWithBlackRect(5, 5, SKRect.Empty);

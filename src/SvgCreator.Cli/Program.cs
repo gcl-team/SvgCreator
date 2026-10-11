@@ -73,7 +73,7 @@ var ellipsesOption = new Option<bool>("--ellipses")
 
 var styleOption = new Option<OutputStyle>("--style")
 {
-    Description = "Clean: crisp flat ink. Stamp: rubber-stamp impression (rough edges, worn ink) via a native SVG filter.",
+    Description = "Clean: crisp flat ink. Stamp: rubber-stamp impression (rough edges, worn ink) via a native SVG filter. Postmark: Stamp plus wavy cancellation lines over the circular frame (or a rectangular frame around the picture).",
     DefaultValueFactory = _ => SvgConversionOptions.Default.Style,
 };
 

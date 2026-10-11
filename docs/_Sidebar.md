@@ -8,7 +8,7 @@
 - [Curve Fitting](Curve-Fitting.md)
 - [Shape Recognition](Shape-Recognition.md)
 - [SVG Output](SVG-Output.md)
-- [Stamp Style](Stamp-Style.md)
+- [Stamp and Postmark Styles](Stamp-Style.md)
 
 **Cross-cutting**
 - [Native AOT](Native-AOT.md)

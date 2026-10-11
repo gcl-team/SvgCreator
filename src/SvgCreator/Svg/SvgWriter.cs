@@ -12,7 +12,7 @@ namespace SvgCreator.Svg;
 /// two concentric ellipses becomes one stroked <c>&lt;circle&gt;</c>/<c>&lt;ellipse&gt;</c>, and any
 /// other elliptical contour is drawn with native arc (<c>a</c>) commands inside its path.
 /// </summary>
-internal static class SvgWriter
+internal static partial class SvgWriter
 {
     private const string SvgNamespace = "http://www.w3.org/2000/svg";
 
@@ -46,7 +46,10 @@ internal static class SvgWriter
         var output = new StringBuilder();
         using (var xml = XmlWriter.Create(output, settings))
         {
-            var w = width.ToString(CultureInfo.InvariantCulture);
+            // A postmark's cancellation lines run off to the right, so the canvas may need widening.
+            Cancellation? cancellation = style == OutputStyle.Postmark ? BuildCancellation(contours, width, height) : null;
+            var canvasWidth = cancellation is { } c ? Math.Max(width, c.RequiredWidth) : width;
+            var w = canvasWidth.ToString(CultureInfo.InvariantCulture);
             var h = height.ToString(CultureInfo.InvariantCulture);
 
             xml.WriteStartElement("svg", SvgNamespace);
@@ -55,10 +58,10 @@ internal static class SvgWriter
             xml.WriteAttributeString("viewBox", $"0 0 {w} {h}");
 
             string? filterId = null;
-            if (style == OutputStyle.Stamp)
+            if (style is OutputStyle.Stamp or OutputStyle.Postmark)
             {
                 filterId = $"svgcreator-stamp-{stampSeed.ToString(CultureInfo.InvariantCulture)}";
-                WriteStampFilter(xml, filterId, width, height, stampSeed, stampScale);
+                WriteStampFilter(xml, filterId, canvasWidth, height, stampSeed, stampScale);
             }
 
             xml.WriteStartElement("g", SvgNamespace);
@@ -83,6 +86,12 @@ internal static class SvgWriter
             }
 
             xml.WriteEndElement();
+
+            if (cancellation is { } cancel)
+            {
+                WriteCancellation(xml, cancel, fillColor, filterId);
+            }
+
             xml.WriteEndElement();
         }
 
