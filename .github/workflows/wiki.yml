@@ -1,0 +1,51 @@
+name: Publish docs to wiki
+
+# docs/ is the source of truth: every sync mirrors it into the GitHub Wiki,
+# so edits made directly in the wiki are overwritten.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/wiki.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write # the built-in token can push to this repository's wiki
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out docs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Clone wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git clone "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki
+
+      - name: Mirror docs into wiki
+        run: |
+          # Remove existing pages so pages deleted from docs/ disappear from the wiki too.
+          find wiki -maxdepth 1 -type f -name '*.md' -delete
+          cp docs/*.md wiki/
+          # Pages link with ".md" so they work in the repo; wiki links have no extension.
+          sed -i -E 's/\]\(([A-Za-z0-9_-]+)\.md(#[^)]*)?\)/](\1\2)/g' wiki/*.md
+
+      - name: Commit and push
+        working-directory: wiki
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki already up to date."
+            exit 0
+          fi
+          git commit -m "Sync docs from ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}"
+          git push

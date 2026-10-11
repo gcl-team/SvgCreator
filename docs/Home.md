@@ -2,6 +2,8 @@
 
 SvgCreator turns a raster image, such as an anime character illustration, into a **line-art SVG**: black ink outlines with no colouring. These pages record the techniques used in the project, why each one was chosen over the alternatives, and the pitfalls hit along the way, with the measurements that drove each decision.
 
+> These pages are generated from [`docs/`](https://github.com/gcl-team/SvgCreator/tree/main/docs) in the repository, which is the source of truth. Edit them there; direct wiki edits are overwritten on the next sync.
+
 ## Pipeline
 
 ```mermaid
