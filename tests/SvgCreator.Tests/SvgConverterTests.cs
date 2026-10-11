@@ -62,6 +62,38 @@ public class SvgConverterTests
         Assert.Throws<InvalidDataException>(() => new SvgConverter().Convert(garbage));
     }
 
+    [Theory]
+    [InlineData("#c0392b")]
+    [InlineData("#C0392B80")]
+    [InlineData("#f00")]
+    [InlineData("navy")]
+    [InlineData("rgb(192, 57, 43)")]
+    [InlineData("hsl(6 63% 46% / .5)")]
+    public void Convert_CustomInkColor_IsUsedAsFill(string color)
+    {
+        using var png = TestImages.PngWithBlackRect(20, 10, new SKRect(2, 3, 8, 7));
+
+        var svg = new SvgConverter().Convert(png, new SvgConversionOptions { FillColor = color });
+
+        var group = Assert.Single(XDocument.Parse(svg).Descendants(Svg + "g"));
+        Assert.Equal(color, (string?)group.Attribute("fill"));
+    }
+
+    [Theory]
+    [InlineData("#00g")]
+    [InlineData("#12345")]
+    [InlineData("red;stroke:blue")]
+    [InlineData("url(#x)")]
+    [InlineData("\"><script>")]
+    public void Convert_InvalidInkColor_Throws(string color)
+    {
+        using var png = TestImages.PngWithBlackRect(5, 5, SKRect.Empty);
+
+        var ex = Assert.Throws<ArgumentException>(
+            () => new SvgConverter().Convert(png, new SvgConversionOptions { FillColor = color }));
+        Assert.Equal("FillColor", ex.ParamName);
+    }
+
     [Fact]
     public void Convert_InvalidThreshold_Throws()
     {

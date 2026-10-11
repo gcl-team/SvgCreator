@@ -45,6 +45,9 @@ Future hosts such as `src/SvgCreator.Api` or `src/SvgCreator.Web` go next to the
 ```sh
 dotnet run --project src/SvgCreator.Cli -- input.png -o output.svg --line-contrast 12 --weak-line-contrast 6 --line-sigma 1 --color-contrast 20 --min-area 4 --tolerance 1
 
+# coloured ink: hex, CSS name or rgb()/hsl()
+dotnet run --project src/SvgCreator.Cli -- input.png --ink-color "#c0392b"
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 

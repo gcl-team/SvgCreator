@@ -65,6 +65,12 @@ var cornerAngleOption = new Option<double>("--corner-angle")
     DefaultValueFactory = _ => SvgConversionOptions.Default.CornerAngle,
 };
 
+var inkColorOption = new Option<string>("--ink-color")
+{
+    Description = "Ink colour: hex (#c0392b), a CSS name (navy) or rgb()/hsl().",
+    DefaultValueFactory = _ => SvgConversionOptions.Default.FillColor,
+};
+
 var rootCommand = new RootCommand("Convert an image into a line-art SVG (black ink outlines, no colouring).")
 {
     inputArgument,
@@ -78,6 +84,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     minAreaOption,
     toleranceOption,
     cornerAngleOption,
+    inkColorOption,
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -95,6 +102,7 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
         MinComponentArea = parseResult.GetValue(minAreaOption),
         CurveTolerance = parseResult.GetValue(toleranceOption),
         CornerAngle = parseResult.GetValue(cornerAngleOption),
+        FillColor = parseResult.GetRequiredValue(inkColorOption),
     };
 
     try

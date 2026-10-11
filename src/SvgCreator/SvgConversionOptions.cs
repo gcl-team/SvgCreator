@@ -1,9 +1,11 @@
+using System.Text.RegularExpressions;
+
 namespace SvgCreator;
 
 /// <summary>
 /// Options controlling how an image is turned into line art.
 /// </summary>
-public sealed record SvgConversionOptions
+public sealed partial record SvgConversionOptions
 {
     /// <summary>The default options.</summary>
     public static SvgConversionOptions Default { get; } = new();
@@ -64,7 +66,10 @@ public sealed record SvgConversionOptions
     /// </summary>
     public double CornerAngle { get; init; } = 135;
 
-    /// <summary>SVG fill colour for the ink. Default: <c>#000</c>.</summary>
+    /// <summary>
+    /// Ink colour, as a CSS colour: hex (<c>#c0392b</c>, <c>#000</c>, with optional alpha),
+    /// a named colour (<c>navy</c>) or <c>rgb()</c>/<c>hsl()</c> notation. Default: <c>#000</c>.
+    /// </summary>
     public string FillColor { get; init; } = "#000";
 
     internal void Validate()
@@ -86,5 +91,16 @@ public sealed record SvgConversionOptions
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(CornerAngle);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(CornerAngle, 180);
         ArgumentException.ThrowIfNullOrWhiteSpace(FillColor);
+        if (!CssColor().IsMatch(FillColor))
+        {
+            throw new ArgumentException(
+                $"'{FillColor}' is not a valid colour. Use hex (#c0392b), a CSS name (navy) or rgb()/hsl().",
+                nameof(FillColor));
+        }
     }
+
+    // Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), a CSS named colour, or rgb()/rgba()/hsl()/hsla().
+    // Source-generated, so it is trimming- and Native AOT-safe.
+    [GeneratedRegex(@"^(#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-zA-Z]+|(rgba?|hsla?)\([0-9a-z.,%/+\- ]+\))$")]
+    private static partial Regex CssColor();
 }
