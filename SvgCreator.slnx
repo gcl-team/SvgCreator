@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SvgCreator.Cli/SvgCreator.Cli.csproj" />
+    <Project Path="src/SvgCreator/SvgCreator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SvgCreator.Tests/SvgCreator.Tests.csproj" />
+  </Folder>
+</Solution>
