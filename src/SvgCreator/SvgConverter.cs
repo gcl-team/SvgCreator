@@ -61,6 +61,8 @@ public sealed class SvgConverter : ISvgConverter
         cancellationToken.ThrowIfCancellationRequested();
 
         var curves = CurveBuilder.Build(contours, options.CurveTolerance, options.CornerAngle, options.DetectEllipses);
-        return SvgWriter.Write(gray.Width, gray.Height, curves, options.FillColor);
+        // The stamp texture follows line thickness, which LineSigma sets in Lines mode.
+        var stampScale = options.Mode == ExtractionMode.Lines ? options.LineSigma : 1.0;
+        return SvgWriter.Write(gray.Width, gray.Height, curves, options.FillColor, options.Style, options.StampSeed, stampScale);
     }
 }

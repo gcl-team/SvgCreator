@@ -100,6 +100,54 @@ public class SvgWriterTests
         Assert.Equal("M90 50a40 30 0 0 1-80 0a40 30 0 0 1 80 0ZM45 45l0 10l10 0Z", d);
     }
 
+    private static readonly CurveContour[] Square = [Polygon(1, false, new(1, 1), new(9, 1), new(9, 9), new(1, 9))];
+
+    [Fact]
+    public void Write_CleanStyle_HasNoFilter()
+    {
+        var root = XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000")).Root!;
+
+        Assert.Empty(root.Descendants(Svg + "defs"));
+        Assert.Null(root.Element(Svg + "g")!.Attribute("filter"));
+    }
+
+    [Fact]
+    public void Write_StampStyle_AddsNativeFilterReferencedByTheInkGroup()
+    {
+        var root = XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000", OutputStyle.Stamp, stampSeed: 7)).Root!;
+
+        var filter = Assert.Single(root.Descendants(Svg + "filter"));
+        Assert.Equal("svgcreator-stamp-7", (string?)filter.Attribute("id"));
+        Assert.Equal("url(#svgcreator-stamp-7)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
+        Assert.Equal(["7", "8", "9"], filter.Elements(Svg + "feTurbulence").Select(t => (string?)t.Attribute("seed")));
+        Assert.Single(filter.Elements(Svg + "feDisplacementMap"));
+        Assert.Equal(2, filter.Elements(Svg + "feComposite").Count());
+
+        // The geometry itself is untouched.
+        Assert.Equal(
+            XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000")).Descendants(Svg + "path").Single().Attribute("d")!.Value,
+            root.Descendants(Svg + "path").Single().Attribute("d")!.Value);
+    }
+
+    [Fact]
+    public void Write_StampScale_ScalesTextureWithLineThickness()
+    {
+        static (double Displacement, double EdgeFrequency) Texture(double scale)
+        {
+            var filter = XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000", OutputStyle.Stamp, 1, scale)).Descendants(Svg + "filter").Single();
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            return (
+                double.Parse((string)filter.Element(Svg + "feDisplacementMap")!.Attribute("scale")!, inv),
+                double.Parse((string)filter.Element(Svg + "feTurbulence")!.Attribute("baseFrequency")!, inv));
+        }
+
+        var normal = Texture(1);
+        var thick = Texture(2);
+
+        Assert.Equal(normal.Displacement * 2, thick.Displacement, 3);
+        Assert.Equal(normal.EdgeFrequency / 2, thick.EdgeFrequency, 3);
+    }
+
     [Fact]
     public void Write_EscapesFillColor()
     {

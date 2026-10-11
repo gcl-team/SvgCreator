@@ -24,6 +24,7 @@ flowchart LR
 | Fit curves | [Curve Fitting](Curve-Fitting.md) | `Fitting/` |
 | Recognize circles and ellipses | [Shape Recognition](Shape-Recognition.md) | `Fitting/EllipseFitter.cs` |
 | Write SVG | [SVG Output](SVG-Output.md) | `Svg/SvgWriter.cs` |
+| Optional stamp look | [Stamp Style](Stamp-Style.md) | `SvgWriter.WriteStampFilter` |
 
 Cross-cutting topics:
 

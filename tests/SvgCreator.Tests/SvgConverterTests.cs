@@ -117,6 +117,31 @@ public class SvgConverterTests
     }
 
     [Fact]
+    public void Convert_StampStyle_FiltersInkWhileDefaultHasNoFilter()
+    {
+        using var png1 = TestImages.PngWithBlackRect(20, 10, new SKRect(2, 3, 8, 7));
+        using var png2 = TestImages.PngWithBlackRect(20, 10, new SKRect(2, 3, 8, 7));
+
+        var clean = XDocument.Parse(new SvgConverter().Convert(png1));
+        var stamp = XDocument.Parse(new SvgConverter().Convert(png2, new SvgConversionOptions { Style = OutputStyle.Stamp }));
+
+        Assert.Empty(clean.Descendants(Svg + "filter"));
+        Assert.Equal("url(#svgcreator-stamp-1)", (string?)stamp.Descendants(Svg + "g").Single().Attribute("filter"));
+    }
+
+    [Fact]
+    public void Convert_InvalidStyleOrSeed_Throws()
+    {
+        using var png = TestImages.PngWithBlackRect(5, 5, SKRect.Empty);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new SvgConverter().Convert(png, new SvgConversionOptions { Style = (OutputStyle)42 }));
+        png.Position = 0;
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new SvgConverter().Convert(png, new SvgConversionOptions { StampSeed = -1 }));
+    }
+
+    [Fact]
     public void Convert_InvalidThreshold_Throws()
     {
         using var png = TestImages.PngWithBlackRect(5, 5, SKRect.Empty);

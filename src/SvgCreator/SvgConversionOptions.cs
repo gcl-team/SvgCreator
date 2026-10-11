@@ -73,6 +73,15 @@ public sealed partial record SvgConversionOptions
     /// </summary>
     public bool DetectEllipses { get; init; } = true;
 
+    /// <summary>How the ink is rendered. Default: <see cref="OutputStyle.Clean"/>.</summary>
+    public OutputStyle Style { get; init; } = OutputStyle.Clean;
+
+    /// <summary>
+    /// <see cref="OutputStyle.Stamp"/>: seed for the stamp texture. The same seed always gives the
+    /// same impression; a different one gives a differently worn print. Default: 1.
+    /// </summary>
+    public int StampSeed { get; init; } = 1;
+
     /// <summary>
     /// Ink colour, as a CSS colour: hex (<c>#c0392b</c>, <c>#000</c>, with optional alpha),
     /// a named colour (<c>navy</c>) or <c>rgb()</c>/<c>hsl()</c> notation. Default: <c>#000</c>.
@@ -85,6 +94,13 @@ public sealed partial record SvgConversionOptions
         {
             throw new ArgumentOutOfRangeException(nameof(Mode), Mode, "Unknown extraction mode.");
         }
+
+        if (!Enum.IsDefined(Style))
+        {
+            throw new ArgumentOutOfRangeException(nameof(Style), Style, "Unknown output style.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegative(StampSeed);
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(LineContrast);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(WeakLineContrast);

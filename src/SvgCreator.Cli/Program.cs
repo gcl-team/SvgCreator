@@ -71,6 +71,18 @@ var ellipsesOption = new Option<bool>("--ellipses")
     DefaultValueFactory = _ => SvgConversionOptions.Default.DetectEllipses,
 };
 
+var styleOption = new Option<OutputStyle>("--style")
+{
+    Description = "Clean: crisp flat ink. Stamp: rubber-stamp impression (rough edges, worn ink) via a native SVG filter.",
+    DefaultValueFactory = _ => SvgConversionOptions.Default.Style,
+};
+
+var stampSeedOption = new Option<int>("--stamp-seed")
+{
+    Description = "Stamp style: texture seed; change it for a differently worn impression.",
+    DefaultValueFactory = _ => SvgConversionOptions.Default.StampSeed,
+};
+
 var inkColorOption = new Option<string>("--ink-color")
 {
     Description = "Ink colour: hex (#c0392b), a CSS name (navy) or rgb()/hsl().",
@@ -91,6 +103,8 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     toleranceOption,
     cornerAngleOption,
     ellipsesOption,
+    styleOption,
+    stampSeedOption,
     inkColorOption,
 };
 
@@ -110,6 +124,8 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
         CurveTolerance = parseResult.GetValue(toleranceOption),
         CornerAngle = parseResult.GetValue(cornerAngleOption),
         DetectEllipses = parseResult.GetValue(ellipsesOption),
+        Style = parseResult.GetValue(styleOption),
+        StampSeed = parseResult.GetValue(stampSeedOption),
         FillColor = parseResult.GetRequiredValue(inkColorOption),
     };
 

@@ -49,6 +49,9 @@ dotnet run --project src/SvgCreator.Cli -- input.png -o output.svg --line-contra
 # coloured ink: hex, CSS name or rgb()/hsl()
 dotnet run --project src/SvgCreator.Cli -- input.png --ink-color "#c0392b"
 
+# rubber-stamp / seal impression (native SVG filter: rough edges, worn ink)
+dotnet run --project src/SvgCreator.Cli -- input.png --style stamp --ink-color "#c0392b"
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 
