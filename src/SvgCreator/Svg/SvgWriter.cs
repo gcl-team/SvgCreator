@@ -7,11 +7,20 @@ namespace SvgCreator.Svg;
 
 /// <summary>
 /// Writes contours as filled SVG paths: one <c>&lt;path&gt;</c> per ink component (outer border
-/// plus its holes) under an even-odd fill so holes stay empty.
+/// plus its holes) under an even-odd fill so holes stay empty. Components recognized as ellipses use
+/// native shapes: a solid ellipse becomes <c>&lt;circle&gt;</c>/<c>&lt;ellipse&gt;</c>, a band between
+/// two concentric ellipses becomes one stroked <c>&lt;circle&gt;</c>/<c>&lt;ellipse&gt;</c>, and any
+/// other elliptical contour is drawn with native arc (<c>a</c>) commands inside its path.
 /// </summary>
 internal static class SvgWriter
 {
     private const string SvgNamespace = "http://www.w3.org/2000/svg";
+
+    // Ring widths may differ this much (px) between the two axes and still count as uniform.
+    private const double RingTolerance = 1.0;
+
+    // Radii closer than this (px) are written as a circle.
+    private const double CircleTolerance = 0.5;
 
     public static string Write(int width, int height, IReadOnlyList<CurveContour> contours, string fillColor)
     {
@@ -34,6 +43,11 @@ internal static class SvgWriter
 
             foreach (var group in GroupByComponent(contours))
             {
+                if (TryWriteShape(xml, group, fillColor))
+                {
+                    continue;
+                }
+
                 xml.WriteStartElement("path", SvgNamespace);
                 xml.WriteAttributeString("d", PathData(group));
                 xml.WriteEndElement();
@@ -44,6 +58,60 @@ internal static class SvgWriter
         }
 
         return output.ToString();
+    }
+
+    // A component that is exactly one solid ellipse, or one elliptical band, becomes a native shape.
+    private static bool TryWriteShape(XmlWriter xml, List<CurveContour> group, string fillColor)
+    {
+        if (group is [{ IsHole: false, Ellipse: { } solid }])
+        {
+            WriteEllipse(xml, solid);
+            xml.WriteEndElement();
+            return true;
+        }
+
+        if (group.Count == 2
+            && group.Find(c => !c.IsHole)?.Ellipse is { } outer
+            && group.Find(c => c.IsHole)?.Ellipse is { } inner
+            && Ellipse.TryMakeRing(outer, inner, RingTolerance, out var middle, out var width))
+        {
+            WriteEllipse(xml, middle);
+            xml.WriteAttributeString("fill", "none");
+            xml.WriteAttributeString("stroke", fillColor);
+            xml.WriteAttributeString("stroke-width", Format(width));
+            xml.WriteEndElement();
+            return true;
+        }
+
+        return false;
+    }
+
+    // Leaves the element open so callers can add attributes.
+    private static void WriteEllipse(XmlWriter xml, Ellipse e)
+    {
+        var circle = e.IsCircle(CircleTolerance);
+        xml.WriteStartElement(circle ? "circle" : "ellipse", SvgNamespace);
+        xml.WriteAttributeString("cx", Format(e.Center.X));
+        xml.WriteAttributeString("cy", Format(e.Center.Y));
+        if (circle)
+        {
+            xml.WriteAttributeString("r", Format((e.RadiusX + e.RadiusY) / 2));
+            return;
+        }
+
+        xml.WriteAttributeString("rx", Format(e.RadiusX));
+        xml.WriteAttributeString("ry", Format(e.RadiusY));
+        if (Math.Round(e.AngleDegrees, 1) is not (0 or 180))
+        {
+            xml.WriteAttributeString("transform", $"rotate({Format(e.AngleDegrees)} {Format(e.Center.X)} {Format(e.Center.Y)})");
+        }
+    }
+
+    private static string Format(double value)
+    {
+        var sb = new StringBuilder();
+        AppendNumber(sb, (long)Math.Round(value * 10, MidpointRounding.AwayFromZero));
+        return sb.ToString();
     }
 
     private static List<List<CurveContour>> GroupByComponent(IReadOnlyList<CurveContour> contours)
@@ -78,6 +146,12 @@ internal static class SvgWriter
         var sb = new StringBuilder();
         foreach (var contour in contours)
         {
+            if (contour.Ellipse is { } ellipse)
+            {
+                AppendEllipse(sb, ellipse);
+                continue;
+            }
+
             var segments = contour.Segments;
             if (segments.Count == 0)
             {
@@ -117,6 +191,29 @@ internal static class SvgWriter
         }
 
         return sb.ToString();
+    }
+
+    // Two native half-ellipse arcs between opposite ends of the X axis.
+    private static void AppendEllipse(StringBuilder sb, Ellipse e)
+    {
+        var start = Tenths(e.PointAt(0));
+        var opposite = Tenths(e.PointAt(Math.PI));
+        sb.Append('M');
+        AppendNumber(sb, start.X);
+        AppendNumber(sb, start.Y);
+        AppendArc(sb, e, opposite, start);
+        AppendArc(sb, e, start, opposite);
+        sb.Append('Z');
+    }
+
+    private static void AppendArc(StringBuilder sb, Ellipse e, (long X, long Y) end, (long X, long Y) from)
+    {
+        sb.Append('a');
+        AppendNumber(sb, (long)Math.Round(e.RadiusX * 10, MidpointRounding.AwayFromZero));
+        AppendNumber(sb, (long)Math.Round(e.RadiusY * 10, MidpointRounding.AwayFromZero));
+        AppendNumber(sb, (long)Math.Round(e.AngleDegrees * 10, MidpointRounding.AwayFromZero));
+        sb.Append(" 0 1"); // large-arc 0, sweep 1: each half goes the positive-angle way round
+        AppendDelta(sb, end, from);
     }
 
     private static (long X, long Y) Tenths(PointD p) =>

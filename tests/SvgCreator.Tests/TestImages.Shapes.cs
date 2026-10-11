@@ -36,4 +36,26 @@ internal static partial class TestImages
 
         return new BinaryImage(width, height, pixels);
     }
+
+    /// <summary>Filled ellipse rotated by <paramref name="angleDegrees"/>, optionally with an elliptical hole of the given inner radii.</summary>
+    public static BinaryImage Ellipse(int size, double rx, double ry, double angleDegrees, double innerRx = 0, double innerRy = 0)
+    {
+        var pixels = new byte[size * size];
+        var c = size / 2.0;
+        var angle = angleDegrees * Math.PI / 180;
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                double dx = x + 0.5 - c, dy = y + 0.5 - c;
+                var u = (dx * Math.Cos(angle)) + (dy * Math.Sin(angle));
+                var v = (-dx * Math.Sin(angle)) + (dy * Math.Cos(angle));
+                var inOuter = (u * u / (rx * rx)) + (v * v / (ry * ry)) <= 1;
+                var inInner = innerRx > 0 && (u * u / (innerRx * innerRx)) + (v * v / (innerRy * innerRy)) <= 1;
+                pixels[(y * size) + x] = inOuter && !inInner ? (byte)1 : (byte)0;
+            }
+        }
+
+        return new BinaryImage(size, size, pixels);
+    }
 }

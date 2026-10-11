@@ -20,10 +20,8 @@ public class SvgConverterTests
         Assert.Equal("M8 3l0 4l-6 0l0-4Z", (string?)path.Attribute("d"));
     }
 
-    [Fact]
-    public void Convert_LinesMode_OutlinesShapeWithoutFillingDarkBackground()
+    private static MemoryStream LightDiscOnDarkBackground()
     {
-        // A light disc on a dark background: Lines mode should outline the disc, not fill the background.
         using var bitmap = new SKBitmap(64, 64);
         using (var canvas = new SKCanvas(bitmap))
         using (var paint = new SKPaint { Color = SKColors.White, IsAntialias = true })
@@ -32,16 +30,40 @@ public class SvgConverterTests
             canvas.DrawCircle(32, 32, 20, paint);
         }
 
-        using var png = new MemoryStream();
+        var png = new MemoryStream();
         bitmap.Encode(png, SKEncodedImageFormat.Png, 100);
         png.Position = 0;
+        return png;
+    }
 
-        var svg = new SvgConverter().Convert(png);
+    [Fact]
+    public void Convert_LinesMode_OutlinesCircleAsNativeStrokedCircle()
+    {
+        // Lines mode outlines the disc with a thin ring instead of filling the dark background,
+        // and the ring is recognized as one stroked <circle>.
+        using var png = LightDiscOnDarkBackground();
 
-        var path = Assert.Single(XDocument.Parse(svg).Descendants(Svg + "path"));
-        var d = (string)path.Attribute("d")!;
+        var g = XDocument.Parse(new SvgConverter().Convert(png)).Descendants(Svg + "g").Single();
+
+        Assert.Empty(g.Elements(Svg + "path"));
+        var circle = Assert.Single(g.Elements(Svg + "circle"));
+        Assert.Equal("none", (string?)circle.Attribute("fill"));
+        // The line sits on the darker side, i.e. just outside the radius-20 disc.
+        Assert.InRange(double.Parse((string)circle.Attribute("r")!, System.Globalization.CultureInfo.InvariantCulture), 20, 25);
+        Assert.InRange(double.Parse((string)circle.Attribute("cx")!, System.Globalization.CultureInfo.InvariantCulture), 31, 33);
+    }
+
+    [Fact]
+    public void Convert_EllipseDetectionOff_KeepsCurvesInPath()
+    {
+        using var png = LightDiscOnDarkBackground();
+
+        var svg = new SvgConverter().Convert(png, new SvgConversionOptions { DetectEllipses = false });
+
+        var d = (string)Assert.Single(XDocument.Parse(svg).Descendants(Svg + "path")).Attribute("d")!;
         Assert.DoesNotContain("M0 0", d, StringComparison.Ordinal); // no full-canvas background shape
         Assert.Equal(2, d.Count(c => c == 'M')); // a ring: outer border + hole
+        Assert.Empty(XDocument.Parse(svg).Descendants(Svg + "circle"));
     }
 
     [Fact]

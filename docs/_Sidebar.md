@@ -6,6 +6,7 @@
 - [Connected Components](Connected-Components.md)
 - [Contour Tracing](Contour-Tracing.md)
 - [Curve Fitting](Curve-Fitting.md)
+- [Shape Recognition](Shape-Recognition.md)
 - [SVG Output](SVG-Output.md)
 
 **Cross-cutting**

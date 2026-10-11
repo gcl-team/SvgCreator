@@ -13,6 +13,7 @@ The defaults were tuned on 512–2000 px anime illustrations. Start with them, a
 | Curves too fussy | `CurveTolerance` (`--tolerance`) | Raise to 1.5–2 |
 | Curves cut across details | `CurveTolerance` (`--tolerance`) | Lower to 0.5–0.75 |
 | Sharp tips get rounded | `CornerAngle` (`--corner-angle`) | Raise it, e.g. 150, so more turns count as corners |
+| A round shape should stay curves (or a circle wasn't recognized as you expected) | `DetectEllipses` (`--ellipses false`) | Turn off to keep everything as Bézier curves |
 | Want coloured ink | `FillColor` (`--ink-color`) | Hex (`#c0392b`, `#c0392b80` with alpha), a CSS name (`navy`), or `rgb()`/`hsl()`. Anything else is rejected |
 | The input is already clean black-on-white line art | `Mode` (`--mode Threshold`), `Threshold` (`-t`) | Use Threshold mode |
 
@@ -29,4 +30,5 @@ The defaults were tuned on 512–2000 px anime illustrations. Start with them, a
 | `MinComponentArea` | 4 | px |
 | `CurveTolerance` | 1 | px |
 | `CornerAngle` | 135 | degrees (180 = straight) |
+| `DetectEllipses` | true | |
 | `FillColor` | `#000` | CSS colour |

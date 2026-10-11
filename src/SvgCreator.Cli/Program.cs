@@ -65,6 +65,12 @@ var cornerAngleOption = new Option<double>("--corner-angle")
     DefaultValueFactory = _ => SvgConversionOptions.Default.CornerAngle,
 };
 
+var ellipsesOption = new Option<bool>("--ellipses")
+{
+    Description = "Write outlines that are circles or ellipses as native <circle>/<ellipse> shapes (use '--ellipses false' to keep curves).",
+    DefaultValueFactory = _ => SvgConversionOptions.Default.DetectEllipses,
+};
+
 var inkColorOption = new Option<string>("--ink-color")
 {
     Description = "Ink colour: hex (#c0392b), a CSS name (navy) or rgb()/hsl().",
@@ -84,6 +90,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     minAreaOption,
     toleranceOption,
     cornerAngleOption,
+    ellipsesOption,
     inkColorOption,
 };
 
@@ -102,6 +109,7 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
         MinComponentArea = parseResult.GetValue(minAreaOption),
         CurveTolerance = parseResult.GetValue(toleranceOption),
         CornerAngle = parseResult.GetValue(cornerAngleOption),
+        DetectEllipses = parseResult.GetValue(ellipsesOption),
         FillColor = parseResult.GetRequiredValue(inkColorOption),
     };
 

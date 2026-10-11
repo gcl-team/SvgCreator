@@ -12,7 +12,7 @@ flowchart LR
     B --> C[Extract ink<br/>DoG + hysteresis<br/>+ Lab colour edges]
     C --> D[Label components<br/>union-find]
     D --> E[Trace contours<br/>pixel-edge following]
-    E --> F[Fit curves<br/>corners + Schneider]
+    E --> F[Fit shapes & curves<br/>ellipses, corners + Schneider]
     F --> G[Write SVG<br/>compact relative paths]
 ```
 
@@ -22,6 +22,7 @@ flowchart LR
 | Label components | [Connected Components](Connected-Components.md) | `Tracing/ComponentLabeler.cs` |
 | Trace contours | [Contour Tracing](Contour-Tracing.md) | `Tracing/ContourTracer.cs` |
 | Fit curves | [Curve Fitting](Curve-Fitting.md) | `Fitting/` |
+| Recognize circles and ellipses | [Shape Recognition](Shape-Recognition.md) | `Fitting/EllipseFitter.cs` |
 | Write SVG | [SVG Output](SVG-Output.md) | `Svg/SvgWriter.cs` |
 
 Cross-cutting topics:

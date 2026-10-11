@@ -6,35 +6,38 @@ namespace SvgCreator.Fitting;
 /// Turns pixel-edge contours into smooth cubic outlines:
 /// densify to unit steps → take edge midpoints (removes the pixel staircase) → detect corners
 /// (snapped back to the exact pixel corner) → Schneider-fit each corner-to-corner run.
+/// Optionally, outlines that are ellipses are recognized first and kept as exact ellipses.
 /// </summary>
 internal static class CurveBuilder
 {
     // Outlines this short (e.g. a lone 1–2 px speck) are kept as their exact pixel polygon.
     private const int MinFitPoints = 8;
 
-    public static IReadOnlyList<CurveContour> Build(IReadOnlyList<Contour> contours, double tolerance, double cornerAngle)
+    public static IReadOnlyList<CurveContour> Build(
+        IReadOnlyList<Contour> contours, double tolerance, double cornerAngle, bool detectEllipses = false)
     {
         var result = new List<CurveContour>(contours.Count);
         foreach (var contour in contours)
         {
-            result.Add(new CurveContour(contour.Label, contour.IsHole, BuildSegments(contour.Points, tolerance, cornerAngle)));
+            result.Add(BuildContour(contour, tolerance, cornerAngle, detectEllipses));
         }
 
         return result;
     }
 
-    private static List<CubicBezier> BuildSegments(IReadOnlyList<PointI> vertices, double tolerance, double cornerAngle)
+    private static CurveContour BuildContour(Contour contour, double tolerance, double cornerAngle, bool detectEllipses)
     {
+        var vertices = contour.Points;
         var lattice = Densify(vertices);
-        var segments = new List<CubicBezier>();
         if (lattice.Length <= MinFitPoints)
         {
+            var polygon = new List<CubicBezier>(vertices.Count);
             for (var i = 0; i < vertices.Count; i++)
             {
-                segments.Add(CubicBezier.Line(ToD(vertices[i]), ToD(vertices[(i + 1) % vertices.Count])));
+                polygon.Add(CubicBezier.Line(ToD(vertices[i]), ToD(vertices[(i + 1) % vertices.Count])));
             }
 
-            return segments;
+            return new CurveContour(contour.Label, contour.IsHole, polygon);
         }
 
         var n = lattice.Length;
@@ -44,6 +47,18 @@ internal static class CurveBuilder
             points[i] = (ToD(lattice[i]) + ToD(lattice[(i + 1) % n])) * 0.5;
         }
 
+        if (detectEllipses && EllipseFitter.TryFit(points, tolerance, out var ellipse))
+        {
+            return new CurveContour(contour.Label, contour.IsHole, [], ellipse);
+        }
+
+        return new CurveContour(contour.Label, contour.IsHole, FitSegments(points, lattice, tolerance, cornerAngle));
+    }
+
+    private static List<CubicBezier> FitSegments(PointD[] points, PointI[] lattice, double tolerance, double cornerAngle)
+    {
+        var n = points.Length;
+        var segments = new List<CubicBezier>();
         var corners = CornerDetector.Find(points, cornerAngle);
         SnapCornersToLattice(points, lattice, corners);
 

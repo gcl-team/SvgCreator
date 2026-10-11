@@ -60,7 +60,7 @@ public sealed class SvgConverter : ISvgConverter
         var contours = ContourTracer.Trace(components);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var curves = CurveBuilder.Build(contours, options.CurveTolerance, options.CornerAngle);
+        var curves = CurveBuilder.Build(contours, options.CurveTolerance, options.CornerAngle, options.DetectEllipses);
         return SvgWriter.Write(gray.Width, gray.Height, curves, options.FillColor);
     }
 }

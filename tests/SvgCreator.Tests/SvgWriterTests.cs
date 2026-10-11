@@ -52,6 +52,55 @@ public class SvgWriterTests
     }
 
     [Fact]
+    public void Write_SolidEllipseComponent_UsesNativeCircleOrEllipse()
+    {
+        CurveContour[] contours =
+        [
+            new(1, false, [], new Ellipse(new(20, 15), 10.04, 9.98, 0)),
+            new(2, false, [], new Ellipse(new(50, 40), 20, 8, 30)),
+        ];
+
+        var g = XDocument.Parse(SvgWriter.Write(80, 60, contours, "#000")).Descendants(Svg + "g").Single();
+
+        var circle = Assert.Single(g.Elements(Svg + "circle"));
+        Assert.Equal(("20", "15", "10"), ((string?)circle.Attribute("cx"), (string?)circle.Attribute("cy"), (string?)circle.Attribute("r")));
+        var ellipse = Assert.Single(g.Elements(Svg + "ellipse"));
+        Assert.Equal("rotate(30 50 40)", (string?)ellipse.Attribute("transform"));
+        Assert.Empty(g.Elements(Svg + "path"));
+    }
+
+    [Fact]
+    public void Write_ConcentricRing_UsesOneStrokedCircle()
+    {
+        CurveContour[] contours =
+        [
+            new(1, false, [], new Ellipse(new(50, 50), 40, 40, 0)),
+            new(1, true, [], new Ellipse(new(50.2, 49.9), 37, 37, 0)),
+        ];
+
+        var circle = XDocument.Parse(SvgWriter.Write(100, 100, contours, "navy")).Descendants(Svg + "circle").Single();
+
+        Assert.Equal("38.5", (string?)circle.Attribute("r"));
+        Assert.Equal("none", (string?)circle.Attribute("fill"));
+        Assert.Equal("navy", (string?)circle.Attribute("stroke"));
+        Assert.Equal("3", (string?)circle.Attribute("stroke-width"));
+    }
+
+    [Fact]
+    public void Write_EllipseWithIrregularHole_UsesNativeArcsInsidePath()
+    {
+        CurveContour[] contours =
+        [
+            new(1, false, [], new Ellipse(new(50, 50), 40, 30, 0)),
+            Polygon(1, true, new(45, 45), new(45, 55), new(55, 55)),
+        ];
+
+        var d = (string?)XDocument.Parse(SvgWriter.Write(100, 100, contours, "#000")).Descendants(Svg + "path").Single().Attribute("d");
+
+        Assert.Equal("M90 50a40 30 0 0 1-80 0a40 30 0 0 1 80 0ZM45 45l0 10l10 0Z", d);
+    }
+
+    [Fact]
     public void Write_EscapesFillColor()
     {
         var svg = SvgWriter.Write(1, 1, [], "\"><script>");

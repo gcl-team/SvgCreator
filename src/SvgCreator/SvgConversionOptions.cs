@@ -67,6 +67,13 @@ public sealed partial record SvgConversionOptions
     public double CornerAngle { get; init; } = 135;
 
     /// <summary>
+    /// Recognize outlines that are circles or ellipses and write them as native SVG shapes
+    /// (<c>&lt;circle&gt;</c>, <c>&lt;ellipse&gt;</c>, or a stroked one for rings) instead of Bézier
+    /// curves: exact, smaller and easy to edit. Default: <see langword="true"/>.
+    /// </summary>
+    public bool DetectEllipses { get; init; } = true;
+
+    /// <summary>
     /// Ink colour, as a CSS colour: hex (<c>#c0392b</c>, <c>#000</c>, with optional alpha),
     /// a named colour (<c>navy</c>) or <c>rgb()</c>/<c>hsl()</c> notation. Default: <c>#000</c>.
     /// </summary>
