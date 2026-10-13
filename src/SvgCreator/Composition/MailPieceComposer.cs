@@ -22,7 +22,9 @@ internal static class MailPieceComposer
     private const double BorderDepth = 0.07;     // EnvelopeWriter's strap border
 
     // The postmark ring, as fractions of the stamp's height: its radius, and its centre's height
-    // from the stamp's top. The centre sits on the stamp's left edge, so the ring overlaps the
+    // from the stamp's top. The radius is the ring's outer edge, which is what the eye sees: a
+    // thick ring is written as one circle stroked along its midline, but the stroke reaches out to
+    // the outer ellipse, and that visible extent is also what the cover rule below must bound. The centre sits on the stamp's left edge, so the ring overlaps the
     // stamp and the waves, which start inside the ring's right side, cross it.
     private const double RingRadius = 0.42;
     private const double RingCentreY = 0.62;

@@ -142,7 +142,10 @@ internal sealed class PostmarkCancellation : IDecoration
         xml.WriteEndElement();
     }
 
-    /// <summary>The drawing's circular frame, which the cancellation runs from; none when it has no circle.</summary>
+    /// <summary>
+    /// The drawing's circular frame, which the cancellation runs from; none when it has no circle.
+    /// For a ring this is its outer ellipse, the edge you see, not the midline its stroke is drawn on.
+    /// </summary>
     public static Ellipse? FrameOf(TracedDrawing drawing) => FindFrame(drawing.Contours, drawing.Width, drawing.Height)?.Ellipse;
 
     // The outline of the largest recognized ellipse big enough to be the drawing's frame.

@@ -141,6 +141,26 @@ public class MailPieceTests
     }
 
     [Fact]
+    public void Create_ThickRing_ItsVisibleOuterEdgeIsTheSizedRadius()
+    {
+        // The seal's ring is a band (radii 53 and 47), written as one stroked circle on its
+        // midline (r = 50, stroke 6). What the eye sees, and what the cover rule must bound, runs
+        // out to 53: so the layout sizes the outer edge, not the midline, to 0.42 of the stamp.
+        var root = XDocument.Parse(new MailPieceGenerator().Create(Envelope, Stamp(), Postmark())).Root!;
+        var stamp = Piece(root, "mail-postage-stamp");
+        var postmark = Piece(root, "mail-postmark");
+        var scale = Number(postmark, "width") / double.Parse(((string)postmark.Attribute("viewBox")!).Split(' ')[2], CultureInfo.InvariantCulture);
+        var ring = postmark.Descendants(Svg + "circle").Single();
+
+        var outerEdge = (Number(ring, "r") + (Number(ring, "stroke-width") / 2)) * scale;
+
+        // The ring's r and stroke are traced geometry, written at tenths; the layout uses the exact
+        // fitted radius. Agreement to 0.05 px still tells the outer edge from the midline (≈ 1.9 px in).
+        Assert.Equal(0.42 * Number(stamp, "height"), outerEdge, 1);
+        Assert.NotEqual(0.42 * Number(stamp, "height"), Number(ring, "r") * scale, 1);
+    }
+
+    [Fact]
     public void Create_InvalidOptions_FailBeforeAnyImageIsRead()
     {
         var unreadable = new ThrowingStream();
