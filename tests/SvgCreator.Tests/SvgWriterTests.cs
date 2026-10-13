@@ -201,8 +201,10 @@ public class SvgWriterTests
     [Fact]
     public void Write_PostmarkWithSolidDiscFrame_UsesAShareOfTheFrameHeight()
     {
-        // No hole, so no band to match: 0.04 of the half-height of 45 is 1.8.
-        var (_, cancel, _, _) = Postmark(new CurveContour(1, false, [], new Ellipse(new(100, 50), 45, 45, 0)));
+        // No hole, so no band to match: 0.018 of the half-height of 100 is 1.8 (above the 1.5 floor).
+        CurveContour[] disc = [new(1, false, [], new Ellipse(new(200, 200), 100, 100, 0))];
+        var root = XDocument.Parse(TestSvg.Write(400, 400, disc, "#000", OutputStyle.Postmark)).Root!;
+        var cancel = root.Elements(Svg + "g").Single(g => (string?)g.Attribute("class") == "postmark-cancel");
 
         Assert.Equal("1.8", (string?)cancel.Attribute("stroke-width"));
     }

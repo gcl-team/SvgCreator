@@ -24,7 +24,7 @@ internal sealed class PostmarkCancellation : IDecoration
     // concentric hole), so they read as part of the same stamp. A frame without a band, such as a
     // solid disc, and the rectangle fallback use this share of the frame's half-height instead.
     // Either way, the floor keeps them visible through the worn-ink filter.
-    private const double CancelStrokeWidth = 0.04;
+    private const double CancelStrokeWidth = 0.018;
     private const double CancelMinStrokeWidth = 1.5;
 
     // An ellipse only becomes the postmark when it is a frame, not a small detail like an eye.
