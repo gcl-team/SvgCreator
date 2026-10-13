@@ -108,6 +108,34 @@ public class PostageStampTests
         Assert.Equal(row[0].Size / row[1].Size, fitted[0].Size / fitted[1].Size, 9); // shrunk together
     }
 
+    private static PostageStampWriter.Item Country(string text, double size = 10) =>
+        new("stamp-country", text, StampCorner.TopLeft, size, Bold: true, Italic: false);
+
+    [Fact]
+    public void RowWidth_CountsFullWidthGlyphsAsAFullEm()
+    {
+        // Five CJK glyphs at size 10 are about 50 px wide. At 0.74 em (37 px) a 40 px picture
+        // would have been judged wide enough, and the text would overrun it.
+        List<PostageStampWriter.Item> row = [Country("日本郵便局")];
+
+        Assert.Equal(50, PostageStampWriter.RowWidth(row, 40), 9);
+        Assert.Equal(40, PostageStampWriter.RowWidth(PostageStampWriter.FitRow(row, 40, 40), 40), 9);
+    }
+
+    [Theory]
+    [InlineData("ÖSTERREICH", "OSTERREICH")] // accented capitals: as wide as their base letters
+    [InlineData("españa", "espana")]         // accented lowercase
+    [InlineData("Ce\u0301te", "Cete")]      // a combining accent adds no width
+    public void RowWidth_MeasuresAccentedLatinLikeAscii(string accented, string plain) =>
+        Assert.Equal(PostageStampWriter.RowWidth([Country(plain)], 40), PostageStampWriter.RowWidth([Country(accented)], 40), 9);
+
+    [Theory]
+    [InlineData("ΕΛΛΑΣ")]  // Greek capitals: unmeasured script
+    [InlineData("россия")] // Cyrillic lowercase: char.IsLower once counted these at 0.54 em
+    [InlineData("🇸🇬")]     // a flag: two runes (four UTF-16 units), each a full em
+    public void RowWidth_AssumesAFullEmForUnmeasuredScripts(string text) =>
+        Assert.Equal(text.EnumerateRunes().Count() * 10.0, PostageStampWriter.RowWidth([Country(text)], 40), 9);
+
     [Fact]
     public void FitRow_LeavesARowThatFitsUnchanged()
     {

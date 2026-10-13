@@ -64,10 +64,15 @@ Native `<text>` stays small and editable, but the library never knows which font
 
 | Characters | Advance (em) |
 |---|---|
-| Capitals (and anything unknown) | 0.74 |
-| Digits | 0.62 |
-| Lowercase | 0.54 |
+| ASCII capitals and symbols | 0.74 |
+| ASCII digits | 0.62 |
+| ASCII lowercase | 0.54 |
 | Space, punctuation, `i l j` | 0.30 |
+| Accented Latin letters (`é Ö ñ ł`, U+00C0–U+024F) | Like their base letter: 0.74 capital, 0.54 lowercase |
+| Combining marks (an accent typed after its letter) | 0 |
+| Anything else: CJK, Greek, Cyrillic, Arabic, emoji… | 1.0 |
+
+Text outside Latin isn't measured, so it gets a full em. That's exact for CJK and other full-width glyphs, and safely wide for the rest. Overestimating only shrinks the text a little, but underestimating lets it overrun. An earlier version applied the Latin buckets to every script: `char.IsLower` put Cyrillic lowercase at 0.54 em, and CJK fell into the 0.74 em bucket, so a row of Japanese judged to fit ran about 35% past the picture. Width is counted per Unicode scalar (`Rune`), so a character outside the Basic Multilingual Plane counts once, not once per UTF-16 half.
 
 Regular weight is 8% narrower. If a row's estimate plus the gap between items is wider than the picture, the text shrinks evenly into the space left after the gap. A flat 0.62 em for every character underestimated bold capitals by about 15%, which is exactly the overlap the first render showed.
 

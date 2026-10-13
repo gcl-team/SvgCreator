@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Xml;
 using SvgCreator.Imaging;
@@ -37,6 +38,11 @@ internal static class PostageStampWriter
     private const double DigitWidth = 0.62;
     private const double NarrowWidth = 0.3; // space, punctuation, i, l, j
     private const double RegularWeight = 0.92;
+
+    // Outside Latin the advances aren't measured, so assume a full em: exact for CJK and other
+    // full-width glyphs, and on the safe side for other scripts. Overestimating only shrinks the
+    // text a little; underestimating lets it overrun.
+    private const double UnmeasuredWidth = 1.0;
 
     // Baseline below the top of a row, and the row's height, in em.
     private const double Ascent = 0.8;
@@ -163,19 +169,30 @@ internal static class PostageStampWriter
     private static double EstimateWidth(Item item)
     {
         var em = 0.0;
-        foreach (var c in item.Text)
+        foreach (var rune in item.Text.EnumerateRunes())
         {
-            em += c switch
+            em += rune.Value switch
             {
-                ' ' or '.' or ',' or ':' or ';' or '\'' or '!' or '|' or 'i' or 'l' or 'j' => NarrowWidth,
-                _ when char.IsAsciiDigit(c) => DigitWidth,
-                _ when char.IsLower(c) => LowercaseWidth,
-                _ => CapitalWidth, // capitals, symbols and other scripts: assume wide
+                < 0x80 => AsciiWidth((char)rune.Value),
+
+                // Latin-1 Supplement and Latin Extended-A/B letters (é, Ö, ñ, ł) are as wide as
+                // the ASCII letters they decorate.
+                >= 0xC0 and <= 0x24F when Rune.IsLetter(rune) => Rune.IsUpper(rune) ? CapitalWidth : LowercaseWidth,
+                _ when Rune.GetUnicodeCategory(rune) is UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark => 0,
+                _ => UnmeasuredWidth,
             };
         }
 
         return em * item.Size * (item.Bold ? 1 : RegularWeight);
     }
+
+    private static double AsciiWidth(char c) => c switch
+    {
+        ' ' or '.' or ',' or ':' or ';' or '\'' or '!' or '|' or 'i' or 'l' or 'j' => NarrowWidth,
+        _ when char.IsAsciiDigit(c) => DigitWidth,
+        _ when char.IsAsciiLetterLower(c) => LowercaseWidth,
+        _ => CapitalWidth, // capitals and symbols
+    };
 
     private static double RowSize(List<Item> row) => row.Count == 0 ? 0 : row.Max(i => i.Size);
 
