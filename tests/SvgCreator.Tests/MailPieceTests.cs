@@ -110,18 +110,34 @@ public class MailPieceTests
     }
 
     [Fact]
-    public void PostmarkRect_CentresTheRingOnTheStampsLeftEdge()
+    public void PostmarkRect_OnANarrowStamp_MovesTheRingLeftToCoverAThird()
     {
+        // A portrait stamp, 150 wide and 200 tall: a ring of radius 0.42 × 200 = 84 centred on its
+        // left edge would cover 84 of its 150 width. Moved left by 84 − 150/3 = 34, it covers 50.
         var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
         var ring = new Ellipse(new PointD(50, 60), 40, 40, 0); // in the traced drawing's coordinates
 
         var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp);
         var scale = rect.Height / 120;
+        var centreX = rect.X + (50 * scale);
 
         Assert.Equal(0.42 * 200, 40 * scale, 9);                  // ring radius: a share of the stamp height
-        Assert.Equal(stamp.X, rect.X + (50 * scale), 9);           // centre on the stamp's left edge
+        Assert.Equal(stamp.X - 34, centreX, 9);
+        Assert.Equal(150.0 / 3, centreX + (40 * scale) - stamp.X, 9); // the ring covers a third of the stamp
         Assert.Equal(stamp.Y + (0.62 * 200), rect.Y + (60 * scale), 9);
         Assert.Equal(180 * scale, rect.Width, 9);                  // the wider canvas (waves) keeps its aspect
+    }
+
+    [Fact]
+    public void PostmarkRect_OnAWideStamp_CentresTheRingOnItsLeftEdge()
+    {
+        // 300 wide: a third is 100, more than the radius of 84, so the ring stays where it was.
+        var stamp = new MailPieceComposer.Rect(700, 70, 300, 200);
+        var ring = new Ellipse(new PointD(50, 60), 40, 40, 0);
+
+        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp);
+
+        Assert.Equal(stamp.X, rect.X + (50 * rect.Height / 120), 9);
     }
 
     [Fact]

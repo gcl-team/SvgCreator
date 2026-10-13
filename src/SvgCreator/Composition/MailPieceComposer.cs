@@ -27,6 +27,13 @@ internal static class MailPieceComposer
     private const double RingRadius = 0.42;
     private const double RingCentreY = 0.62;
 
+    // The ring's size follows the stamp's height, so on a narrow stamp it would cover most of the
+    // picture: a portrait stamp is only about 0.75 of its height wide. The ring is moved left until
+    // it covers at most this share of the stamp's width. Wide stamps don't move; the largest shift
+    // (about 0.17 of the height) leaves the waves, which reach about 0.67 past the centre, well
+    // across the stamp.
+    private const double MaxRingCover = 1.0 / 3;
+
     // A postmark without a circle is the whole traced picture: this tall, its right quarter over
     // the stamp's left edge.
     private const double PictureHeight = 0.8;
@@ -91,8 +98,10 @@ internal static class MailPieceComposer
     {
         if (frame is { } ring)
         {
-            var scale = RingRadius * stamp.Height / ring.RadiusY;
-            var (cx, cy) = (stamp.X, stamp.Y + (RingCentreY * stamp.Height));
+            var radius = RingRadius * stamp.Height;
+            var scale = radius / ring.RadiusY;
+            var shift = Math.Max(0, radius - (MaxRingCover * stamp.Width));
+            var (cx, cy) = (stamp.X - shift, stamp.Y + (RingCentreY * stamp.Height));
             return new Rect(cx - (ring.Center.X * scale), cy - (ring.Center.Y * scale), size.Width * scale, size.Height * scale);
         }
 

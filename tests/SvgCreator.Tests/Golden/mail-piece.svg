@@ -15,7 +15,7 @@
       <text class="stamp-fee" x="63.32" y="7.16" font-size="4.4" font-weight="bold" text-anchor="end">$1.20</text>
     </g>
   </svg>
-  <svg class="mail-postmark" x="275.462" y="40.0326" width="92.9227" height="75.3427" viewBox="0 0 148 120">
+  <svg class="mail-postmark" x="274.9535" y="40.0326" width="92.9227" height="75.3427" viewBox="0 0 148 120">
     <defs>
       <filter id="svgcreator-stamp-1-1-148x120" filterUnits="userSpaceOnUse" x="0" y="0" width="148" height="120" color-interpolation-filters="sRGB">
         <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="1" result="edgeNoise" />
