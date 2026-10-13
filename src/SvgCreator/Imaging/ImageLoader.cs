@@ -15,8 +15,17 @@ internal static class ImageLoader
         using var codec = SKCodec.Create(stream)
             ?? throw new InvalidDataException("Unsupported or corrupt image data.");
 
-        var (rgba, width, height) = Decode(codec);
-        return ToRgb(rgba, width, height, width * 4);
+        // Straight from the decoded bitmap to RGB; only a picture that needs turning pays for a
+        // second buffer, and then at 3 bytes per pixel rather than RGBA's 4.
+        using var bitmap = Decode(codec);
+        var rgb = ToRgb(bitmap.GetPixelSpan(), bitmap.Width, bitmap.Height, bitmap.RowBytes);
+        if (codec.EncodedOrigin is SKEncodedOrigin.TopLeft)
+        {
+            return rgb;
+        }
+
+        var (pixels, width, height) = Orient(rgb.Pixels, rgb.Width, rgb.Height, rgb.Width * 3, 3, codec.EncodedOrigin);
+        return new RgbImage(width, height, pixels);
     }
 
     public static async Task<RgbImage> LoadAsync(Stream stream, CancellationToken cancellationToken)
@@ -63,53 +72,65 @@ internal static class ImageLoader
         if (mediaType is not null)
         {
             // The browser applies the orientation to the original bytes, so report the size it shows.
-            var (w, h) = SwapsAxes(codec.EncodedOrigin)
-                ? (codec.Info.Height, codec.Info.Width)
-                : (codec.Info.Width, codec.Info.Height);
+            var (w, h) = DisplayedSize(codec);
             return new EncodedImage(data, mediaType, w, h);
         }
 
         // Re-encoding drops the EXIF tag, so bake the orientation into the pixels instead.
-        var (rgba, width, height) = Decode(codec);
+        using var decoded = Decode(codec);
+        using var png = codec.EncodedOrigin is SKEncodedOrigin.TopLeft
+            ? decoded.Encode(SKEncodedImageFormat.Png, 100)
+            : Upright(decoded, codec.EncodedOrigin);
+        var (width, height) = DisplayedSize(codec);
+        return new EncodedImage(png.ToArray(), "image/png", width, height);
+    }
+
+    private static (int Width, int Height) DisplayedSize(SKCodec codec) =>
+        SwapsAxes(codec.EncodedOrigin) ? (codec.Info.Height, codec.Info.Width) : (codec.Info.Width, codec.Info.Height);
+
+    private static SKData Upright(SKBitmap decoded, SKEncodedOrigin origin)
+    {
+        var (rgba, width, height) = Orient(decoded.GetPixelSpan(), decoded.Width, decoded.Height, decoded.RowBytes, 4, origin);
         using var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
         for (var y = 0; y < height; y++)
         {
             Marshal.Copy(rgba, y * width * 4, bitmap.GetPixels() + (y * bitmap.RowBytes), width * 4);
         }
 
-        using var png = bitmap.Encode(SKEncodedImageFormat.Png, 100);
-        return new EncodedImage(png.ToArray(), "image/png", width, height);
+        return bitmap.Encode(SKEncodedImageFormat.Png, 100);
     }
 
-    // Decodes to tightly packed, unpremultiplied RGBA8888, turned upright.
-    private static (byte[] Rgba, int Width, int Height) Decode(SKCodec codec)
+    // Decodes the stored pixel grid as unpremultiplied RGBA8888.
+    private static SKBitmap Decode(SKCodec codec)
     {
         var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-        using var bitmap = new SKBitmap(info);
+        var bitmap = new SKBitmap(info);
         var result = codec.GetPixels(info, bitmap.GetPixels());
         if (result is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
         {
+            bitmap.Dispose();
             throw new InvalidDataException($"Failed to decode image: {result}.");
         }
 
-        return Orient(bitmap.GetPixelSpan(), info.Width, info.Height, bitmap.RowBytes, codec.EncodedOrigin);
+        return bitmap;
     }
 
     private static bool SwapsAxes(SKEncodedOrigin origin) =>
         origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
 
     /// <summary>
-    /// Turns stored pixels upright for an EXIF orientation, returning tightly packed RGBA. Each
+    /// Turns stored pixels upright for an EXIF orientation, returning them tightly packed with
+    /// <paramref name="bytesPerPixel"/> bytes each (4 for RGBA, 3 for RGB). Each
     /// origin names where the stored first row and column end up: RightTop (6) means the stored top
     /// row is shown as the right column, a 90° clockwise turn.
     /// </summary>
-    internal static (byte[] Rgba, int Width, int Height) Orient(ReadOnlySpan<byte> rgba, int width, int height, int rowBytes, SKEncodedOrigin origin)
+    internal static (byte[] Pixels, int Width, int Height) Orient(ReadOnlySpan<byte> pixels, int width, int height, int rowBytes, int bytesPerPixel, SKEncodedOrigin origin)
     {
         var (w, h) = SwapsAxes(origin) ? (height, width) : (width, height);
-        var output = new byte[w * h * 4];
+        var output = new byte[w * h * bytesPerPixel];
         for (var y = 0; y < height; y++)
         {
-            var row = rgba.Slice(y * rowBytes, width * 4);
+            var row = pixels.Slice(y * rowBytes, width * bytesPerPixel);
             for (var x = 0; x < width; x++)
             {
                 var (ox, oy) = origin switch
@@ -123,7 +144,7 @@ internal static class ImageLoader
                     SKEncodedOrigin.LeftBottom => (y, width - 1 - x),               // 8: 90° anticlockwise
                     _ => (x, y),                                                    // 1: upright
                 };
-                row.Slice(x * 4, 4).CopyTo(output.AsSpan(((oy * w) + ox) * 4, 4));
+                row.Slice(x * bytesPerPixel, bytesPerPixel).CopyTo(output.AsSpan(((oy * w) + ox) * bytesPerPixel, bytesPerPixel));
             }
         }
 

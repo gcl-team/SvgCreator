@@ -82,12 +82,36 @@ public class ImageOrientationTests
     }
 
     [Fact]
+    public void Load_UprightImage_AllocatesOnlyTheRgbBuffer()
+    {
+        // The upright path converts the decoded bitmap (native memory) straight to RGB. Turning
+        // every picture through a packed RGBA copy first cost 4 more managed bytes per pixel.
+        const int Side = 1000;
+        byte[] png;
+        using (var encoded = TestImages.PngWithBlackRect(Side, Side, new SKRect(10, 10, 20, 20)))
+        {
+            png = encoded.ToArray();
+        }
+
+        // SKCodec closes the stream it reads, so each load gets its own.
+        ImageLoader.Load(new MemoryStream(png)); // warm up: JIT and Skia statics
+        using var input = new MemoryStream(png);
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var image = ImageLoader.Load(input);
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        Assert.Equal(Side, image.Width);
+        Assert.InRange(allocated, Side * Side * 3, Side * Side * 4); // the 3-byte RGB buffer, little else
+    }
+
+    [Fact]
     public void Orient_RightTop_TurnsStoredPixelsClockwise()
     {
         // 3×2 stored, one byte of R per pixel to follow them:  a b c / d e f
         byte[] rgba = [.. "abcdef".SelectMany(c => new[] { (byte)c, (byte)0, (byte)0, (byte)255 })];
 
-        var (pixels, width, height) = ImageLoader.Orient(rgba, 3, 2, 12, SKEncodedOrigin.RightTop);
+        var (pixels, width, height) = ImageLoader.Orient(rgba, 3, 2, 12, 4, SKEncodedOrigin.RightTop);
 
         // Turned 90° clockwise: d a / e b / f c
         Assert.Equal((2, 3), (width, height));
