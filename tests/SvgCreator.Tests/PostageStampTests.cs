@@ -59,8 +59,9 @@ public class PostageStampTests
         {
             svg = new PostageStampGenerator().Create(avif, Singapore);
         }
-        catch (InvalidDataException)
+        catch (InvalidDataException ex)
         {
+            Assert.StartsWith("AVIF images aren't supported", ex.Message, StringComparison.Ordinal);
             return;
         }
 

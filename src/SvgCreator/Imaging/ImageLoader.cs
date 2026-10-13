@@ -12,8 +12,7 @@ internal static class ImageLoader
 {
     public static RgbImage Load(Stream stream)
     {
-        using var codec = SKCodec.Create(stream)
-            ?? throw new InvalidDataException("Unsupported or corrupt image data.");
+        using var codec = OpenCodec(stream);
 
         // Straight from the decoded bitmap to RGB; only a picture that needs turning pays for a
         // second buffer, and then at 3 bytes per pixel rather than RGBA's 4.
@@ -59,8 +58,7 @@ internal static class ImageLoader
 
     private static EncodedImage ToEncoded(byte[] data)
     {
-        using var codec = SKCodec.Create(new MemoryStream(data))
-            ?? throw new InvalidDataException("Unsupported or corrupt image data.");
+        using var codec = OpenCodec(new MemoryStream(data));
 
         var mediaType = codec.EncodedFormat switch
         {
@@ -101,6 +99,61 @@ internal static class ImageLoader
         }
 
         return bitmap.Encode(SKEncodedImageFormat.Png, 100);
+    }
+
+    /// <summary>
+    /// Opens a codec, or throws with a reason a person can act on. SkiaSharp reports the same
+    /// <see cref="SKCodecResult.Unimplemented"/> for a format it has no decoder for and for random
+    /// bytes, so formats it can't read are recognized here from their header instead.
+    /// </summary>
+    private static SKCodec OpenCodec(Stream stream)
+    {
+        if (!stream.CanSeek)
+        {
+            var buffer = new MemoryStream();
+            stream.CopyTo(buffer);
+            buffer.Position = 0;
+            stream = buffer;
+        }
+
+        var start = stream.Position;
+        var header = new byte[32];
+        var length = stream.ReadAtLeast(header, header.Length, throwOnEndOfStream: false);
+        stream.Position = start;
+
+        return SKCodec.Create(stream, out var result)
+            ?? throw new InvalidDataException(DescribeFailure(header.AsSpan(0, length), result));
+    }
+
+    internal static string DescribeFailure(ReadOnlySpan<byte> header, SKCodecResult result) => IsoMediaFormat(header) switch
+    {
+        { } format => $"{format} images aren't supported: SkiaSharp has no {format} decoder. Convert the image to PNG, JPEG or WebP.",
+        null when result == SKCodecResult.IncompleteInput => "The image data is incomplete; the file may be truncated.",
+        null => "Unsupported or corrupt image data.",
+    };
+
+    // AVIF and HEIF are ISO media files: an 'ftyp' box at the start lists brands (the major brand,
+    // then compatible ones). AVIF files also list the generic HEIF brand 'mif1', so check AVIF first.
+    private static string? IsoMediaFormat(ReadOnlySpan<byte> header)
+    {
+        if (header.Length < 12 || !header.Slice(4, 4).SequenceEqual("ftyp"u8))
+        {
+            return null;
+        }
+
+        var boxSize = Math.Min(header.Length, (int)System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(header));
+        var brands = new List<string>();
+        for (var i = 8; i + 4 <= boxSize; i += 4)
+        {
+            if (i != 12) // bytes 12–15 are the minor version, not a brand
+            {
+                brands.Add(System.Text.Encoding.ASCII.GetString(header.Slice(i, 4)));
+            }
+        }
+
+        return brands.Any(b => b is "avif" or "avis") ? "AVIF"
+            : brands.Any(b => b is "heic" or "heix" or "hevc" or "hevx" or "heim" or "heis" or "mif1" or "msf1") ? "HEIF"
+            : null;
     }
 
     // Decodes the stored pixel grid as unpremultiplied RGBA8888.

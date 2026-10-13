@@ -8,7 +8,7 @@ public class ImageOrientationTests
 {
     // A 60×30 JPEG whose top-left quadrant is red and the rest blue, with an EXIF orientation tag
     // (value at byte 31). Fixed bytes, so the test doesn't depend on an encoder writing EXIF.
-    private const string QuadrantJpegBase64 =
+    internal const string QuadrantJpegBase64 =
         "/9j/4QAiRXhpZgAATU0AKgAAAAgAAQESAAMAAAABAAEAAAAAAAD/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAA" +
         "AAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAPKADAAQAAAABAAAAHgAAAAD/7QA4UGhvdG9z" +
         "aG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgAHgA8AwEiAAIRAQMRAf/EAB8A" +
