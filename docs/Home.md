@@ -26,6 +26,7 @@ flowchart LR
 | Write SVG | [SVG Output](SVG-Output.md) | `Svg/SvgWriter.cs` |
 | Optional stamp / postmark look | [Stamp and Postmark Styles](Stamp-Style.md) | `Svg/SvgStyle.cs`, `Svg/StampFilter.cs`, `Svg/PostmarkCancellation.cs` |
 | Postage stamp (separate generator) | [Postage Stamp](Postage-Stamp.md) | `PostageStampGenerator.cs`, `Svg/PostageStampWriter.cs` |
+| Airmail envelope (separate generator) | [Envelope](Envelope.md) | `EnvelopeGenerator.cs`, `Svg/EnvelopeWriter.cs` |
 
 Cross-cutting topics:
 

@@ -32,7 +32,7 @@ An `OutputStyle` is just a named combination of layers (`SvgStyle.For`): Stamp i
 | The new artwork… | Goes in | Example |
 |---|---|---|
 | is drawn over a traced drawing, on that drawing's canvas | A new `IDecoration` plus one line in `SvgStyle.For`. `SvgWriter` doesn't change | `PostmarkCancellation`; a straight-bar or slogan cancellation would go here too |
-| defines its own canvas, or doesn't start from a traced drawing | Its own generator, writing through `SvgWriter.WriteDocument` with `SvgStyle.Clean` | The [postage stamp](Postage-Stamp.md): its canvas is the perforated paper, and its picture isn't traced |
+| defines its own canvas, or doesn't start from a traced drawing | Its own generator, writing through `SvgWriter.WriteDocument` with `SvgStyle.Clean` | The [postage stamp](Postage-Stamp.md): its canvas is the perforated paper, and its picture isn't traced. The [envelope](Envelope.md): no input image at all |
 | combines several finished pieces | The planned canvas composer, not a generator or a style | A stamp with a postmark over it, on an envelope |
 
 So a perforated edge is never a decoration. It belongs to the stamp's paper, and the stamp generator owns that.
