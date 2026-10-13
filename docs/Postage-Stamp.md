@@ -43,7 +43,11 @@ Everything is a fraction of the picture's shorter side (`unit`), so the stamp lo
 | Country / fee / caption type | 0.12 / 0.11 / 0.05 |
 | Picture frame stroke | 0.006 |
 
-Stroke widths and font sizes are written with up to four decimals, while coordinates use [tenths](SVG-Output.md#compact-path-encoding). A proportional stroke can be far below 0.1 px on a small picture. At tenths, the paper edge (0.003) rounded to 0 for any picture under 16.7 px, which removed the very edge that keeps white paper visible on a white page. The frame (0.006) disappeared under 8.3 px. Font sizes have the same problem, and worse: `FitRow` makes a row fill exactly the space available, so a font size rounded up by up to 0.05 can push the row past the picture again.
+**Precision.** Every layout value (positions, sizes, stroke widths, font sizes) is a fraction of the picture, so all of them are written with up to four decimals. Only the perforated path keeps the compact [tenths](SVG-Output.md#compact-path-encoding) form. Tenths broke the layout in three ways, each worse on small pictures:
+
+- The paper edge (0.003) rounded to 0 for any picture under 16.7 px, which removed the very edge that keeps white paper visible on a white page. The frame (0.006) disappeared under 8.3 px.
+- The frame and the picture were each rounded separately, so the frame drifted off the picture's edge. Even the 60×40 test picture was 0.08 px off, a third of the frame's width.
+- `FitRow` makes a row fill exactly the space available, so a font size moved by up to 0.05 could push the row past the picture again.
 
 Items in the same row (top or bottom) share a baseline, so the large country name and a smaller fee still line up. A row with nothing in it takes no space.
 

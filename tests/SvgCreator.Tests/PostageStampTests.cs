@@ -131,6 +131,25 @@ public class PostageStampTests
         Assert.Equal(0.006 * unit, Number(frame, "stroke-width"), 4);
     }
 
+    [Theory]
+    [InlineData(12, 8)]
+    [InlineData(16, 12)]
+    [InlineData(60, 40)]
+    public void Create_FrameStrokeHugsThePictureEdges(int width, int height)
+    {
+        using var png = TestImages.PngWithBlackRect(width, height, new SkiaSharp.SKRect(1, 1, 3, 3));
+        var root = XDocument.Parse(new PostageStampGenerator().Create(png, Singapore)).Root!;
+        var image = root.Descendants(Svg + "image").Single();
+        var frame = root.Descendants(Svg + "rect").Single();
+        var half = Number(frame, "stroke-width") / 2;
+
+        // The stroke's inner edge sits on the picture's edge on every side.
+        Assert.Equal(Number(image, "x"), Number(frame, "x") + half, 3);
+        Assert.Equal(Number(image, "y"), Number(frame, "y") + half, 3);
+        Assert.Equal(Number(image, "x") + Number(image, "width"), Number(frame, "x") + Number(frame, "width") - half, 3);
+        Assert.Equal(Number(image, "y") + Number(image, "height"), Number(frame, "y") + Number(frame, "height") - half, 3);
+    }
+
     [Fact]
     public void Create_FittedRowStillFitsAfterFontSizesAreWritten()
     {

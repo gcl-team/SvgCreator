@@ -69,6 +69,10 @@ internal static class PostageStampWriter
         var height = (int)Math.Ceiling(paperHeight + (2 * origin));
 
         // Always clean: effects and postmarks are separate artwork, combined on a canvas later.
+        // Every layout value is a fraction of the picture, so all are written with Number: at
+        // tenths, thin strokes round to 0 on small pictures, the frame drifts off the picture's
+        // edge, and font sizes that FitRow made just fit can overflow again. The perforated path
+        // keeps the compact tenths form.
         return SvgWriter.WriteDocument(width, height, inkColor, SvgStyle.Clean, (xml, _) =>
         {
             xml.WriteStartElement("path", Namespace);
@@ -76,15 +80,13 @@ internal static class PostageStampWriter
             xml.WriteAttributeString("d", PerforatedEdge(origin, paperWidth, paperHeight, PerforationPitch * unit));
             xml.WriteAttributeString("fill", PaperColor);
             xml.WriteAttributeString("stroke", PaperEdgeColor);
-            // Stroke widths are proportional and can be well under 0.1 px on a small picture, so they
-            // keep more precision than coordinates; at tenths they would round to 0 and vanish.
             xml.WriteAttributeString("stroke-width", Number(PaperStrokeWidth * unit));
             xml.WriteEndElement();
 
             xml.WriteStartElement("image", Namespace);
             xml.WriteAttributeString("class", "stamp-picture");
-            xml.WriteAttributeString("x", Format(picture.X));
-            xml.WriteAttributeString("y", Format(picture.Y));
+            xml.WriteAttributeString("x", Number(picture.X));
+            xml.WriteAttributeString("y", Number(picture.Y));
             xml.WriteAttributeString("width", Integer(picture.Width));
             xml.WriteAttributeString("height", Integer(picture.Height));
             xml.WriteAttributeString("preserveAspectRatio", "none");
@@ -98,10 +100,10 @@ internal static class PostageStampWriter
 
             var frameWidth = FrameStrokeWidth * unit;
             xml.WriteStartElement("rect", Namespace);
-            xml.WriteAttributeString("x", Format(picture.X - (frameWidth / 2)));
-            xml.WriteAttributeString("y", Format(picture.Y - (frameWidth / 2)));
-            xml.WriteAttributeString("width", Format(picture.Width + frameWidth));
-            xml.WriteAttributeString("height", Format(picture.Height + frameWidth));
+            xml.WriteAttributeString("x", Number(picture.X - (frameWidth / 2)));
+            xml.WriteAttributeString("y", Number(picture.Y - (frameWidth / 2)));
+            xml.WriteAttributeString("width", Number(picture.Width + frameWidth));
+            xml.WriteAttributeString("height", Number(picture.Height + frameWidth));
             xml.WriteAttributeString("fill", "none");
             xml.WriteAttributeString("stroke", inkColor);
             xml.WriteAttributeString("stroke-width", Number(frameWidth));
@@ -182,10 +184,8 @@ internal static class PostageStampWriter
         {
             xml.WriteStartElement("text", Namespace);
             xml.WriteAttributeString("class", item.ClassName);
-            xml.WriteAttributeString("x", Format(item.IsRight ? right : left));
-            xml.WriteAttributeString("y", Format(baseline));
-            // Like stroke widths, sizes are proportional; at tenths, a size FitRow made just fit
-            // could round up and overflow again.
+            xml.WriteAttributeString("x", Number(item.IsRight ? right : left));
+            xml.WriteAttributeString("y", Number(baseline));
             xml.WriteAttributeString("font-size", Number(item.Size));
             if (item.Bold)
             {
