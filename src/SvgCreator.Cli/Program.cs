@@ -133,7 +133,9 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
     return await WriteSvgAsync(input, output, stream => new SvgConverter().ConvertAsync(stream, options, cancellationToken), cancellationToken);
 });
 
-return await rootCommand.Parse(args).InvokeAsync();
+// Response files are off: with them on, any argument starting with @ is read as a file of more
+// arguments, so a fee or caption such as "@50" or "@handle" failed with "Response file not found".
+return await rootCommand.Parse(args, new ParserConfiguration { ResponseFileTokenReplacer = null }).InvokeAsync();
 
 // The stamp is always printed clean, so it takes none of the tracing or style options.
 static Command StampCommand()
