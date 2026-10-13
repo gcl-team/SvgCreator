@@ -15,7 +15,7 @@ namespace SvgCreator.Svg;
 internal static class SvgWriter
 {
     // Ring widths may differ this much (px) between the two axes and still count as uniform.
-    private const double RingTolerance = 1.0;
+    internal const double RingTolerance = 1.0;
 
     // Radii closer than this (px) are written as a circle.
     private const double CircleTolerance = 0.5;

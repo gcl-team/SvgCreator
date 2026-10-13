@@ -188,6 +188,26 @@ public class SvgWriterTests
     }
 
     [Fact]
+    public void Write_PostmarkWithRingBand_DrawsTheWavesAsThickAsTheRing()
+    {
+        // A ring 6 px wide (radii 43 and 37): the waves match it, so they read as one stamp.
+        var (_, cancel, _, _) = Postmark(
+            new CurveContour(1, false, [], new Ellipse(new(100, 50), 43, 43, 0)),
+            new CurveContour(1, true, [], new Ellipse(new(100, 50), 37, 37, 0)));
+
+        Assert.Equal("6", (string?)cancel.Attribute("stroke-width"));
+    }
+
+    [Fact]
+    public void Write_PostmarkWithSolidDiscFrame_UsesAShareOfTheFrameHeight()
+    {
+        // No hole, so no band to match: 0.04 of the half-height of 45 is 1.8.
+        var (_, cancel, _, _) = Postmark(new CurveContour(1, false, [], new Ellipse(new(100, 50), 45, 45, 0)));
+
+        Assert.Equal("1.8", (string?)cancel.Attribute("stroke-width"));
+    }
+
+    [Fact]
     public void Write_PostmarkWithoutCircle_FramesWholeCanvasWithRectangle()
     {
         var (_, cancel, width, startX) = Postmark(Square);

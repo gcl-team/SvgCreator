@@ -78,7 +78,8 @@ Code: `src/SvgCreator/Svg/PostmarkCancellation.cs`
 
 - **6 parallel waves** spanning the middle 60% of the frame's height.
 - **Like real cancellations, they overlap the stamp.** They start half a frame-radius *inside* the frame's right side and run 0.6 radius *past* it.
-- **Everything scales with the frame's half-height:** spacing, wavelength, amplitude, and stroke width (1.8%, which is about the ring's own stroke).
+- **Everything scales with the frame's half-height:** spacing, wavelength and amplitude.
+- **The waves are as thick as the ring.** When the frame is a band (an outline with a concentric hole, the same pair the writer turns into one stroked circle), the waves use the band's width, so they read as part of the same stamp. A frame without a band (a solid disc) and the rectangle fallback use 4% of the frame's half-height. Both have a 1.5 px floor, so the waves survive the worn-ink filter. The first version always used 1.8% of the half-height, described as "about the ring's own stroke". Measured, a bold ring traced from a white-page screenshot was 2.5× thicker than the waves, and the filter's pinholes take proportionally more ink from a thin line, so the waves looked faint.
 - **Each wave costs a few bytes per hump.** A quadratic Bézier whose control point is offset by 2A peaks at height A, and SVG's `t` command repeats a quadratic by mirroring the previous control point. So one `q` followed by `t`s draws a sine-like wave: `M377.4 110q22.6-35.5 45.2 0t45.2 0t45.2 0…`.
 - **They're generated, not traced,** so they sit in their own `<g class="postmark-cancel">` (with the `<rect>` frame, if any), separate from the drawing. The same stamp filter applies to both groups, so the whole mark looks equally worn.
 
