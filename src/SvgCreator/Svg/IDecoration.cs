@@ -12,5 +12,5 @@ internal interface IDecoration
     int RequiredWidth { get; }
 
     /// <summary>Writes the decoration's group in <paramref name="color"/>, under the ink filter if there is one.</summary>
-    void Write(XmlWriter xml, string color, IInkFilter? filter);
+    void Write(XmlWriter xml, string color, string? filterId);
 }

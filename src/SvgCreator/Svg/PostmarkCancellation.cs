@@ -109,7 +109,7 @@ internal sealed class PostmarkCancellation : IDecoration
         return new PostmarkCancellation(sb.ToString(), strokeWidth, (int)Math.Ceiling(end), rect);
     }
 
-    public void Write(XmlWriter xml, string color, IInkFilter? filter)
+    public void Write(XmlWriter xml, string color, string? filterId)
     {
         xml.WriteStartElement("g", Namespace);
         xml.WriteAttributeString("class", "postmark-cancel");
@@ -117,9 +117,9 @@ internal sealed class PostmarkCancellation : IDecoration
         xml.WriteAttributeString("stroke", color);
         xml.WriteAttributeString("stroke-width", Format(strokeWidth));
         xml.WriteAttributeString("stroke-linecap", "round");
-        if (filter is not null)
+        if (filterId is not null)
         {
-            xml.WriteAttributeString("filter", $"url(#{filter.Id})");
+            xml.WriteAttributeString("filter", $"url(#{filterId})");
         }
 
         if (frame is { } rect)

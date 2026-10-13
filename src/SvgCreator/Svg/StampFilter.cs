@@ -29,13 +29,15 @@ internal sealed record StampFilter(int Seed, double Scale) : IInkFilter
     private const double SpeckGain = 20;
     private const double SpeckBias = 15.6;
 
-    public string Id => $"svgcreator-stamp-{Integer(Seed)}";
+    // The definition depends on the seed, the texture scale and the canvas it covers.
+    public string Id(int canvasWidth, int canvasHeight) =>
+        $"svgcreator-stamp-{Integer(Seed)}-{Number(Scale)}-{Integer(canvasWidth)}x{Integer(canvasHeight)}";
 
     public void WriteDefinition(XmlWriter xml, int canvasWidth, int canvasHeight)
     {
         xml.WriteStartElement("defs", Namespace);
         xml.WriteStartElement("filter", Namespace);
-        xml.WriteAttributeString("id", Id);
+        xml.WriteAttributeString("id", Id(canvasWidth, canvasHeight));
         xml.WriteAttributeString("filterUnits", "userSpaceOnUse");
         xml.WriteAttributeString("x", "0");
         xml.WriteAttributeString("y", "0");

@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using SvgCreator.Fitting;
+using SvgCreator.Svg;
 
 namespace SvgCreator.Tests;
 
@@ -116,8 +117,8 @@ public class SvgWriterTests
         var root = XDocument.Parse(TestSvg.Write(10, 10, Square, "#000", OutputStyle.Stamp, stampSeed: 7)).Root!;
 
         var filter = Assert.Single(root.Descendants(Svg + "filter"));
-        Assert.Equal("svgcreator-stamp-7", (string?)filter.Attribute("id"));
-        Assert.Equal("url(#svgcreator-stamp-7)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
+        Assert.Equal("svgcreator-stamp-7-1-10x10", (string?)filter.Attribute("id"));
+        Assert.Equal("url(#svgcreator-stamp-7-1-10x10)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
         Assert.Equal(["7", "8", "9"], filter.Elements(Svg + "feTurbulence").Select(t => (string?)t.Attribute("seed")));
         Assert.Single(filter.Elements(Svg + "feDisplacementMap"));
         Assert.Equal(2, filter.Elements(Svg + "feComposite").Count());
@@ -126,6 +127,18 @@ public class SvgWriterTests
         Assert.Equal(
             XDocument.Parse(TestSvg.Write(10, 10, Square, "#000")).Descendants(Svg + "path").Single().Attribute("d")!.Value,
             root.Descendants(Svg + "path").Single().Attribute("d")!.Value);
+    }
+
+    [Fact]
+    public void StampFilter_IdNamesEverythingItsDefinitionDependsOn()
+    {
+        // Ids are global on a shared canvas: filters may only share one when their definitions match.
+        var filter = new StampFilter(Seed: 1, Scale: 1.5);
+
+        Assert.Equal(filter.Id(120, 100), new StampFilter(1, 1.5).Id(120, 100));
+        Assert.NotEqual(filter.Id(120, 100), filter.Id(121, 100));               // canvas
+        Assert.NotEqual(filter.Id(120, 100), new StampFilter(1, 2).Id(120, 100)); // texture scale
+        Assert.NotEqual(filter.Id(120, 100), new StampFilter(2, 1.5).Id(120, 100)); // seed
     }
 
     [Fact]
@@ -171,7 +184,7 @@ public class SvgWriterTests
         Assert.Equal(200, width);                         // the waves already fit: no widening needed
         Assert.Equal("#c0392b", (string?)cancel.Attribute("stroke"));
         Assert.Equal("none", (string?)cancel.Attribute("fill"));
-        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1)", (string?)g.Attribute("filter")));
+        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1-1-200x100)", (string?)g.Attribute("filter")));
     }
 
     [Fact]

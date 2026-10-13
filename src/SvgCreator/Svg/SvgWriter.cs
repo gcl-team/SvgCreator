@@ -21,15 +21,15 @@ internal static class SvgWriter
     private const double CircleTolerance = 0.5;
 
     public static string Write(TracedDrawing drawing, string fillColor, SvgStyle? style = null) =>
-        WriteDocument(drawing.Width, drawing.Height, fillColor, style ?? SvgStyle.Clean, (xml, filter) =>
+        WriteDocument(drawing.Width, drawing.Height, fillColor, style ?? SvgStyle.Clean, (xml, filterId) =>
         {
             xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("fill", fillColor);
             xml.WriteAttributeString("fill-rule", "evenodd");
             xml.WriteAttributeString("stroke", "none");
-            if (filter is not null)
+            if (filterId is not null)
             {
-                xml.WriteAttributeString("filter", $"url(#{filter.Id})");
+                xml.WriteAttributeString("filter", $"url(#{filterId})");
             }
 
             foreach (var group in GroupByComponent(drawing.Contours))
@@ -49,9 +49,9 @@ internal static class SvgWriter
 
     /// <summary>
     /// Writes an SVG document of the given size: the style's filter definition, then the content,
-    /// then the style's decorations. The content receives the filter to apply to its ink.
+    /// then the style's decorations. The content receives the id of the filter to apply to its ink.
     /// </summary>
-    public static string WriteDocument(int width, int height, string inkColor, SvgStyle style, Action<XmlWriter, IInkFilter?> writeContent)
+    public static string WriteDocument(int width, int height, string inkColor, SvgStyle style, Action<XmlWriter, string?> writeContent)
     {
         var settings = new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true };
         var output = new StringBuilder();
@@ -68,11 +68,12 @@ internal static class SvgWriter
             xml.WriteAttributeString("viewBox", $"0 0 {w} {h}");
 
             style.Filter?.WriteDefinition(xml, canvasWidth, height);
-            writeContent(xml, style.Filter);
+            var filterId = style.Filter?.Id(canvasWidth, height);
+            writeContent(xml, filterId);
 
             foreach (var decoration in style.Decorations)
             {
-                decoration.Write(xml, inkColor, style.Filter);
+                decoration.Write(xml, inkColor, filterId);
             }
 
             xml.WriteEndElement();
