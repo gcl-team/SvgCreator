@@ -38,8 +38,10 @@ internal static class ImageLoader
     }
 
     /// <summary>
-    /// Reads an image for embedding as is. Formats every browser shows (PNG, JPEG, WebP, GIF, BMP)
-    /// keep their original bytes; anything else is re-encoded as PNG.
+    /// Reads an image for embedding as is. Formats every current browser shows (PNG, JPEG, WebP,
+    /// GIF, BMP, AVIF) keep their original bytes; anything else SkiaSharp decodes is re-encoded as
+    /// PNG. AVIF is kept only where the SkiaSharp build can read it at all; the stock builds can't,
+    /// and reject it as unsupported.
     /// </summary>
     public static EncodedImage LoadEncoded(Stream stream)
     {
@@ -67,7 +69,8 @@ internal static class ImageLoader
             SKEncodedImageFormat.Webp => "image/webp",
             SKEncodedImageFormat.Gif => "image/gif",
             SKEncodedImageFormat.Bmp => "image/bmp",
-            _ => null,
+            SKEncodedImageFormat.Avif => "image/avif",
+            _ => null, // such as HEIF, which only Safari shows
         };
         if (mediaType is not null)
         {

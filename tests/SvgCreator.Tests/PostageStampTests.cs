@@ -38,6 +38,36 @@ public class PostageStampTests
         Assert.Equal((60.0, 40.0), (Number(image, "width"), Number(image, "height")));
     }
 
+    // A 60×30 AVIF (encoded once with macOS sips).
+    private const string AvifBase64 =
+        "AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAEhbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAA" +
+        "AAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAACNpaW5mAAAAAAABAAAA" +
+        "FWluZmUCAAAAAAEAAGF2MDEAAAAAgWlwcnAAAABgaXBjbwAAABNjb2xybmNseAACAAIABoAAAAAMY2xsaQDLAEAAAAAUaXNw" +
+        "ZQAAAAAAAAA8AAAAHgAAAAlpcm90AAAAABBwaXhpAAAAAAMICAgAAAAMYXYxQ4EADAAAAAAZaXBtYQAAAAAAAAABAAEGgQID" +
+        "BYaEAAAAHmlsb2MAAAAARAAAAQABAAAAAQAAAVEAAABGAAAAAW1kYXQAAAAAAAAAVhIACg0AAAACp30//gQICBoQMjMUAGSA" +
+        "AgggiOn4goLIXPbMzz/Uny8pWtfx8xtSoyZe6nPv+CoJujewxvlcIkpCCR02jsA=";
+
+    [Fact]
+    public void Create_Avif_IsKeptAsAvifOrRejected_NeverReencoded()
+    {
+        // Browsers show AVIF, so its bytes must be kept, never swapped for a larger PNG. The stock
+        // SkiaSharp builds can't decode AVIF at all, so there it is rejected as unsupported.
+        using var avif = new MemoryStream(System.Convert.FromBase64String(AvifBase64));
+
+        string svg;
+        try
+        {
+            svg = new PostageStampGenerator().Create(avif, Singapore);
+        }
+        catch (InvalidDataException)
+        {
+            return;
+        }
+
+        var href = (string)XDocument.Parse(svg).Descendants(Svg + "image").Single().Attribute("href")!;
+        Assert.Equal("data:image/avif;base64," + AvifBase64, href);
+    }
+
     [Fact]
     public async Task CreateAsync_MatchesCreate()
     {
