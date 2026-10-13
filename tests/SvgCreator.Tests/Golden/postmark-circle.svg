@@ -1,6 +1,6 @@
 <svg width="132" height="100" viewBox="0 0 132 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="svgcreator-stamp-3-1-132x100" filterUnits="userSpaceOnUse" x="0" y="0" width="132" height="100" color-interpolation-filters="sRGB">
+    <filter id="svgcreator-stamp-3-132x100-0.8-2.5-0.06-0.9" filterUnits="userSpaceOnUse" x="0" y="0" width="132" height="100" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="3" result="edgeNoise" />
       <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="2.5" xChannelSelector="R" yChannelSelector="G" result="rough" />
       <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="4" result="wearNoise" />
@@ -11,12 +11,12 @@
       <feComposite in="rough" in2="mask" operator="in" />
     </filter>
   </defs>
-  <g fill="#c0392b" fill-rule="evenodd" stroke="none" filter="url(#svgcreator-stamp-3-1-132x100)">
+  <g fill="#c0392b" fill-rule="evenodd" stroke="none" filter="url(#svgcreator-stamp-3-132x100-0.8-2.5-0.06-0.9)">
     <circle cx="60" cy="50" r="39.5" fill="none" stroke="#c0392b" stroke-width="3" />
     <path d="M40 35l20 0l0 20l-20 0ZM45 40l0 10l10 0l0-10Z" />
     <path d="M65 60c1.2 4.7 10 5 10 .5c0-3.5-9.5-3.5-10-.5Z" />
   </g>
-  <g class="postmark-cancel" fill="none" stroke="#c0392b" stroke-width="3" stroke-linecap="round" filter="url(#svgcreator-stamp-3-1-132x100)">
+  <g class="postmark-cancel" fill="none" stroke="#c0392b" stroke-width="3" stroke-linecap="round" filter="url(#svgcreator-stamp-3-132x100-0.8-2.5-0.06-0.9)">
     <path d="M80.5 25.4q3.7-5.9 7.5 0t7.5 0t7.5 0t7.5 0t7.5 0t7.5 0M80.5 35.2q3.7-5.9 7.5 0t7.5 0t7.5 0t7.5 0t7.5 0t7.5 0M80.5 45.1q3.7-5.9 7.5 0t7.5 0t7.5 0t7.5 0t7.5 0t7.5 0M80.5 54.9q3.7-5.9 7.5 0t7.5 0t7.5 0t7.5 0t7.5 0t7.5 0M80.5 64.8q3.7-5.9 7.5 0t7.5 0t7.5 0t7.5 0t7.5 0t7.5 0M80.5 74.6q3.7-5.9 7.5 0t7.5 0t7.5 0t7.5 0t7.5 0t7.5 0" />
   </g>
 </svg>

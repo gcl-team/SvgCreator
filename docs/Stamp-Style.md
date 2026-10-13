@@ -25,7 +25,7 @@ Roughening the geometry itself would have been worse on every count:
 ## The filter, step by step
 
 ```xml
-<filter id="svgcreator-stamp-1-1-W×H" filterUnits="userSpaceOnUse" x="0" y="0" width="W" height="H"
+<filter id="svgcreator-stamp-1-W×H-0.8-2.5-0.06-0.9" filterUnits="userSpaceOnUse" x="0" y="0" width="W" height="H"
         color-interpolation-filters="sRGB">
   <!-- 1. rough edges -->
   <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="1" result="edgeNoise"/>
@@ -57,7 +57,7 @@ Roughening the geometry itself would have been worse on every count:
 - **The first attempt was too worn.** Thresholds at R ≈ 0.55–0.62 broke thin face lines and made every stroke grainy. Raising them to the values above keeps the drawing readable while still looking worn.
 - **Scale by line thickness, not image size.** The original plan scaled the texture with the canvas, ×4 for a 2032 px image. That gave 10 px edge displacement on lines only 2–4 px wide, so they frayed. In Lines mode, stroke width comes from `LineSigma` (pixels, at any resolution), so the texture scales with `LineSigma` instead: frequencies are divided by it, displacement is multiplied by it.
 - **The seed is deterministic.** The same `StampSeed` always gives the same file, so tests are stable and AOT output matches JIT output. Change it (`--stamp-seed 2`) for a differently worn impression.
-- **Unique filter ids.** The id names everything the definition depends on: the seed, the texture scale and the canvas size (`svgcreator-stamp-{seed}-{scale}-{W}x{H}`). Element ids are global when several SVGs share an HTML page or a composed canvas. An id with just the seed let two stamped pieces with the same seed but different sizes share an id with *different* definitions, so one would render with the other's filter. Now two pieces only share an id when their filters are identical, and then either copy works.
+- **Unique filter ids.** The id names everything the definition depends on: the seed, the canvas size, and the four texture values *as written* (`svgcreator-stamp-{seed}-{W}x{H}-{edge}-{displacement}-{wear}-{speck}`). It uses the written values rather than the scale, because the scale only reaches the definition through those values. Rounding the scale itself for the id let 1.00001 and 1.00004 share an id while writing different displacements (2.5 and 2.5001). Element ids are global when several SVGs share an HTML page or a composed canvas. An id with just the seed let two stamped pieces with the same seed but different sizes share an id with *different* definitions, so one would render with the other's filter. Now two pieces only share an id when their filters are identical, and then either copy works.
 
 ## Postmark style
 

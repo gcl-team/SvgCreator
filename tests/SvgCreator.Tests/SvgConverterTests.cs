@@ -128,7 +128,7 @@ public class SvgConverterTests
         var stamp = XDocument.Parse(new SvgConverter().Convert(png2, new SvgConversionOptions { Style = OutputStyle.Stamp }));
 
         Assert.Empty(clean.Descendants(Svg + "filter"));
-        Assert.Equal("url(#svgcreator-stamp-1-1-20x10)", (string?)stamp.Descendants(Svg + "g").Single().Attribute("filter"));
+        Assert.Equal("url(#svgcreator-stamp-1-20x10-0.8-2.5-0.06-0.9)", (string?)stamp.Descendants(Svg + "g").Single().Attribute("filter"));
     }
 
     [Fact]

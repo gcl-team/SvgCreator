@@ -42,7 +42,7 @@ Every option is validated before any image is read, so a bad option fails fast.
 
 ## Ids on a shared canvas
 
-Ids are global across the whole document. Nesting only works because every id names everything its definition depends on: the envelope's ids carry its size and seed, and the stamp filter carries its seed, texture scale and canvas size (`svgcreator-stamp-{seed}-{scale}-{W}x{H}`). That stamp-filter id used to be just `svgcreator-stamp-{seed}`. Two stamped pieces with the same seed but different sizes would then have shared an id with *different* definitions, and one would render with the other's filter. Now an id is shared only when the definitions are identical.
+Ids are global across the whole document. Nesting only works because every id names everything its definition depends on: the envelope's ids carry its size and seed, and the stamp filter carries its seed, canvas size and the texture values it writes (`svgcreator-stamp-{seed}-{W}x{H}-{edge}-{displacement}-{wear}-{speck}`). That stamp-filter id used to be just `svgcreator-stamp-{seed}`. Two stamped pieces with the same seed but different sizes would then have shared an id with *different* definitions, and one would render with the other's filter. Now an id is shared only when the definitions are identical.
 
 ## Known limits
 

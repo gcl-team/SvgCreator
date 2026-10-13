@@ -117,8 +117,8 @@ public class SvgWriterTests
         var root = XDocument.Parse(TestSvg.Write(10, 10, Square, "#000", OutputStyle.Stamp, stampSeed: 7)).Root!;
 
         var filter = Assert.Single(root.Descendants(Svg + "filter"));
-        Assert.Equal("svgcreator-stamp-7-1-10x10", (string?)filter.Attribute("id"));
-        Assert.Equal("url(#svgcreator-stamp-7-1-10x10)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
+        Assert.Equal("svgcreator-stamp-7-10x10-0.8-2.5-0.06-0.9", (string?)filter.Attribute("id"));
+        Assert.Equal("url(#svgcreator-stamp-7-10x10-0.8-2.5-0.06-0.9)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
         Assert.Equal(["7", "8", "9"], filter.Elements(Svg + "feTurbulence").Select(t => (string?)t.Attribute("seed")));
         Assert.Single(filter.Elements(Svg + "feDisplacementMap"));
         Assert.Equal(2, filter.Elements(Svg + "feComposite").Count());
@@ -139,6 +139,28 @@ public class SvgWriterTests
         Assert.NotEqual(filter.Id(120, 100), filter.Id(121, 100));               // canvas
         Assert.NotEqual(filter.Id(120, 100), new StampFilter(1, 2).Id(120, 100)); // texture scale
         Assert.NotEqual(filter.Id(120, 100), new StampFilter(2, 1.5).Id(120, 100)); // seed
+    }
+
+    [Theory]
+    [InlineData(1.00001, 1.00004)]     // round to the same scale (1) but write different displacements
+    [InlineData(1.0, 1.0000000001)]    // write identical definitions, so sharing an id is safe
+    [InlineData(1.5, 2.0)]
+    public void StampFilter_SharesAnIdExactlyWhenTheWrittenDefinitionsMatch(double a, double b)
+    {
+        static string Definition(StampFilter filter)
+        {
+            var sb = new System.Text.StringBuilder();
+            using (var xml = System.Xml.XmlWriter.Create(sb, new System.Xml.XmlWriterSettings { OmitXmlDeclaration = true }))
+            {
+                filter.WriteDefinition(xml, 120, 100);
+            }
+
+            return sb.ToString();
+        }
+
+        var (first, second) = (new StampFilter(1, a), new StampFilter(1, b));
+
+        Assert.Equal(Definition(first) == Definition(second), first.Id(120, 100) == second.Id(120, 100));
     }
 
     [Fact]
@@ -184,7 +206,7 @@ public class SvgWriterTests
         Assert.Equal(200, width);                         // the waves already fit: no widening needed
         Assert.Equal("#c0392b", (string?)cancel.Attribute("stroke"));
         Assert.Equal("none", (string?)cancel.Attribute("fill"));
-        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1-1-200x100)", (string?)g.Attribute("filter")));
+        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1-200x100-0.8-2.5-0.06-0.9)", (string?)g.Attribute("filter")));
     }
 
     [Fact]
