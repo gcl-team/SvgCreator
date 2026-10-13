@@ -30,6 +30,8 @@ The stamp still renders through `SvgWriter.WriteDocument`, with `SvgStyle.Clean`
 
 The original image goes in an `<image href="data:…;base64,…">` at its own pixel size, so it's never resampled and the line-extraction options don't apply. PNG, JPEG, WebP, GIF and BMP keep their original bytes. Any other format SkiaSharp decodes is re-encoded as PNG, because browsers can't show it.
 
+**EXIF orientation.** Phone photos are often stored on their side with an EXIF tag saying how to turn them. SkiaSharp reports the *stored* size, but browsers apply the tag, including to an `<image>` inside an SVG (checked in Chrome). Because the picture is drawn with `preserveAspectRatio="none"`, the stored size of a portrait photo (orientations 5–8) stretched it into a landscape frame. The loader now reports the displayed size when it keeps the original bytes. When it re-encodes as PNG, which drops the tag, it turns the pixels upright first. Line-art conversion uses the same upright pixels, so it traces what you see.
+
 The SVG is roughly 4/3 the size of the input file, the cost of base64.
 
 ## Sizes

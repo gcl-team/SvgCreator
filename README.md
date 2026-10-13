@@ -14,7 +14,7 @@ File.WriteAllText("character.svg", svg);
 
 | Stage | Class | What it does |
 |---|---|---|
-| Decode | `ImageLoader` | Decodes with SkiaSharp, then converts to luminance composited over white (transparent = background) |
+| Decode | `ImageLoader` | Decodes with SkiaSharp, turns the pixels upright by their EXIF orientation, then converts to luminance composited over white (transparent = background) |
 | Extract ink | `LineExtractor` (default), `Binarizer` | **Lines mode:** a pixel is ink when it is at least `LineContrast` levels darker than its blurred surroundings (center-surround Difference of Gaussians, the core of XDoG). Finds coloured lines, such as dark-pink hair lines, and boundaries between regions. Flat areas of any brightness and soft shading produce nothing. Hysteresis (as in Canny) lets a line that starts at `LineContrast` continue along its ridge down to `WeakLineContrast`, so lines that fade, such as hair strands thinning to a tip, stay closed. Boundaries between colours that differ by at least `ColorContrast` (CIE ΔE) but have similar brightness are found in the Lab a*/b* planes. They are skipped where a drawn line already marks the boundary, so lines aren't doubled. **Threshold mode:** pixels darker than `Threshold` become ink, which suits clean black-and-white line art |
 | Label | `ComponentLabeler` | Two-pass connected-component labeling (8-connectivity, union-find). Drops specks smaller than `MinComponentArea` |
 | Trace | `ContourTracer` | Follows pixel *edges*, not pixel centres, so 1-px lines keep their width. Outer borders run clockwise and holes counter-clockwise |
