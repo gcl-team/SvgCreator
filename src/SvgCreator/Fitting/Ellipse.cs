@@ -9,6 +9,22 @@ internal readonly record struct Ellipse(PointD Center, double RadiusX, double Ra
 {
     public double Area => Math.PI * RadiusX * RadiusY;
 
+    /// <summary>
+    /// Half the width and half the height of the ellipse's axis-aligned bounding box: how far it
+    /// reaches left and right, and up and down, of its centre once rotated.
+    /// </summary>
+    public (double Width, double Height) HalfExtents
+    {
+        get
+        {
+            var angle = AngleDegrees * Math.PI / 180;
+            double cos = Math.Cos(angle), sin = Math.Sin(angle);
+            return (
+                Math.Sqrt(Math.Pow(RadiusX * cos, 2) + Math.Pow(RadiusY * sin, 2)),
+                Math.Sqrt(Math.Pow(RadiusX * sin, 2) + Math.Pow(RadiusY * cos, 2)));
+        }
+    }
+
     /// <summary>Ramanujan's approximation, accurate to well under 0.1% for any eccentricity used here.</summary>
     public double Perimeter
     {

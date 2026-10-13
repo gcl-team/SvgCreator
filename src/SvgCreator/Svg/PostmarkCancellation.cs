@@ -58,11 +58,8 @@ internal sealed class PostmarkCancellation : IDecoration
 
         if (FindFrame(drawing.Contours, width, height) is { Ellipse: { } frame } frameContour)
         {
-            var angle = frame.AngleDegrees * Math.PI / 180;
-            double cos = Math.Cos(angle), sin = Math.Sin(angle);
             center = frame.Center;
-            halfWidth = Math.Sqrt(Math.Pow(frame.RadiusX * cos, 2) + Math.Pow(frame.RadiusY * sin, 2));
-            halfHeight = Math.Sqrt(Math.Pow(frame.RadiusX * sin, 2) + Math.Pow(frame.RadiusY * cos, 2));
+            (halfWidth, halfHeight) = frame.HalfExtents;
             strokeWidth = Math.Max(CancelMinStrokeWidth, RingWidth(drawing.Contours, frameContour) ?? (CancelStrokeWidth * halfHeight));
         }
         else

@@ -21,10 +21,12 @@ internal static class MailPieceComposer
     private const double CornerGap = 0.06;       // between the strap border and the stamp
     private const double BorderDepth = 0.07;     // EnvelopeWriter's strap border
 
-    // The postmark ring, as fractions of the stamp's height: its radius, and its centre's height
-    // from the stamp's top. The radius is the ring's outer edge, which is what the eye sees: a
-    // thick ring is written as one circle stroked along its midline, but the stroke reaches out to
-    // the outer ellipse, and that visible extent is also what the cover rule below must bound. The centre sits on the stamp's left edge, so the ring overlaps the
+    // The postmark ring, as fractions of the stamp's height: how far it reaches above and below
+    // its centre, and its centre's height from the stamp's top. Both reaches are measured to the
+    // ring's outer edge, which is what the eye sees: a thick ring is written as one circle stroked
+    // along its midline, but the stroke reaches out to the outer ellipse, and that visible extent
+    // is also what the cover rule below must bound. For an elliptical frame, the vertical reach
+    // is sized and the horizontal reach is what the cover rule bounds. The centre sits on the stamp's left edge, so the ring overlaps the
     // stamp and the waves, which start inside the ring's right side, cross it.
     private const double RingRadius = 0.42;
     private const double RingCentreY = 0.62;
@@ -100,9 +102,11 @@ internal static class MailPieceComposer
     {
         if (frame is { } ring)
         {
-            var radius = RingRadius * stamp.Height;
-            var scale = radius / ring.RadiusY;
-            var shift = Math.Max(0, radius - (MaxRingCover * stamp.Width));
+            // The frame may be an ellipse, and rotated: size its vertical reach, and bound the
+            // cover by its horizontal reach at that size.
+            var (halfWidth, halfHeight) = ring.HalfExtents;
+            var scale = RingRadius * stamp.Height / halfHeight;
+            var shift = Math.Max(0, (halfWidth * scale) - (MaxRingCover * stamp.Width));
             var (cx, cy) = (stamp.X - shift, stamp.Y + (RingCentreY * stamp.Height));
             return new Rect(cx - (ring.Center.X * scale), cy - (ring.Center.Y * scale), size.Width * scale, size.Height * scale);
         }

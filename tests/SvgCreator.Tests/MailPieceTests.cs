@@ -140,6 +140,34 @@ public class MailPieceTests
         Assert.Equal(stamp.X, rect.X + (50 * rect.Height / 120), 9);
     }
 
+    [Theory]
+    [InlineData(0, 40, 80)]   // 80 wide, 40 tall: reaches twice as far sideways as up
+    [InlineData(90, 80, 40)]  // the same ellipse turned upright: 40 wide, 80 tall (fits, so it doesn't move)
+    [InlineData(45, 63.2456, 63.2456)] // turned 45°: √((80² + 40²) / 2) each way
+    public void PostmarkRect_EllipticalFrame_SizesItsHeightAndBoundsItsWidth(double angle, double halfHeight, double halfWidth)
+    {
+        // A portrait stamp, 150 wide and 200 tall: the frame's vertical reach is sized to
+        // 0.42 × 200 = 84, and its horizontal reach at that size may cover only 150 / 3 = 50.
+        var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
+        var ring = new Ellipse(new PointD(100, 100), 80, 40, angle);
+        Assert.Equal((halfWidth, halfHeight), ring.HalfExtents, new ExtentComparer());
+
+        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp);
+        var scale = rect.Height / 200;
+        var centreX = rect.X + (100 * scale);
+
+        Assert.Equal(0.42 * 200, halfHeight * scale, 3);                    // sized by how far it reaches up and down
+        // Covers at most a third, however wide: a frame that already fits stays on the stamp's edge.
+        Assert.Equal(Math.Min(halfWidth * scale, 150.0 / 3), centreX + (halfWidth * scale) - stamp.X, 3);
+    }
+
+    private sealed class ExtentComparer : IEqualityComparer<(double, double)>
+    {
+        public bool Equals((double, double) a, (double, double) b) => Math.Abs(a.Item1 - b.Item1) < 1e-3 && Math.Abs(a.Item2 - b.Item2) < 1e-3;
+
+        public int GetHashCode((double, double) obj) => 0;
+    }
+
     [Fact]
     public void Create_ThickRing_ItsVisibleOuterEdgeIsTheSizedRadius()
     {
