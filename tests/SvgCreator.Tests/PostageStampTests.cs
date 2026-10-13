@@ -10,7 +10,7 @@ public class PostageStampTests
 
     // A fixed 60×40 solid PNG. Built once rather than encoded at test time, so its bytes (and the
     // golden files that embed them) don't depend on the encoder version.
-    private const string PictureBase64 =
+    internal const string PictureBase64 =
         "iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAAAO0lEQVR42u3OQQkAAAgEsItjHGMbyxQ+hMECLNXzTqSlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpS8t1h+4pujAzIsAAAAASUVORK5CYII=";
 
     private static readonly PostageStampOptions Singapore = new() { Country = "SINGAPORE", Fee = "$1.20", Caption = "Lion City", InkColor = "#7a1f1f" };

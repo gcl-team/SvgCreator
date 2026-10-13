@@ -1,0 +1,49 @@
+# Mail piece
+
+**Goal:** put the pieces together: an [envelope](Envelope.md) with a [postage stamp](Postage-Stamp.md) in its top-right corner and a postmark over the stamp, as one SVG.
+
+```sh
+svgcreator mail -o mail.svg \
+  --stamp-image picture.png --country SINGAPORE --fee '$1.20' --caption 'Lion City' \
+  --postmark-image seal.png --postmark-mode Threshold
+
+# every piece is optional: an envelope alone, or crumpled with a blue postmark
+svgcreator mail -o plain.svg
+svgcreator mail -o used.svg --envelope-style Crumpled --stamp-image picture.png --country JAPAN \
+  --postmark-image seal.png --postmark-mode Threshold --postmark-color '#1d3f8f'
+```
+
+```csharp
+var svg = new MailPieceGenerator().Create(
+    new EnvelopeOptions(),
+    new PostageStampPiece(File.OpenRead("picture.png"), new PostageStampOptions { Country = "SINGAPORE" }),
+    new PostmarkPiece(File.OpenRead("seal.png")));
+```
+
+Code: `src/SvgCreator/MailPieceGenerator.cs`, `MailPieces.cs` (public API), `src/SvgCreator/Composition/MailPieceComposer.cs` (layout)
+
+CLI flags are prefixed per piece (`--envelope-*`, `--stamp-*`, `--postmark-*`, plus `--width`, `--height`, `--paper-color`, `--country`, `--fee`, `--caption`), so the pieces' options can't collide. `--stamp-image` and `--country` go together.
+
+## Pieces, not layers
+
+Each piece is made by its own generator, unchanged, and nested into the envelope's canvas as an inner `<svg x y width height viewBox>`. An inner `<svg>` keeps its own coordinates, so no generator knows it's being composed. This is why the stamp and the envelope were kept standalone in the first place. Draw order is envelope, postage stamp, postmark.
+
+The public types live at the root of the library, like every other generator. The layout code is internal, in `Composition/`, alongside the other internal stages (`Imaging/`, `Tracing/`, `Fitting/`, `Svg/`).
+
+| Piece | Made by | Placed |
+|---|---|---|
+| Envelope | `EnvelopeWriter` | The whole canvas |
+| Postage stamp | `PostageStampWriter` | Top-right corner, 0.06 inside the strap border, 0.36 of the shorter side tall (narrower if the picture is very wide) |
+| Postmark | Traced like `SvgConverter`, default `OutputStyle.Postmark` in dark ink | Its ring (the circular frame the Postmark style finds) is scaled to 0.42 of the stamp's height and centred on the stamp's left edge, 0.62 down, so the waves cross onto the stamp. Without a circle, the whole picture overlaps the stamp's left edge by a quarter |
+
+Every option is validated before any image is read, so a bad option fails fast.
+
+## Ids on a shared canvas
+
+Ids are global across the whole document. Nesting only works because every id names everything its definition depends on: the envelope's ids carry its size and seed, and the stamp filter carries its seed, texture scale and canvas size (`svgcreator-stamp-{seed}-{scale}-{W}x{H}`). That stamp-filter id used to be just `svgcreator-stamp-{seed}`. Two stamped pieces with the same seed but different sizes would then have shared an id with *different* definitions, and one would render with the other's filter. Now an id is shared only when the definitions are identical.
+
+## Known limits
+
+- **The stamp doesn't crumple with the envelope.** It's drawn over the creases, so it looks freshly stuck on a crumpled envelope.
+- **The cancellation waves are the Postmark style's own length**: they cross about half the stamp, not all of it.
+- Layout is fixed (no position flags or rotation yet), and there's no "PAR AVION" label or address.

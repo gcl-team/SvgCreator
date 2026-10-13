@@ -11,6 +11,7 @@
 - [Stamp and Postmark Styles](Stamp-Style.md)
 - [Postage Stamp](Postage-Stamp.md)
 - [Envelope](Envelope.md)
+- [Mail Piece](Mail-Piece.md)
 
 **Cross-cutting**
 - [Native AOT](Native-AOT.md)

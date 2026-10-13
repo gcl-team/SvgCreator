@@ -108,6 +108,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     inkColorOption,
     StampCommand(),
     EnvelopeCommand(),
+    MailCommand(),
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -228,6 +229,99 @@ static Command EnvelopeCommand()
             return 0;
         }
         catch (Exception ex) when (ex is ArgumentException or IOException)
+        {
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
+            return 1;
+        }
+    });
+
+    return command;
+}
+
+// An envelope with an optional postage stamp and postmark. Flags are prefixed per piece so the
+// pieces' options can't collide.
+static Command MailCommand()
+{
+    var envelopeDefaults = new EnvelopeOptions();
+    var output = new Option<FileInfo>("--output", "-o") { Description = "Output SVG path.", Required = true };
+
+    var width = new Option<int>("--width") { Description = "Envelope width in pixels.", DefaultValueFactory = _ => envelopeDefaults.Width };
+    var height = new Option<int>("--height") { Description = "Envelope height in pixels.", DefaultValueFactory = _ => envelopeDefaults.Height };
+    var envelopeStyle = new Option<EnvelopeStyle>("--envelope-style") { Description = "Flat or Crumpled.", DefaultValueFactory = _ => envelopeDefaults.Style };
+    var envelopeSeed = new Option<int>("--envelope-seed") { Description = "Crumpled envelope: crease seed.", DefaultValueFactory = _ => envelopeDefaults.Seed };
+    var paperColor = new Option<string>("--paper-color") { Description = "Envelope paper colour.", DefaultValueFactory = _ => envelopeDefaults.PaperColor };
+
+    var stampImage = new Option<FileInfo>("--stamp-image") { Description = "Image for the postage stamp, embedded unchanged. Needs --country." }.AcceptExistingOnly();
+    var country = new Option<string?>("--country") { Description = "Postage stamp: country name." };
+    var fee = new Option<string?>("--fee") { Description = "Postage stamp: the fee, such as 50c or $1.20." };
+    var caption = new Option<string?>("--caption") { Description = "Postage stamp: a small caption." };
+    var stampInk = new Option<string?>("--stamp-ink-color") { Description = "Postage stamp: colour of its text and frame." };
+
+    var postmarkImage = new Option<FileInfo>("--postmark-image") { Description = "Image traced into the postmark; its circle becomes the ring over the stamp's left edge." }.AcceptExistingOnly();
+    var postmarkColor = new Option<string>("--postmark-color") { Description = "Postmark ink colour.", DefaultValueFactory = _ => PostmarkPiece.DefaultOptions.FillColor };
+    var postmarkSeed = new Option<int>("--postmark-seed") { Description = "Postmark: worn-ink texture seed.", DefaultValueFactory = _ => PostmarkPiece.DefaultOptions.StampSeed };
+    var postmarkMode = new Option<ExtractionMode>("--postmark-mode") { Description = "Postmark tracing: Lines (coloured art) or Threshold (clean black-on-white).", DefaultValueFactory = _ => PostmarkPiece.DefaultOptions.Mode };
+
+    var command = new Command("mail", "Compose an envelope with an optional postage stamp (top right) and postmark (over the stamp).")
+    {
+        output, width, height, envelopeStyle, envelopeSeed, paperColor,
+        stampImage, country, fee, caption, stampInk,
+        postmarkImage, postmarkColor, postmarkSeed, postmarkMode,
+    };
+
+    command.Validators.Add(result =>
+    {
+        if ((result.GetValue(stampImage) is null) != (result.GetValue(country) is null))
+        {
+            result.AddError("--stamp-image and --country go together: the postage stamp needs both.");
+        }
+    });
+
+    command.SetAction(async (parseResult, cancellationToken) =>
+    {
+        var target = parseResult.GetRequiredValue(output);
+        var envelope = envelopeDefaults with
+        {
+            Width = parseResult.GetValue(width),
+            Height = parseResult.GetValue(height),
+            Style = parseResult.GetValue(envelopeStyle),
+            Seed = parseResult.GetValue(envelopeSeed),
+            PaperColor = parseResult.GetRequiredValue(paperColor),
+        };
+
+        try
+        {
+            await using var stampStream = parseResult.GetValue(stampImage)?.OpenRead();
+            await using var postmarkStream = parseResult.GetValue(postmarkImage)?.OpenRead();
+
+            PostageStampPiece? stamp = null;
+            if (stampStream is not null)
+            {
+                var stampOptions = new PostageStampOptions
+                {
+                    Country = parseResult.GetRequiredValue(country)!,
+                    Fee = parseResult.GetValue(fee),
+                    Caption = parseResult.GetValue(caption),
+                };
+                stamp = new PostageStampPiece(stampStream, stampOptions with { InkColor = parseResult.GetValue(stampInk) ?? stampOptions.InkColor });
+            }
+
+            var postmark = postmarkStream is null ? null : new PostmarkPiece(postmarkStream)
+            {
+                Options = PostmarkPiece.DefaultOptions with
+                {
+                    FillColor = parseResult.GetRequiredValue(postmarkColor),
+                    StampSeed = parseResult.GetValue(postmarkSeed),
+                    Mode = parseResult.GetValue(postmarkMode),
+                },
+            };
+
+            var svg = await new MailPieceGenerator().CreateAsync(envelope, stamp, postmark, cancellationToken);
+            await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
+            Console.WriteLine($"Wrote {target.FullName}");
+            return 0;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or ArgumentException or IOException)
         {
             await Console.Error.WriteLineAsync($"Error: {ex.Message}");
             return 1;

@@ -61,6 +61,9 @@ dotnet run --project src/SvgCreator.Cli -- stamp input.png --country SINGAPORE -
 # airmail envelope: red and blue strap border, flat or crumpled
 dotnet run --project src/SvgCreator.Cli -- envelope -o envelope.svg --style crumpled --seed 7
 
+# all together: envelope, postage stamp and postmark
+dotnet run --project src/SvgCreator.Cli -- mail -o mail.svg --stamp-image picture.png --country SINGAPORE --postmark-image seal.png --postmark-mode Threshold
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 

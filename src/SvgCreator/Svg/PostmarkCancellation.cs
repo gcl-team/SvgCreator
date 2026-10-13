@@ -138,6 +138,9 @@ internal sealed class PostmarkCancellation : IDecoration
         xml.WriteEndElement();
     }
 
+    /// <summary>The drawing's circular frame, which the cancellation runs from; none when it has no circle.</summary>
+    public static Ellipse? FrameOf(TracedDrawing drawing) => FindEllipseFrame(drawing.Contours, drawing.Width, drawing.Height);
+
     // The largest recognized ellipse big enough to be the drawing's frame.
     private static Ellipse? FindEllipseFrame(IReadOnlyList<CurveContour> contours, int width, int height)
     {
