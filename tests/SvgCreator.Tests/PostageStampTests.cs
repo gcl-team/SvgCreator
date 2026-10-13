@@ -132,6 +132,22 @@ public class PostageStampTests
     }
 
     [Fact]
+    public void Create_FittedRowStillFitsAfterFontSizesAreWritten()
+    {
+        // 16×12 picture: the long country row is shrunk to exactly fill 16 px. At tenths each font
+        // size moves by up to 0.05: here the row came out 15.2 px, and sizes that round up overflow.
+        using var png = TestImages.PngWithBlackRect(16, 12, new SkiaSharp.SKRect(1, 1, 3, 3));
+        var root = XDocument.Parse(new PostageStampGenerator().Create(png, Singapore with { Country = "UNITED KINGDOM OF GREAT BRITAIN" })).Root!;
+
+        List<PostageStampWriter.Item> written =
+        [
+            new("stamp-country", "UNITED KINGDOM OF GREAT BRITAIN", StampCorner.TopLeft, Number(Text(root, "stamp-country"), "font-size"), Bold: true, Italic: false),
+            new("stamp-fee", "$1.20", StampCorner.TopRight, Number(Text(root, "stamp-fee"), "font-size"), Bold: true, Italic: false),
+        ];
+        Assert.InRange(PostageStampWriter.RowWidth(written, 12), 15.99, 16.001);
+    }
+
+    [Fact]
     public void Create_EscapesText()
     {
         var svg = Create(new PostageStampOptions { Country = "<script>", Caption = "\"&'" });

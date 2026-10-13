@@ -184,7 +184,9 @@ internal static class PostageStampWriter
             xml.WriteAttributeString("class", item.ClassName);
             xml.WriteAttributeString("x", Format(item.IsRight ? right : left));
             xml.WriteAttributeString("y", Format(baseline));
-            xml.WriteAttributeString("font-size", Format(item.Size));
+            // Like stroke widths, sizes are proportional; at tenths, a size FitRow made just fit
+            // could round up and overflow again.
+            xml.WriteAttributeString("font-size", Number(item.Size));
             if (item.Bold)
             {
                 xml.WriteAttributeString("font-weight", "bold");
