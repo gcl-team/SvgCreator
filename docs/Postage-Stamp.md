@@ -54,7 +54,7 @@ Items in the same row (top or bottom) share a baseline, so the large country nam
 
 ## Perforations
 
-The paper is one path: a rectangle with semicircular bites along every edge. Each side gets a whole number of holes (`round(length / pitch)`, at least 2) spaced evenly, so the corners always match. The outline runs clockwise, and with SVG's y axis pointing down, **sweep flag 0** turns each arc *into* the paper. With sweep 1 you get bumps instead of bites.
+The paper is one path: a rectangle with semicircular bites along every edge. Each side gets a whole number of holes (`round(length / pitch)`, at least 2) spaced evenly, so the corners always match. A side has at most 200 holes, which a 10:1 stamp reaches. Past that the holes spread out. Without the cap, the pitch (which follows the *shorter* side) would give a 1 × 1,000,000 px picture 20 million holes, so a small input could exhaust memory. The outline runs clockwise, and with SVG's y axis pointing down, **sweep flag 0** turns each arc *into* the paper. With sweep 1 you get bumps instead of bites.
 
 The paper is white with a light grey edge, because on a white page white paper would otherwise be invisible.
 

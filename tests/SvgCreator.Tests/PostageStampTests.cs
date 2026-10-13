@@ -229,6 +229,17 @@ public class PostageStampTests
         Assert.True(points.Max(p => p.Y) + half <= Number(root, "height"), "bottom edge stroke is clipped");
     }
 
+    [Theory]
+    [InlineData(1_000_000)] // a 1 × 1,000,000 px picture: 20 million holes uncapped
+    [InlineData(1e12)]      // length / pitch beyond int.MaxValue must not overflow the count
+    public void PerforatedEdge_CapsHolesPerSideForElongatedPictures(double length)
+    {
+        var d = PostageStampWriter.PerforatedEdge(0, length, 1, 0.05);
+
+        Assert.Equal(2 * (200 + 20), d.Count(c => c == 'A')); // 200 along each long side, 1 / 0.05 down
+        Assert.True(d.Length < 100_000);
+    }
+
     [Fact]
     public void PerforatedEdge_HasEvenlySpacedHolesOnEverySide()
     {

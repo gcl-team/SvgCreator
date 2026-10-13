@@ -16,6 +16,11 @@ internal static class PostageStampWriter
     private const double Margin = 0.08;            // paper edge to the printed area
     private const double PerforationPitch = 0.05;  // distance between perforation holes
     private const double PerforationRadius = 0.3;  // hole radius, as a fraction of the pitch
+
+    // The pitch follows the shorter side, so a very elongated picture (1 × 1,000,000 px) would
+    // otherwise get millions of holes along its long side. Past this count, which a 10:1 stamp
+    // reaches, the holes spread out instead, keeping the path's size bounded for any input.
+    private const int MaxHolesPerSide = 200;
     private const double TextGap = 0.035;          // between a row of text and the picture
     private const double ItemGap = 0.06;           // between two items in one row
     private const double CountrySize = 0.12;
@@ -266,7 +271,8 @@ internal static class PostageStampWriter
 
     private static HoleRow Holes(double length, double pitch)
     {
-        var count = Math.Max(2, (int)Math.Round(length / pitch));
+        // Clamp before converting: length / pitch can exceed int.MaxValue.
+        var count = (int)Math.Clamp(Math.Round(length / pitch), 2, MaxHolesPerSide);
         return new HoleRow(count, length / count);
     }
 }
