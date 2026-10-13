@@ -76,7 +76,9 @@ internal static class PostageStampWriter
             xml.WriteAttributeString("d", PerforatedEdge(origin, paperWidth, paperHeight, PerforationPitch * unit));
             xml.WriteAttributeString("fill", PaperColor);
             xml.WriteAttributeString("stroke", PaperEdgeColor);
-            xml.WriteAttributeString("stroke-width", Format(PaperStrokeWidth * unit));
+            // Stroke widths are proportional and can be well under 0.1 px on a small picture, so they
+            // keep more precision than coordinates; at tenths they would round to 0 and vanish.
+            xml.WriteAttributeString("stroke-width", Number(PaperStrokeWidth * unit));
             xml.WriteEndElement();
 
             xml.WriteStartElement("image", Namespace);
@@ -102,7 +104,7 @@ internal static class PostageStampWriter
             xml.WriteAttributeString("height", Format(picture.Height + frameWidth));
             xml.WriteAttributeString("fill", "none");
             xml.WriteAttributeString("stroke", inkColor);
-            xml.WriteAttributeString("stroke-width", Format(frameWidth));
+            xml.WriteAttributeString("stroke-width", Number(frameWidth));
             xml.WriteEndElement();
 
             var left = picture.X;

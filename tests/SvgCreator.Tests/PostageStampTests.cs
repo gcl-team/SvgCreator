@@ -116,6 +116,21 @@ public class PostageStampTests
         Assert.Same(row, PostageStampWriter.FitRow(row, 60, 40));
     }
 
+    [Theory]
+    [InlineData(12, 8)]   // paper edge 0.024 px and frame 0.048 px: both rounded to 0 at tenths
+    [InlineData(200, 16)] // just under the 16.7 px where the paper edge reached 0.05
+    public void Create_SmallPicture_KeepsProportionalStrokeWidths(int width, int height)
+    {
+        using var png = TestImages.PngWithBlackRect(width, height, new SkiaSharp.SKRect(1, 1, 3, 3));
+        var root = XDocument.Parse(new PostageStampGenerator().Create(png, Singapore)).Root!;
+        double unit = Math.Min(width, height);
+
+        var paper = root.Descendants(Svg + "path").Single(p => (string?)p.Attribute("class") == "stamp-paper");
+        var frame = root.Descendants(Svg + "rect").Single();
+        Assert.Equal(0.003 * unit, Number(paper, "stroke-width"), 4);
+        Assert.Equal(0.006 * unit, Number(frame, "stroke-width"), 4);
+    }
+
     [Fact]
     public void Create_EscapesText()
     {

@@ -43,6 +43,8 @@ Everything is a fraction of the picture's shorter side (`unit`), so the stamp lo
 | Country / fee / caption type | 0.12 / 0.11 / 0.05 |
 | Picture frame stroke | 0.006 |
 
+Stroke widths are written with up to four decimals, while coordinates use [tenths](SVG-Output.md#compact-path-encoding). A proportional stroke can be far below 0.1 px on a small picture. At tenths, the paper edge (0.003) rounded to 0 for any picture under 16.7 px, which removed the very edge that keeps white paper visible on a white page. The frame (0.006) disappeared under 8.3 px.
+
 Items in the same row (top or bottom) share a baseline, so the large country name and a smaller fee still line up. A row with nothing in it takes no space.
 
 ## Perforations
