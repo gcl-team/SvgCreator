@@ -1,0 +1,75 @@
+<svg width="220" height="110" viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="svgcreator-envelope-220x110-3-edge" filterUnits="userSpaceOnUse" x="0" y="0" width="220" height="110">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.43" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="svgcreator-envelope-grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="1" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0" />
+    </filter>
+    <linearGradient id="svgcreator-envelope-crease" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="1" />
+      <stop offset="1" stop-color="#000" stop-opacity="0" />
+    </linearGradient>
+    <clipPath id="svgcreator-envelope-220x110-paper">
+      <rect x="1.045" y="1.045" width="217.91" height="107.91" />
+    </clipPath>
+  </defs>
+  <g class="envelope" filter="url(#svgcreator-envelope-220x110-3-edge)">
+    <rect class="envelope-paper" x="1.045" y="1.045" width="217.91" height="107.91" fill="#fbf8f1" stroke="#bbb" stroke-width="0.33" />
+    <path class="envelope-straps" d="M1.045 1.045L8.8275 1.045L16.5275 8.745L8.745 8.745ZM32.175 1.045L39.9575 1.045L47.6575 8.745L39.875 8.745ZM63.305 1.045L71.0875 1.045L78.7875 8.745L71.005 8.745ZM94.435 1.045L102.2175 1.045L109.9175 8.745L102.135 8.745ZM125.565 1.045L133.3475 1.045L141.0475 8.745L133.265 8.745ZM156.695 1.045L164.4775 1.045L172.1775 8.745L164.395 8.745ZM187.825 1.045L195.6075 1.045L203.3075 8.745L195.525 8.745ZM218.955 1.045L218.955 1.045L218.955 1.045ZM218.955 1.045L218.955 7.7894L211.255 15.4894L211.255 8.745ZM218.955 28.0225L218.955 34.7669L211.255 42.4669L211.255 35.7225ZM218.955 55L218.955 61.7444L211.255 69.4444L211.255 62.7ZM218.955 81.9775L218.955 88.7219L211.255 96.4219L211.255 89.6775ZM218.955 108.955L218.955 108.955L218.955 108.955ZM218.955 108.955L211.1725 108.955L203.4725 101.255L211.255 101.255ZM187.825 108.955L180.0425 108.955L172.3425 101.255L180.125 101.255ZM156.695 108.955L148.9125 108.955L141.2125 101.255L148.995 101.255ZM125.565 108.955L117.7825 108.955L110.0825 101.255L117.865 101.255ZM94.435 108.955L86.6525 108.955L78.9525 101.255L86.735 101.255ZM63.305 108.955L55.5225 108.955L47.8225 101.255L55.605 101.255ZM32.175 108.955L24.3925 108.955L16.6925 101.255L24.475 101.255ZM1.045 108.955L1.045 108.955L1.045 108.955ZM1.045 108.955L1.045 102.2106L8.745 94.5106L8.745 101.255ZM1.045 81.9775L1.045 75.2331L8.745 67.5331L8.745 74.2775ZM1.045 55L1.045 48.2556L8.745 40.5556L8.745 47.3ZM1.045 28.0225L1.045 21.2781L8.745 13.5781L8.745 20.3225ZM1.045 1.045L1.045 1.045L1.045 1.045Z" fill="#d22630" />
+    <path class="envelope-straps-alternate" d="M16.61 1.045L24.3925 1.045L32.0925 8.745L24.31 8.745ZM47.74 1.045L55.5225 1.045L63.2225 8.745L55.44 8.745ZM78.87 1.045L86.6525 1.045L94.3525 8.745L86.57 8.745ZM110 1.045L117.7825 1.045L125.4825 8.745L117.7 8.745ZM141.13 1.045L148.9125 1.045L156.6125 8.745L148.83 8.745ZM172.26 1.045L180.0425 1.045L187.7425 8.745L179.96 8.745ZM203.39 1.045L211.1725 1.045L215.0638 4.9363L211.255 8.745L211.09 8.745ZM218.955 14.5338L218.955 21.2781L211.255 28.9781L211.255 22.2338ZM218.955 41.5113L218.955 48.2556L211.255 55.9556L211.255 49.2113ZM218.955 68.4888L218.955 75.2331L211.255 82.9331L211.255 76.1888ZM218.955 95.4663L218.955 102.2106L215.5828 105.5828L212.2106 102.2106ZM203.39 108.955L195.6075 108.955L187.9075 101.255L195.69 101.255ZM172.26 108.955L164.4775 108.955L156.7775 101.255L164.56 101.255ZM141.13 108.955L133.3475 108.955L125.6475 101.255L133.43 101.255ZM110 108.955L102.2175 108.955L94.5175 101.255L102.3 101.255ZM78.87 108.955L71.0875 108.955L63.3875 101.255L71.17 101.255ZM47.74 108.955L39.9575 108.955L32.2575 101.255L40.04 101.255ZM16.61 108.955L8.8275 108.955L4.9362 105.0638L8.745 101.255L8.91 101.255ZM1.045 95.4663L1.045 88.7219L8.745 81.0219L8.745 87.7663ZM1.045 68.4888L1.045 61.7444L8.745 54.0444L8.745 60.7888ZM1.045 41.5113L1.045 34.7669L8.745 27.0669L8.745 33.8113ZM1.045 14.5338L1.045 7.7894L4.4172 4.4172L7.7894 7.7894Z" fill="#1d3f8f" />
+    <g class="envelope-creases" clip-path="url(#svgcreator-envelope-220x110-paper)">
+      <g transform="rotate(220.6709 42.6136 72.2909)">
+        <rect x="-283.2064" y="72.2909" width="651.64" height="9.4136" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.0876" />
+        <line x1="-283.2064" y1="72.0709" x2="368.4336" y2="72.0709" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(319.9386 133.7474 23.5029)">
+        <rect x="-192.0726" y="23.5029" width="651.64" height="14.1978" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.136" />
+        <line x1="-192.0726" y1="23.2829" x2="459.5674" y2="23.2829" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(172.8592 144.593 73.2917)">
+        <rect x="-181.227" y="73.2917" width="651.64" height="12.4238" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.1237" />
+        <line x1="-181.227" y1="73.0717" x2="470.413" y2="73.0717" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(37.406 162.1049 38.257)">
+        <rect x="-163.7151" y="38.257" width="651.64" height="10.5594" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.1143" />
+        <line x1="-163.7151" y1="38.037" x2="487.9249" y2="38.037" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(241.0721 165.6847 92.6131)">
+        <rect x="-160.1353" y="92.6131" width="651.64" height="10.7662" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.1168" />
+        <line x1="-160.1353" y1="92.3931" x2="491.5047" y2="92.3931" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(43.5364 178.0122 30.4646)">
+        <rect x="-147.8078" y="30.4646" width="651.64" height="15.9155" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.1348" />
+        <line x1="-147.8078" y1="30.2446" x2="503.8322" y2="30.2446" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(68.0444 144.0222 74.3896)">
+        <rect x="-181.7978" y="74.3896" width="651.64" height="18.8623" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.1028" />
+        <line x1="-181.7978" y1="74.1696" x2="469.8422" y2="74.1696" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(241.0591 59.7943 52.7061)">
+        <rect x="-266.0257" y="52.7061" width="651.64" height="12.9085" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.0986" />
+        <line x1="-266.0257" y1="52.4861" x2="385.6143" y2="52.4861" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(254.4304 50.2437 55.6908)">
+        <rect x="-275.5763" y="55.6908" width="651.64" height="18.3762" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.0948" />
+        <line x1="-275.5763" y1="55.4708" x2="376.0637" y2="55.4708" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(6.2426 122.7369 89.0596)">
+        <rect x="-203.0831" y="89.0596" width="651.64" height="14.8138" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.0832" />
+        <line x1="-203.0831" y1="88.8396" x2="448.5569" y2="88.8396" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(192.3304 142.1309 71.993)">
+        <rect x="-183.6891" y="71.993" width="651.64" height="14.7632" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.1019" />
+        <line x1="-183.6891" y1="71.773" x2="467.9509" y2="71.773" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <g transform="rotate(240.6704 97.3685 24.5296)">
+        <rect x="-228.4515" y="24.5296" width="651.64" height="15.4145" fill="url(#svgcreator-envelope-crease)" fill-opacity="0.0986" />
+        <line x1="-228.4515" y1="24.3096" x2="423.1885" y2="24.3096" stroke="#fff" stroke-opacity="0.55" stroke-width="0.33" />
+      </g>
+      <rect class="envelope-grain" x="1.045" y="1.045" width="217.91" height="107.91" filter="url(#svgcreator-envelope-grain)" />
+    </g>
+  </g>
+</svg>

@@ -107,6 +107,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     stampSeedOption,
     inkColorOption,
     StampCommand(),
+    EnvelopeCommand(),
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -184,6 +185,53 @@ static Command StampCommand()
 
         var target = parseResult.GetValue(output) ?? new FileInfo(Path.ChangeExtension(file.FullName, ".svg"));
         return await WriteSvgAsync(file, target, stream => new PostageStampGenerator().CreateAsync(stream, options, cancellationToken), cancellationToken);
+    });
+
+    return command;
+}
+
+// The envelope is drawn, not converted, so it takes no input image.
+static Command EnvelopeCommand()
+{
+    var defaults = new EnvelopeOptions();
+    var output = new Option<FileInfo>("--output", "-o") { Description = "Output SVG path.", Required = true };
+    var width = new Option<int>("--width") { Description = "Envelope width in pixels.", DefaultValueFactory = _ => defaults.Width };
+    var height = new Option<int>("--height") { Description = "Envelope height in pixels.", DefaultValueFactory = _ => defaults.Height };
+    var style = new Option<EnvelopeStyle>("--style") { Description = "Flat: crisp paper. Crumpled: seeded creases, irregular edges and paper grain.", DefaultValueFactory = _ => defaults.Style };
+    var seed = new Option<int>("--seed") { Description = "Crumpled style: crease seed; change it for a differently crumpled envelope.", DefaultValueFactory = _ => defaults.Seed };
+    var paperColor = new Option<string>("--paper-color") { Description = "Paper colour: hex, a CSS name or rgb()/hsl().", DefaultValueFactory = _ => defaults.PaperColor };
+    var strapColor = new Option<string>("--strap-color") { Description = "Colour of every other strap (default airmail red).", DefaultValueFactory = _ => defaults.StrapColor };
+    var alternateColor = new Option<string>("--alternate-strap-color") { Description = "Colour of the straps in between (default airmail blue).", DefaultValueFactory = _ => defaults.AlternateStrapColor };
+
+    var command = new Command("envelope", "Make an airmail envelope: paper with a red and blue strap border, flat or crumpled.")
+    {
+        output, width, height, style, seed, paperColor, strapColor, alternateColor,
+    };
+
+    command.SetAction(async (parseResult, cancellationToken) =>
+    {
+        var target = parseResult.GetRequiredValue(output);
+        try
+        {
+            var svg = new EnvelopeGenerator().Create(new EnvelopeOptions
+            {
+                Width = parseResult.GetValue(width),
+                Height = parseResult.GetValue(height),
+                Style = parseResult.GetValue(style),
+                Seed = parseResult.GetValue(seed),
+                PaperColor = parseResult.GetRequiredValue(paperColor),
+                StrapColor = parseResult.GetRequiredValue(strapColor),
+                AlternateStrapColor = parseResult.GetRequiredValue(alternateColor),
+            });
+            await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
+            Console.WriteLine($"Wrote {target.FullName}");
+            return 0;
+        }
+        catch (Exception ex) when (ex is ArgumentException or IOException)
+        {
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
+            return 1;
+        }
     });
 
     return command;

@@ -58,6 +58,9 @@ dotnet run --project src/SvgCreator.Cli -- input.png --style postmark --ink-colo
 # postage stamp: the image embedded on perforated paper, with country, fee and caption
 dotnet run --project src/SvgCreator.Cli -- stamp input.png --country SINGAPORE --fee '$1.20' --caption 'Lion City'
 
+# airmail envelope: red and blue strap border, flat or crumpled
+dotnet run --project src/SvgCreator.Cli -- envelope -o envelope.svg --style crumpled --seed 7
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 
