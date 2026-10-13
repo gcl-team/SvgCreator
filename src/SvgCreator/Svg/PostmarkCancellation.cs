@@ -72,18 +72,6 @@ internal sealed class PostmarkCancellation : IDecoration
             halfHeight = (height / 2.0) - inset;
         }
 
-        return Build(center, halfWidth, halfHeight, strokeWidth, rect);
-    }
-
-    /// <summary>Cancels a postage stamp: the waves overlap the right side of its paper, which needs no drawn frame.</summary>
-    public static PostmarkCancellation ForPaper(double x, double y, double width, double height)
-    {
-        var strokeWidth = Math.Max(CancelMinStrokeWidth, CancelStrokeWidth * height / 2.0);
-        return Build(new PointD(x + (width / 2.0), y + (height / 2.0)), width / 2.0, height / 2.0, strokeWidth, null);
-    }
-
-    private static PostmarkCancellation Build(PointD center, double halfWidth, double halfHeight, double strokeWidth, RectFrame? rect)
-    {
         var band = CancelBandHeight * halfHeight;
         var spacing = band / (CancelLineCount - 1);
         var length = (CancelOverlap + CancelOverhang) * halfHeight;

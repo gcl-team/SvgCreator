@@ -89,36 +89,6 @@ var inkColorOption = new Option<string>("--ink-color")
     DefaultValueFactory = _ => SvgConversionOptions.Default.FillColor,
 };
 
-var postageStampOption = new Option<string?>("--postage-stamp")
-{
-    Description = "Make a postage stamp with this country name: the image embedded unchanged on perforated paper, with --fee and --caption. --style still applies (Stamp wears the printing; Postmark cancels the stamp).",
-};
-
-var feeOption = new Option<string?>("--fee")
-{
-    Description = "Postage stamp: the fee, such as 50c or $1.20.",
-};
-
-var captionOption = new Option<string?>("--caption")
-{
-    Description = "Postage stamp: a small caption describing the picture.",
-};
-
-var countryCornerOption = new Option<StampCorner?>("--country-corner")
-{
-    Description = "Postage stamp: where the country name goes (default TopLeft).",
-};
-
-var feeCornerOption = new Option<StampCorner?>("--fee-corner")
-{
-    Description = "Postage stamp: where the fee goes (default TopRight).",
-};
-
-var captionCornerOption = new Option<StampCorner?>("--caption-corner")
-{
-    Description = "Postage stamp: where the caption goes (default BottomLeft).",
-};
-
 var rootCommand = new RootCommand("Convert an image into a line-art SVG (black ink outlines, no colouring).")
 {
     inputArgument,
@@ -136,12 +106,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     styleOption,
     stampSeedOption,
     inkColorOption,
-    postageStampOption,
-    feeOption,
-    captionOption,
-    countryCornerOption,
-    feeCornerOption,
-    captionCornerOption,
+    StampCommand(),
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -163,29 +128,71 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
         Style = parseResult.GetValue(styleOption),
         StampSeed = parseResult.GetValue(stampSeedOption),
         FillColor = parseResult.GetRequiredValue(inkColorOption),
-        Layout = parseResult.GetValue(postageStampOption) is { } country ? StampLayout(country) : null,
     };
 
-    PostageStampLayout StampLayout(string country)
-    {
-        var layout = new PostageStampLayout
-        {
-            Country = country,
-            Fee = parseResult.GetValue(feeOption),
-            Caption = parseResult.GetValue(captionOption),
-        };
-        return layout with
-        {
-            CountryCorner = parseResult.GetValue(countryCornerOption) ?? layout.CountryCorner,
-            FeeCorner = parseResult.GetValue(feeCornerOption) ?? layout.FeeCorner,
-            CaptionCorner = parseResult.GetValue(captionCornerOption) ?? layout.CaptionCorner,
-        };
-    }
+    return await WriteSvgAsync(input, output, stream => new SvgConverter().ConvertAsync(stream, options, cancellationToken), cancellationToken);
+});
 
+return await rootCommand.Parse(args).InvokeAsync();
+
+// The stamp is always printed clean, so it takes none of the tracing or style options.
+static Command StampCommand()
+{
+    var input = new Argument<FileInfo>("input")
+    {
+        Description = "Image for the centre of the stamp, embedded unchanged (PNG, JPEG, WebP, GIF, BMP, ...).",
+    }.AcceptExistingOnly();
+
+    var output = new Option<FileInfo?>("--output", "-o")
+    {
+        Description = "Output SVG path. Defaults to the input path with an .svg extension.",
+    };
+
+    var country = new Option<string>("--country")
+    {
+        Description = "Country name, in the largest type.",
+        Required = true,
+    };
+
+    var fee = new Option<string?>("--fee") { Description = "The fee, such as 50c or $1.20." };
+    var caption = new Option<string?>("--caption") { Description = "A small caption describing the picture." };
+    var countryCorner = new Option<StampCorner?>("--country-corner") { Description = "Where the country name goes (default TopLeft)." };
+    var feeCorner = new Option<StampCorner?>("--fee-corner") { Description = "Where the fee goes (default TopRight)." };
+    var captionCorner = new Option<StampCorner?>("--caption-corner") { Description = "Where the caption goes (default BottomLeft)." };
+    var inkColor = new Option<string?>("--ink-color") { Description = "Colour of the text and the picture frame: hex (#7a1f1f), a CSS name (navy) or rgb()/hsl()." };
+
+    var command = new Command("stamp", "Make a postage stamp: the image on perforated paper, with the country, fee and caption.")
+    {
+        input, output, country, fee, caption, countryCorner, feeCorner, captionCorner, inkColor,
+    };
+
+    command.SetAction(async (parseResult, cancellationToken) =>
+    {
+        var file = parseResult.GetRequiredValue(input);
+        var defaults = new PostageStampOptions { Country = parseResult.GetRequiredValue(country) };
+        var options = defaults with
+        {
+            Fee = parseResult.GetValue(fee),
+            Caption = parseResult.GetValue(caption),
+            CountryCorner = parseResult.GetValue(countryCorner) ?? defaults.CountryCorner,
+            FeeCorner = parseResult.GetValue(feeCorner) ?? defaults.FeeCorner,
+            CaptionCorner = parseResult.GetValue(captionCorner) ?? defaults.CaptionCorner,
+            InkColor = parseResult.GetValue(inkColor) ?? defaults.InkColor,
+        };
+
+        var target = parseResult.GetValue(output) ?? new FileInfo(Path.ChangeExtension(file.FullName, ".svg"));
+        return await WriteSvgAsync(file, target, stream => new PostageStampGenerator().CreateAsync(stream, options, cancellationToken), cancellationToken);
+    });
+
+    return command;
+}
+
+static async Task<int> WriteSvgAsync(FileInfo input, FileInfo output, Func<Stream, Task<string>> create, CancellationToken cancellationToken)
+{
     try
     {
         await using var stream = input.OpenRead();
-        var svg = await new SvgConverter().ConvertAsync(stream, options, cancellationToken);
+        var svg = await create(stream);
         await File.WriteAllTextAsync(output.FullName, svg, cancellationToken);
         Console.WriteLine($"Wrote {output.FullName}");
         return 0;
@@ -195,6 +202,4 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
         await Console.Error.WriteLineAsync($"Error: {ex.Message}");
         return 1;
     }
-});
-
-return await rootCommand.Parse(args).InvokeAsync();
+}

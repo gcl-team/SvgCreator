@@ -1,19 +1,6 @@
 namespace SvgCreator;
 
-/// <summary>
-/// Arranges the picture into a larger design instead of outputting the traced drawing alone.
-/// See <see cref="PostageStampLayout"/>.
-/// </summary>
-public abstract record OutputLayout
-{
-    private protected OutputLayout()
-    {
-    }
-
-    internal abstract void Validate();
-}
-
-/// <summary>A corner of a <see cref="PostageStampLayout"/>, for placing its text.</summary>
+/// <summary>A corner of a <see cref="PostageStampOptions"/>, for placing its text.</summary>
 public enum StampCorner
 {
     /// <summary>Above the picture, on the left.</summary>
@@ -30,15 +17,13 @@ public enum StampCorner
 }
 
 /// <summary>
-/// A postage stamp: the original image embedded unchanged as the central illustration, on paper
-/// with a perforated edge, with the country name, the fee and a small caption above or below it.
-/// Text is written as native <c>&lt;text&gt;</c> in <see cref="SvgConversionOptions.FillColor"/>,
-/// so it stays editable and uses the viewer's serif font. <see cref="SvgConversionOptions.Style"/>
-/// still applies: <see cref="OutputStyle.Stamp"/> wears the printing and
-/// <see cref="OutputStyle.Postmark"/> adds cancellation lines across the stamp. The image is not
-/// traced, so the line-extraction options have no effect.
+/// Options for <see cref="PostageStampGenerator"/>: a postage stamp with the original image embedded
+/// unchanged as the central illustration, on paper with a perforated edge, with the country name,
+/// the fee and a small caption above or below it. Text is native <c>&lt;text&gt;</c>, so it stays
+/// editable and uses the viewer's serif font. The stamp is always printed clean: it is a separate
+/// piece of artwork, to be combined with others (such as a postmark) on a canvas later.
 /// </summary>
-public sealed record PostageStampLayout : OutputLayout
+public sealed record PostageStampOptions
 {
     /// <summary>The country name, in the largest type.</summary>
     public required string Country { get; init; }
@@ -58,8 +43,15 @@ public sealed record PostageStampLayout : OutputLayout
     /// <summary>Where the caption goes. Default: <see cref="StampCorner.BottomLeft"/>.</summary>
     public StampCorner CaptionCorner { get; init; } = StampCorner.BottomLeft;
 
-    internal override void Validate()
+    /// <summary>
+    /// Colour of the text and the picture's frame, as a CSS colour: hex (<c>#7a1f1f</c>), a named
+    /// colour (<c>navy</c>) or <c>rgb()</c>/<c>hsl()</c> notation. Default: <c>#000</c>.
+    /// </summary>
+    public string InkColor { get; init; } = "#000";
+
+    internal void Validate()
     {
+        CssColor.ThrowIfInvalid(InkColor, nameof(InkColor));
         ArgumentException.ThrowIfNullOrWhiteSpace(Country);
         if (Fee is not null)
         {

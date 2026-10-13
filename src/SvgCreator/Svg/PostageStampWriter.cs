@@ -7,7 +7,7 @@ using static SvgCreator.Svg.SvgFormat;
 namespace SvgCreator.Svg;
 
 /// <summary>
-/// Lays out a <see cref="PostageStampLayout"/>: white paper with a perforated edge, the picture
+/// Lays out a <see cref="PostageStampOptions"/> stamp: white paper with a perforated edge, the picture
 /// embedded unchanged in a thin ink frame, and rows of text above and below it. The picture keeps its
 /// pixel size, so it is never resampled.
 /// </summary>
@@ -38,10 +38,6 @@ internal static class PostageStampWriter
     private const double Ascent = 0.8;
     private const double LineHeight = 1.05;
 
-    // The stamp texture is tuned for line art a few pixels thick. On a stamp the caption is the
-    // finest ink, so scale the texture to its strokes (about a tenth of an em) or it eats the caption.
-    private const double TextureScale = CaptionSize * 0.1 / 4;
-
     private const string PaperColor = "#fff";
     private const string PaperEdgeColor = "#bbb";
     private const string FontFamily = "Georgia, 'Times New Roman', serif";
@@ -53,10 +49,11 @@ internal static class PostageStampWriter
         public bool IsRight => Corner is StampCorner.TopRight or StampCorner.BottomRight;
     }
 
-    public static string Write(EncodedImage image, PostageStampLayout layout, string inkColor, OutputStyle outputStyle, int stampSeed)
+    public static string Write(EncodedImage image, PostageStampOptions options)
     {
         double unit = Math.Min(image.Width, image.Height);
-        var items = Items(layout, unit);
+        var inkColor = options.InkColor;
+        var items = Items(options, unit);
         var top = FitRow([.. items.Where(i => i.IsTop)], image.Width, unit);
         var bottom = FitRow([.. items.Where(i => !i.IsTop)], image.Width, unit);
 
@@ -71,10 +68,8 @@ internal static class PostageStampWriter
         var width = (int)Math.Ceiling(paperWidth + (2 * origin));
         var height = (int)Math.Ceiling(paperHeight + (2 * origin));
 
-        var stampScale = TextureScale * unit;
-        var style = SvgStyle.For(outputStyle, stampSeed, stampScale, () => PostmarkCancellation.ForPaper(origin, origin, paperWidth, paperHeight));
-
-        return SvgWriter.WriteDocument(width, height, inkColor, style, (xml, filter) =>
+        // Always clean: effects and postmarks are separate artwork, combined on a canvas later.
+        return SvgWriter.WriteDocument(width, height, inkColor, SvgStyle.Clean, (xml, _) =>
         {
             xml.WriteStartElement("path", Namespace);
             xml.WriteAttributeString("class", "stamp-paper");
@@ -84,7 +79,6 @@ internal static class PostageStampWriter
             xml.WriteAttributeString("stroke-width", Format(PaperStrokeWidth * unit));
             xml.WriteEndElement();
 
-            // The picture is printed as is; the ink filter only wears the frame and the text.
             xml.WriteStartElement("image", Namespace);
             xml.WriteAttributeString("class", "stamp-picture");
             xml.WriteAttributeString("x", Format(picture.X));
@@ -99,10 +93,6 @@ internal static class PostageStampWriter
             xml.WriteAttributeString("class", "stamp-print");
             xml.WriteAttributeString("fill", inkColor);
             xml.WriteAttributeString("font-family", FontFamily);
-            if (filter is not null)
-            {
-                xml.WriteAttributeString("filter", $"url(#{filter.Id})");
-            }
 
             var frameWidth = FrameStrokeWidth * unit;
             xml.WriteStartElement("rect", Namespace);
@@ -124,17 +114,17 @@ internal static class PostageStampWriter
         });
     }
 
-    private static List<Item> Items(PostageStampLayout layout, double unit)
+    private static List<Item> Items(PostageStampOptions options, double unit)
     {
-        List<Item> items = [new("stamp-country", layout.Country, layout.CountryCorner, CountrySize * unit, Bold: true, Italic: false)];
-        if (layout.Fee is { } fee)
+        List<Item> items = [new("stamp-country", options.Country, options.CountryCorner, CountrySize * unit, Bold: true, Italic: false)];
+        if (options.Fee is { } fee)
         {
-            items.Add(new("stamp-fee", fee, layout.FeeCorner, FeeSize * unit, Bold: true, Italic: false));
+            items.Add(new("stamp-fee", fee, options.FeeCorner, FeeSize * unit, Bold: true, Italic: false));
         }
 
-        if (layout.Caption is { } caption)
+        if (options.Caption is { } caption)
         {
-            items.Add(new("stamp-caption", caption, layout.CaptionCorner, CaptionSize * unit, Bold: false, Italic: true));
+            items.Add(new("stamp-caption", caption, options.CaptionCorner, CaptionSize * unit, Bold: false, Italic: true));
         }
 
         return items;

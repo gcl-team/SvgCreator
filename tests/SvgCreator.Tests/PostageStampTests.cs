@@ -13,12 +13,12 @@ public class PostageStampTests
     private const string PictureBase64 =
         "iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAAAO0lEQVR42u3OQQkAAAgEsItjHGMbyxQ+hMECLNXzTqSlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpS8t1h+4pujAzIsAAAAASUVORK5CYII=";
 
-    private static readonly PostageStampLayout Singapore = new() { Country = "SINGAPORE", Fee = "$1.20", Caption = "Lion City" };
+    private static readonly PostageStampOptions Singapore = new() { Country = "SINGAPORE", Fee = "$1.20", Caption = "Lion City", InkColor = "#7a1f1f" };
 
-    private static string Convert(PostageStampLayout layout, OutputStyle style = OutputStyle.Clean)
+    private static string Create(PostageStampOptions options)
     {
         using var png = new MemoryStream(System.Convert.FromBase64String(PictureBase64));
-        return new SvgConverter().Convert(png, new SvgConversionOptions { Layout = layout, Style = style, FillColor = "#7a1f1f", StampSeed = 3 });
+        return new PostageStampGenerator().Create(png, options);
     }
 
     private static double Number(XElement e, string attribute) => double.Parse((string)e.Attribute(attribute)!, CultureInfo.InvariantCulture);
@@ -27,33 +27,29 @@ public class PostageStampTests
         root.Descendants(Svg + "text").Single(t => (string?)t.Attribute("class") == className);
 
     [Fact]
-    public void Golden_Clean() => SvgGoldenTests.AssertGolden("postage-stamp.svg", Convert(Singapore));
+    public void Golden() => SvgGoldenTests.AssertGolden("postage-stamp.svg", Create(Singapore));
 
     [Fact]
-    public void Golden_Postmark() => SvgGoldenTests.AssertGolden("postage-stamp-postmark.svg", Convert(Singapore, OutputStyle.Postmark));
-
-    [Fact]
-    public void Convert_EmbedsTheOriginalImageUnchanged()
+    public void Create_EmbedsTheOriginalImageUnchanged()
     {
-        var image = XDocument.Parse(Convert(Singapore)).Descendants(Svg + "image").Single();
+        var image = XDocument.Parse(Create(Singapore)).Descendants(Svg + "image").Single();
 
         Assert.Equal("data:image/png;base64," + PictureBase64, (string?)image.Attribute("href"));
         Assert.Equal((60.0, 40.0), (Number(image, "width"), Number(image, "height")));
     }
 
     [Fact]
-    public async Task ConvertAsync_MatchesConvert()
+    public async Task CreateAsync_MatchesCreate()
     {
         using var png = new MemoryStream(System.Convert.FromBase64String(PictureBase64));
-        var options = new SvgConversionOptions { Layout = Singapore, FillColor = "#7a1f1f", StampSeed = 3 };
 
-        Assert.Equal(Convert(Singapore), await new SvgConverter().ConvertAsync(png, options, TestContext.Current.CancellationToken));
+        Assert.Equal(Create(Singapore), await new PostageStampGenerator().CreateAsync(png, Singapore, TestContext.Current.CancellationToken));
     }
 
     [Fact]
-    public void Convert_PlacesTextAtItsCorners()
+    public void Create_PlacesTextAtItsCorners()
     {
-        var root = XDocument.Parse(Convert(Singapore with { CountryCorner = StampCorner.BottomRight, CaptionCorner = StampCorner.TopLeft })).Root!;
+        var root = XDocument.Parse(Create(Singapore with { CountryCorner = StampCorner.BottomRight, CaptionCorner = StampCorner.TopLeft })).Root!;
         var image = root.Descendants(Svg + "image").Single();
         var (top, bottom) = (Number(image, "y"), Number(image, "y") + Number(image, "height"));
         var (left, right) = (Number(image, "x"), Number(image, "x") + Number(image, "width"));
@@ -72,9 +68,9 @@ public class PostageStampTests
     }
 
     [Fact]
-    public void Convert_WithoutFeeOrCaption_LeavesNoRowBelowThePicture()
+    public void Create_WithoutFeeOrCaption_LeavesNoRowBelowThePicture()
     {
-        var root = XDocument.Parse(Convert(new PostageStampLayout { Country = "JAPAN" })).Root!;
+        var root = XDocument.Parse(Create(new PostageStampOptions { Country = "JAPAN" })).Root!;
         var image = root.Descendants(Svg + "image").Single();
 
         Assert.Single(root.Descendants(Svg + "text"));
@@ -84,10 +80,10 @@ public class PostageStampTests
     }
 
     [Fact]
-    public void Convert_LongText_ShrinksTheRowToFitThePicture()
+    public void Create_LongText_ShrinksTheRowToFitThePicture()
     {
-        var root = XDocument.Parse(Convert(Singapore with { Country = "UNITED KINGDOM OF GREAT BRITAIN" })).Root!;
-        var normal = XDocument.Parse(Convert(Singapore)).Root!;
+        var root = XDocument.Parse(Create(Singapore with { Country = "UNITED KINGDOM OF GREAT BRITAIN" })).Root!;
+        var normal = XDocument.Parse(Create(Singapore)).Root!;
 
         Assert.True(Number(Text(root, "stamp-country"), "font-size") < Number(Text(normal, "stamp-country"), "font-size"));
         Assert.Equal(Number(Text(root, "stamp-country"), "font-size") / Number(Text(normal, "stamp-country"), "font-size"),
@@ -95,26 +91,32 @@ public class PostageStampTests
     }
 
     [Fact]
-    public void Convert_EscapesText()
+    public void Create_EscapesText()
     {
-        var svg = Convert(new PostageStampLayout { Country = "<script>", Caption = "\"&'" });
+        var svg = Create(new PostageStampOptions { Country = "<script>", Caption = "\"&'" });
 
         Assert.DoesNotContain("<script>", svg, StringComparison.Ordinal);
         Assert.Equal("<script>", Text(XDocument.Parse(svg).Root!, "stamp-country").Value);
     }
 
     [Fact]
-    public void Convert_Postmark_CancelsTheStampWithoutDrawingAFrame()
+    public void Create_IsAlwaysCleanArtworkForLaterComposition()
     {
-        var root = XDocument.Parse(Convert(Singapore, OutputStyle.Postmark)).Root!;
-        var clean = XDocument.Parse(Convert(Singapore)).Root!;
+        var root = XDocument.Parse(Create(Singapore)).Root!;
 
-        var cancel = root.Elements(Svg + "g").Single(g => (string?)g.Attribute("class") == "postmark-cancel");
-        Assert.Empty(cancel.Elements(Svg + "rect"));                     // the perforated paper is the frame
-        Assert.True(Number(root, "width") > Number(clean, "width"));     // the waves run past the right edge
-        Assert.Equal(Number(clean, "height"), Number(root, "height"));
-        Assert.Equal("url(#svgcreator-stamp-3)", (string?)root.Descendants(Svg + "g").First(g => (string?)g.Attribute("class") == "stamp-print").Attribute("filter"));
-        Assert.Null(root.Descendants(Svg + "image").Single().Attribute("filter")); // the picture is printed as is
+        Assert.Empty(root.Descendants(Svg + "filter"));
+        Assert.DoesNotContain(root.Descendants(), e => e.Attribute("filter") is not null);
+        Assert.DoesNotContain(root.Descendants(Svg + "g"), g => (string?)g.Attribute("class") == "postmark-cancel");
+    }
+
+    [Fact]
+    public void Create_UsesInkColorForTextAndFrame()
+    {
+        var root = XDocument.Parse(Create(Singapore with { InkColor = "navy" })).Root!;
+        var print = root.Descendants(Svg + "g").Single(g => (string?)g.Attribute("class") == "stamp-print");
+
+        Assert.Equal("navy", (string?)print.Attribute("fill"));
+        Assert.Equal("navy", (string?)print.Element(Svg + "rect")!.Attribute("stroke"));
     }
 
     [Fact]
@@ -133,21 +135,25 @@ public class PostageStampTests
     [InlineData(StampCorner.TopRight, "")]    // empty caption
     public void Validate_RejectsCollidingOrEmptyItems(StampCorner feeCorner, string? caption)
     {
-        var layout = new PostageStampLayout { Country = "SINGAPORE", Fee = "$1", FeeCorner = feeCorner, Caption = caption };
+        var layout = new PostageStampOptions { Country = "SINGAPORE", Fee = "$1", FeeCorner = feeCorner, Caption = caption };
 
-        Assert.ThrowsAny<ArgumentException>(() => Convert(layout));
+        Assert.ThrowsAny<ArgumentException>(() => Create(layout));
     }
 
     [Fact]
     public void Validate_AllowsSharedCornerForAnAbsentItem()
     {
         // The fee isn't shown, so its corner doesn't matter.
-        var layout = new PostageStampLayout { Country = "SINGAPORE", FeeCorner = StampCorner.TopLeft };
+        var layout = new PostageStampOptions { Country = "SINGAPORE", FeeCorner = StampCorner.TopLeft };
 
-        XDocument.Parse(Convert(layout));
+        XDocument.Parse(Create(layout));
     }
 
     [Fact]
+    public void Validate_RejectsInvalidInkColor() =>
+        Assert.Throws<ArgumentException>(() => Create(Singapore with { InkColor = "not a colour" }));
+
+    [Fact]
     public void Validate_RejectsBlankCountry() =>
-        Assert.ThrowsAny<ArgumentException>(() => Convert(new PostageStampLayout { Country = " " }));
+        Assert.ThrowsAny<ArgumentException>(() => Create(new PostageStampOptions { Country = " " }));
 }

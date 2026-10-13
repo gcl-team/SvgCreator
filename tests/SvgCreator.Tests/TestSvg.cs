@@ -11,6 +11,6 @@ internal static class TestSvg
         OutputStyle style = OutputStyle.Clean, int stampSeed = 1, double stampScale = 1)
     {
         var drawing = new TracedDrawing(width, height, contours);
-        return SvgWriter.Write(drawing, fillColor, SvgStyle.For(style, stampSeed, stampScale, () => PostmarkCancellation.For(drawing)));
+        return SvgWriter.Write(drawing, fillColor, SvgStyle.For(style, drawing, stampSeed, stampScale));
     }
 }

@@ -1,27 +1,30 @@
-# Postage stamp layout
+# Postage stamp
 
 **Goal:** turn a picture into a postage stamp: the image on white paper with a perforated edge, the country name in large type, the fee in another corner, and a small caption.
 
 ```sh
-svgcreator input.png --postage-stamp SINGAPORE --fee '$1.20' --caption 'Lion City, 2026' --ink-color '#7a1f1f'
+svgcreator stamp input.png --country SINGAPORE --fee '$1.20' --caption 'Lion City, 2026' --ink-color '#7a1f1f'
 
-# move items around; Postmark cancels the stamp
-svgcreator input.png --postage-stamp MALAYSIA --fee 50c --fee-corner BottomRight --style postmark
+# move items around
+svgcreator stamp input.png --country MALAYSIA --fee 50c --fee-corner BottomRight
 ```
 
-Code: `src/SvgCreator/OutputLayout.cs` (public options), `src/SvgCreator/Svg/PostageStampWriter.cs` (layout)
+```csharp
+var svg = new PostageStampGenerator().CreateFromFile("input.png",
+    new PostageStampOptions { Country = "SINGAPORE", Fee = "$1.20", Caption = "Lion City", InkColor = "#7a1f1f" });
+```
 
-## A layout, not a style
+Code: `src/SvgCreator/PostageStampGenerator.cs`, `PostageStampOptions.cs` (public API), `src/SvgCreator/Svg/PostageStampWriter.cs` (layout)
 
-A style (Clean, Stamp, Postmark) changes how the ink of a drawing looks. A stamp is different: its canvas is the paper, not the image, and the picture sits in a window inside it. So it's a separate option, `SvgConversionOptions.Layout`, and the two combine:
+## Its own generator, always clean
 
-| `--style` | On a postage stamp |
-|---|---|
-| Clean | Crisp printing |
-| Stamp | The [stamp filter](Stamp-Style.md) wears the frame and the text. The picture is never filtered |
-| Postmark | Worn printing, plus cancellation waves over the stamp's right side. The paper's own edge is the frame, so no rectangle is drawn, and the canvas widens for the waves' overhang |
+A stamp is a different product from line art, so it isn't a mode of `SvgConverter`. It has its own `PostageStampGenerator` and `PostageStampOptions`. It never traces, so the line-extraction options would mean nothing. It also ignores the output styles (Clean, Stamp, Postmark): the stamp is always printed clean.
 
-`PostageStampWriter` hands its content to the same `SvgWriter.WriteDocument` the line art uses, so canvas widening, the filter definition and decorations work the same way for both (see [SVG Output](SVG-Output.md#styles-are-layers)).
+That's deliberate. A worn look or a postmark is separate artwork, and the plan is to compose several SVGs on one canvas later: a stamp, a postmark over it, an envelope around them. Keeping each piece single-purpose means the composer can combine them freely, and no generator has to know about the others.
+
+An earlier draft put the stamp behind a `Layout` option on `SvgConversionOptions`, with styles applied on top. It worked, but it mixed two products in one options record, and the stamp ended up owning its own postmark.
+
+The stamp still renders through `SvgWriter.WriteDocument`, with `SvgStyle.Clean`, like the line art (see [SVG Output](SVG-Output.md#styles-are-layers)).
 
 ## The picture is embedded, not traced
 
@@ -60,10 +63,6 @@ Native `<text>` stays small and editable, but the library never knows which font
 | Space, punctuation, `i l j` | 0.30 |
 
 Regular weight is 8% narrower. If a row's estimate plus the gap between items is wider than the picture, the whole row shrinks evenly. A flat 0.62 em for every character underestimated bold capitals by about 15%, which is exactly the overlap the first render showed.
-
-## Lesson: scale the wear to the finest ink
-
-The stamp filter is tuned for line art strokes a few pixels thick. On a stamp the finest ink is the caption, whose strokes are about a tenth of an em. Scaling the texture to the picture size (or clamping the scale at 1) made the wear coarse next to that text, so captions lost whole letters ("F stiv l series"). The scale is now `unit × 0.05 × 0.1 / 4`: the caption's stroke width divided by the stroke width the filter was tuned for. The wear then looks the same relative to the text at any image size.
 
 ## Checking renders
 
