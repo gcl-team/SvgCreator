@@ -25,7 +25,17 @@ Code: `src/SvgCreator/Svg/SvgWriter.cs`
 | Ink filter (0 or 1) | `IInkFilter` | A `<filter>` in `<defs>`, applied to the ink group and to every decoration, so everything looks printed the same way | `StampFilter` |
 | Decorations (0 or more) | `IDecoration` | Generated (not traced) artwork in its own `<g>` after the ink. It can ask for a wider canvas | `PostmarkCancellation` |
 
-An `OutputStyle` is just a named combination of layers (`SvgStyle.For`): Stamp is the stamp filter alone, and Postmark is the stamp filter plus the cancellation decoration. A new look, such as a perforated postage-stamp edge, is a new `IDecoration` plus one line in `SvgStyle.For`, and `SvgWriter` doesn't change. Artwork that isn't a traced drawing gets its own generator, which writes its content through the same `SvgWriter.WriteDocument`. The [postage stamp](Postage-Stamp.md) is the first, and it is always clean. Combining pieces (a stamp, a postmark, an envelope) is planned as a separate canvas composer.
+An `OutputStyle` is just a named combination of layers (`SvgStyle.For`): Stamp is the stamp filter alone, and Postmark is the stamp filter plus the cancellation decoration.
+
+**Where new artwork goes.** Ask what the canvas is:
+
+| The new artwork… | Goes in | Example |
+|---|---|---|
+| is drawn over a traced drawing, on that drawing's canvas | A new `IDecoration` plus one line in `SvgStyle.For`. `SvgWriter` doesn't change | `PostmarkCancellation`; a straight-bar or slogan cancellation would go here too |
+| defines its own canvas, or doesn't start from a traced drawing | Its own generator, writing through `SvgWriter.WriteDocument` with `SvgStyle.Clean` | The [postage stamp](Postage-Stamp.md): its canvas is the perforated paper, and its picture isn't traced |
+| combines several finished pieces | The planned canvas composer, not a generator or a style | A stamp with a postmark over it, on an envelope |
+
+So a perforated edge is never a decoration. It belongs to the stamp's paper, and the stamp generator owns that.
 
 **Golden tests.** `SvgGoldenTests` pins the exact SVG text of every style in `tests/SvgCreator.Tests/Golden/`, so a refactor can't change the output unnoticed. After an intentional output change, run `UPDATE_GOLDEN=1 dotnet test` and review the diff of those files.
 
