@@ -1,11 +1,9 @@
-using System.Text.RegularExpressions;
-
 namespace SvgCreator;
 
 /// <summary>
 /// Options controlling how an image is turned into line art.
 /// </summary>
-public sealed partial record SvgConversionOptions
+public sealed record SvgConversionOptions
 {
     /// <summary>The default options.</summary>
     public static SvgConversionOptions Default { get; } = new();
@@ -113,17 +111,6 @@ public sealed partial record SvgConversionOptions
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(CurveTolerance);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(CornerAngle);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(CornerAngle, 180);
-        ArgumentException.ThrowIfNullOrWhiteSpace(FillColor);
-        if (!CssColor().IsMatch(FillColor))
-        {
-            throw new ArgumentException(
-                $"'{FillColor}' is not a valid colour. Use hex (#c0392b), a CSS name (navy) or rgb()/hsl().",
-                nameof(FillColor));
-        }
+        CssColor.ThrowIfInvalid(FillColor, nameof(FillColor));
     }
-
-    // Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), a CSS named colour, or rgb()/rgba()/hsl()/hsla().
-    // Source-generated, so it is trimming- and Native AOT-safe.
-    [GeneratedRegex(@"^(#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-zA-Z]+|(rgba?|hsla?)\([0-9a-z.,%/+\- ]+\))$")]
-    private static partial Regex CssColor();
 }

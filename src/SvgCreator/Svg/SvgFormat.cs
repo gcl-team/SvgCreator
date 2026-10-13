@@ -4,17 +4,27 @@ using SvgCreator.Fitting;
 
 namespace SvgCreator.Svg;
 
-/// <summary>Compact number formatting shared by everything that writes SVG.</summary>
+/// <summary>
+/// Number formatting shared by everything that writes SVG. Which precision to use:
+/// <list type="bullet">
+/// <item><see cref="Format"/> and <see cref="AppendNumber"/> (tenths): traced geometry and path
+/// data. Values are in image pixels, where 0.1 px is invisible, and a path has so many numbers that
+/// the compact form matters.</item>
+/// <item><see cref="Number"/> (up to four decimals): filter parameters, and layout values computed
+/// as fractions of the picture (positions, sizes, stroke widths). These can be far below 0.1 px on a
+/// small picture, and a document has only a handful of them.</item>
+/// </list>
+/// </summary>
 internal static class SvgFormat
 {
     public const string Namespace = "http://www.w3.org/2000/svg";
 
     public static string Integer(int value) => value.ToString(CultureInfo.InvariantCulture);
 
-    // Up to four decimals, for filter parameters.
+    // Up to four decimals: filter parameters and proportional layout values.
     public static string Number(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);
 
-    // Tenths precision in the shortest form, for coordinates and lengths.
+    // Tenths precision in the shortest form: traced geometry.
     public static string Format(double value)
     {
         var sb = new StringBuilder();

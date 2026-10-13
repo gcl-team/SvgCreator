@@ -20,30 +20,14 @@ internal static class SvgWriter
     // Radii closer than this (px) are written as a circle.
     private const double CircleTolerance = 0.5;
 
-    public static string Write(TracedDrawing drawing, string fillColor, SvgStyle? style = null)
-    {
-        style ??= SvgStyle.Clean;
-        var settings = new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true };
-        var output = new StringBuilder();
-        using (var xml = XmlWriter.Create(output, settings))
+    public static string Write(TracedDrawing drawing, string fillColor, SvgStyle? style = null) =>
+        WriteDocument(drawing.Width, drawing.Height, fillColor, style ?? SvgStyle.Clean, (xml, filter) =>
         {
-            // Decorations may run past the drawing (a postmark's waves do), so the canvas may widen.
-            var canvasWidth = style.Decorations.Aggregate(drawing.Width, (w, d) => Math.Max(w, d.RequiredWidth));
-            var w = Integer(canvasWidth);
-            var h = Integer(drawing.Height);
-
-            xml.WriteStartElement("svg", Namespace);
-            xml.WriteAttributeString("width", w);
-            xml.WriteAttributeString("height", h);
-            xml.WriteAttributeString("viewBox", $"0 0 {w} {h}");
-
-            style.Filter?.WriteDefinition(xml, canvasWidth, drawing.Height);
-
             xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("fill", fillColor);
             xml.WriteAttributeString("fill-rule", "evenodd");
             xml.WriteAttributeString("stroke", "none");
-            if (style.Filter is { } filter)
+            if (filter is not null)
             {
                 xml.WriteAttributeString("filter", $"url(#{filter.Id})");
             }
@@ -61,10 +45,34 @@ internal static class SvgWriter
             }
 
             xml.WriteEndElement();
+        });
+
+    /// <summary>
+    /// Writes an SVG document of the given size: the style's filter definition, then the content,
+    /// then the style's decorations. The content receives the filter to apply to its ink.
+    /// </summary>
+    public static string WriteDocument(int width, int height, string inkColor, SvgStyle style, Action<XmlWriter, IInkFilter?> writeContent)
+    {
+        var settings = new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true };
+        var output = new StringBuilder();
+        using (var xml = XmlWriter.Create(output, settings))
+        {
+            // Decorations may run past the content (a postmark's waves do), so the canvas may widen.
+            var canvasWidth = style.Decorations.Aggregate(width, (w, d) => Math.Max(w, d.RequiredWidth));
+            var w = Integer(canvasWidth);
+            var h = Integer(height);
+
+            xml.WriteStartElement("svg", Namespace);
+            xml.WriteAttributeString("width", w);
+            xml.WriteAttributeString("height", h);
+            xml.WriteAttributeString("viewBox", $"0 0 {w} {h}");
+
+            style.Filter?.WriteDefinition(xml, canvasWidth, height);
+            writeContent(xml, style.Filter);
 
             foreach (var decoration in style.Decorations)
             {
-                decoration.Write(xml, fillColor, style.Filter);
+                decoration.Write(xml, inkColor, style.Filter);
             }
 
             xml.WriteEndElement();

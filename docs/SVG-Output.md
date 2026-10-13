@@ -25,7 +25,17 @@ Code: `src/SvgCreator/Svg/SvgWriter.cs`
 | Ink filter (0 or 1) | `IInkFilter` | A `<filter>` in `<defs>`, applied to the ink group and to every decoration, so everything looks printed the same way | `StampFilter` |
 | Decorations (0 or more) | `IDecoration` | Generated (not traced) artwork in its own `<g>` after the ink. It can ask for a wider canvas | `PostmarkCancellation` |
 
-An `OutputStyle` is just a named combination of layers (`SvgStyle.For`): Stamp is the stamp filter alone, and Postmark is the stamp filter plus the cancellation decoration. A new look, such as a perforated postage-stamp edge, is a new `IDecoration` plus one line in `SvgStyle.For`, and `SvgWriter` doesn't change. Something that arranges several drawings, such as an envelope, belongs in its own composer that takes `TracedDrawing`s, not in `OutputStyle`.
+An `OutputStyle` is just a named combination of layers (`SvgStyle.For`): Stamp is the stamp filter alone, and Postmark is the stamp filter plus the cancellation decoration.
+
+**Where new artwork goes.** Ask what the canvas is:
+
+| The new artwork… | Goes in | Example |
+|---|---|---|
+| is drawn over a traced drawing, on that drawing's canvas | A new `IDecoration` plus one line in `SvgStyle.For`. `SvgWriter` doesn't change | `PostmarkCancellation`; a straight-bar or slogan cancellation would go here too |
+| defines its own canvas, or doesn't start from a traced drawing | Its own generator, writing through `SvgWriter.WriteDocument` with `SvgStyle.Clean` | The [postage stamp](Postage-Stamp.md): its canvas is the perforated paper, and its picture isn't traced |
+| combines several finished pieces | The planned canvas composer, not a generator or a style | A stamp with a postmark over it, on an envelope |
+
+So a perforated edge is never a decoration. It belongs to the stamp's paper, and the stamp generator owns that.
 
 **Golden tests.** `SvgGoldenTests` pins the exact SVG text of every style in `tests/SvgCreator.Tests/Golden/`, so a refactor can't change the output unnoticed. After an intentional output change, run `UPDATE_GOLDEN=1 dotnet test` and review the diff of those files.
 
@@ -42,7 +52,7 @@ After [curve fitting](Curve-Fitting.md), the segment count dropped by 45%, but t
 ## Compact path encoding
 
 1. **Relative commands.** Each subpath starts with an absolute `M`, then lowercase `c`/`l` with *deltas* from the previous point, which are small numbers with few digits.
-2. **Tenths precision.** 0.1 px is invisible at any normal zoom.
+2. **Tenths precision.** 0.1 px is invisible at any normal zoom. This is for traced geometry and path data, which are measured in image pixels. Values computed as fractions of a picture, such as everything the [postage stamp](Postage-Stamp.md) writes (its paper path included), use up to four decimals instead (`SvgFormat.Number`), because they can be far below 0.1 px on a small picture.
 3. **No rounding drift.** Coordinates are rounded to integer tenths *first*, and each delta is taken between rounded points. If you rounded the deltas themselves, the errors would pile up along a long path.
 4. **Shortest number form.** `0.5` → `.5`, `-0.5` → `-.5`. A space is only inserted where a digit would otherwise run into the next number; a minus sign separates numbers by itself.
 5. **Implicit closing line.** If the last segment is a straight line back to the start, it's left out, because `Z` draws it.

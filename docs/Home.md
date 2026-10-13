@@ -25,6 +25,7 @@ flowchart LR
 | Recognize circles and ellipses | [Shape Recognition](Shape-Recognition.md) | `Fitting/EllipseFitter.cs` |
 | Write SVG | [SVG Output](SVG-Output.md) | `Svg/SvgWriter.cs` |
 | Optional stamp / postmark look | [Stamp and Postmark Styles](Stamp-Style.md) | `Svg/SvgStyle.cs`, `Svg/StampFilter.cs`, `Svg/PostmarkCancellation.cs` |
+| Postage stamp (separate generator) | [Postage Stamp](Postage-Stamp.md) | `PostageStampGenerator.cs`, `Svg/PostageStampWriter.cs` |
 
 Cross-cutting topics:
 

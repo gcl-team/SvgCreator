@@ -17,7 +17,7 @@ The defaults were tuned on 512–2000 px anime illustrations. Start with them, a
 | Want a rubber-stamp / seal look | `Style` (`--style stamp`) | Native SVG filter adds rough edges and worn ink; pair with `--ink-color "#c0392b"` for a red seal |
 | Want a postal cancellation look | `Style` (`--style postmark`) | Stamp + wavy cancellation lines over the circular frame, or a rectangular frame around the picture when there's no circle. Widens the canvas ~20–30% |
 | Different stamp wear pattern | `StampSeed` (`--stamp-seed`) | Any other non-negative number |
-| Want coloured ink | `FillColor` (`--ink-color`) | Hex (`#c0392b`, `#c0392b80` with alpha), a CSS name (`navy`), or `rgb()`/`hsl()`. Anything else is rejected |
+| Want coloured ink | `FillColor` (`--ink-color`) | Hex (`#c0392b`, `#c0392b80` with alpha), a CSS colour name (`navy`, any case), or `rgb()`/`hsl()`. Names are checked against the 148 CSS named colours (plus `transparent` and `currentcolor`), because a renderer silently drops a fill it doesn't recognize. `rgb()`/`hsl()` are only checked for their shape |
 | The input is already clean black-on-white line art | `Mode` (`--mode Threshold`), `Threshold` (`-t`) | Use Threshold mode |
 
 ## Defaults
