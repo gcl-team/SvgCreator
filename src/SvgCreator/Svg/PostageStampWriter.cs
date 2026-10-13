@@ -1,6 +1,5 @@
 using System.Text;
 using System.Xml;
-using SvgCreator.Fitting;
 using SvgCreator.Imaging;
 using static SvgCreator.Svg.SvgFormat;
 
@@ -69,10 +68,10 @@ internal static class PostageStampWriter
         var height = (int)Math.Ceiling(paperHeight + (2 * origin));
 
         // Always clean: effects and postmarks are separate artwork, combined on a canvas later.
-        // Every layout value is a fraction of the picture, so all are written with Number: at
-        // tenths, thin strokes round to 0 on small pictures, the frame drifts off the picture's
-        // edge, and font sizes that FitRow made just fit can overflow again. The perforated path
-        // keeps the compact tenths form.
+        // Every value, the perforated path included, is a fraction of the picture, so all are
+        // written with Number: at tenths, thin strokes round to 0 on small pictures, the paper's
+        // inset rounds away and clips its edge, the frame drifts off the picture, and font sizes
+        // that FitRow made just fit can overflow again.
         return SvgWriter.WriteDocument(width, height, inkColor, SvgStyle.Clean, (xml, _) =>
         {
             xml.WriteStartElement("path", Namespace);
@@ -210,63 +209,50 @@ internal static class PostageStampWriter
     /// <summary>
     /// The paper outline: a rectangle with semicircular bites along every edge, where the sheet
     /// was torn along its perforations. Each side gets a whole number of holes, spaced evenly.
-    /// The outline runs clockwise, so sweep flag 0 turns each arc into the paper.
+    /// The outline runs clockwise, so sweep flag 0 turns each arc into the paper. Like every other
+    /// layout value it is written with <see cref="SvgFormat.Number"/>, in absolute coordinates so
+    /// rounding can't build up along the edge; next to the embedded picture its size is negligible.
     /// </summary>
     internal static string PerforatedEdge(double origin, double width, double height, double pitch)
     {
         var sb = new StringBuilder();
-        var radius = PerforationRadius * pitch;
-        var radiusTenths = ToTenths(radius);
-        var current = Tenths(new PointD(origin, origin));
-        sb.Append('M');
-        AppendNumber(sb, current.X);
-        AppendNumber(sb, current.Y);
+        var r = PerforationRadius * pitch;
+        var radius = Number(r);
+        sb.Append('M').Append(Number(origin)).Append(' ').Append(Number(origin));
 
-        void LineTo(double x, double y)
-        {
-            var next = Tenths(new PointD(origin + x, origin + y));
-            sb.Append('l');
-            AppendDelta(sb, next, current);
-            current = next;
-        }
+        void LineTo(double x, double y) =>
+            sb.Append('L').Append(Number(origin + x)).Append(' ').Append(Number(origin + y));
 
-        void BiteTo(double x, double y)
-        {
-            var next = Tenths(new PointD(origin + x, origin + y));
-            sb.Append('a');
-            AppendNumber(sb, radiusTenths);
-            AppendNumber(sb, radiusTenths);
-            sb.Append(" 0 0 0");
-            AppendDelta(sb, next, current);
-            current = next;
-        }
+        void BiteTo(double x, double y) =>
+            sb.Append('A').Append(radius).Append(' ').Append(radius).Append(" 0 0 0 ")
+              .Append(Number(origin + x)).Append(' ').Append(Number(origin + y));
 
         var (across, down) = (Holes(width, pitch), Holes(height, pitch));
         for (var i = 0; i < across.Count; i++)
         {
-            LineTo(across.Centre(i) - radius, 0);
-            BiteTo(across.Centre(i) + radius, 0);
+            LineTo(across.Centre(i) - r, 0);
+            BiteTo(across.Centre(i) + r, 0);
         }
 
         LineTo(width, 0);
         for (var i = 0; i < down.Count; i++)
         {
-            LineTo(width, down.Centre(i) - radius);
-            BiteTo(width, down.Centre(i) + radius);
+            LineTo(width, down.Centre(i) - r);
+            BiteTo(width, down.Centre(i) + r);
         }
 
         LineTo(width, height);
         for (var i = across.Count - 1; i >= 0; i--)
         {
-            LineTo(across.Centre(i) + radius, height);
-            BiteTo(across.Centre(i) - radius, height);
+            LineTo(across.Centre(i) + r, height);
+            BiteTo(across.Centre(i) - r, height);
         }
 
         LineTo(0, height);
         for (var i = down.Count - 1; i >= 0; i--)
         {
-            LineTo(0, down.Centre(i) + radius);
-            BiteTo(0, down.Centre(i) - radius);
+            LineTo(0, down.Centre(i) + r);
+            BiteTo(0, down.Centre(i) - r);
         }
 
         sb.Append('Z');

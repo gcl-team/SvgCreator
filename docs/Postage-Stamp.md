@@ -43,9 +43,10 @@ Everything is a fraction of the picture's shorter side (`unit`), so the stamp lo
 | Country / fee / caption type | 0.12 / 0.11 / 0.05 |
 | Picture frame stroke | 0.006 |
 
-**Precision.** Every layout value (positions, sizes, stroke widths, font sizes) is a fraction of the picture, so all of them are written with up to four decimals. Only the perforated path keeps the compact [tenths](SVG-Output.md#compact-path-encoding) form. Tenths broke the layout in three ways, each worse on small pictures:
+**Precision.** Every value the stamp writes is a fraction of the picture: positions, sizes, stroke widths, font sizes, and the perforated path. So all of them are written with up to four decimals, and the path uses absolute coordinates so rounding can't build up along the edge. The [tenths](SVG-Output.md#compact-path-encoding) used for traced line art broke the layout in four ways, each worse on small pictures:
 
 - The paper edge (0.003) rounded to 0 for any picture under 16.7 px, which removed the very edge that keeps white paper visible on a white page. The frame (0.006) disappeared under 8.3 px.
+- The paper is inset from the canvas edge by its stroke width, so the edge stroke isn't clipped. At tenths that inset (0.024 px on an 8 px picture) rounded to 0, and half of the top and left edge fell outside the `viewBox`. Writing the path at full precision costs about 2.5 KB on a 2000 px stamp, 0.1% of the file next to the embedded picture.
 - The frame and the picture were each rounded separately, so the frame drifted off the picture's edge. Even the 60×40 test picture was 0.08 px off, a third of the frame's width.
 - `FitRow` makes a row fill exactly the space available, so a font size moved by up to 0.05 could push the row past the picture again.
 
@@ -70,7 +71,7 @@ Native `<text>` stays small and editable, but the library never knows which font
 
 Regular weight is 8% narrower. If a row's estimate plus the gap between items is wider than the picture, the text shrinks evenly into the space left after the gap. A flat 0.62 em for every character underestimated bold capitals by about 15%, which is exactly the overlap the first render showed.
 
-**Scale only what actually scales.** The first fix divided the available width by *text + gap*. But the items are anchored to the picture's edges, so the gap never shrinks. The row then came out `gap × (1 − scale)` too wide: 61.2 px in a 60 px row in the long-country test, which is enough for the labels to touch. The scale is now `(available − gap) / text`. The test checks the fitted width at full precision, because the SVG rounds `font-size` to tenths, which is coarser than the error.
+**Scale only what actually scales.** The first fix divided the available width by *text + gap*. But the items are anchored to the picture's edges, so the gap never shrinks. The row then came out `gap × (1 − scale)` too wide: 61.2 px in a 60 px row in the long-country test, which is enough for the labels to touch. The scale is now `(available − gap) / text`. `FitRow_ShrinksOnlyTheTextSoTheRowWithItsFixedGapFits` checks the fitted width before serialization. `Create_FittedRowStillFitsAfterFontSizesAreWritten` reads the four-decimal `font-size` values back from the SVG and checks that the row still measures the available width.
 
 ## Checking renders
 

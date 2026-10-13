@@ -195,14 +195,48 @@ public class PostageStampTests
         Assert.Equal("navy", (string?)print.Element(Svg + "rect")!.Attribute("stroke"));
     }
 
+    [Theory]
+    [InlineData(12, 8)]   // inset 0.024 px: rounded to 0 at tenths, clipping half the edge stroke
+    [InlineData(16, 12)]
+    [InlineData(60, 40)]
+    public void Create_PaperEdgeStrokeStaysInsideTheCanvas(int width, int height)
+    {
+        using var png = TestImages.PngWithBlackRect(width, height, new SkiaSharp.SKRect(1, 1, 3, 3));
+        var root = XDocument.Parse(new PostageStampGenerator().Create(png, Singapore)).Root!;
+        var paper = root.Descendants(Svg + "path").Single(p => (string?)p.Attribute("class") == "stamp-paper");
+        var half = Number(paper, "stroke-width") / 2;
+
+        // Absolute commands: M/L take x y; A takes rx ry rotation large-arc sweep x y. The bites
+        // curve inward, so the end points bound the outline.
+        var tokens = System.Text.RegularExpressions.Regex.Matches((string)paper.Attribute("d")!, @"[MLAZ]|-?[\d.]+")
+            .Select(m => m.Value).ToList();
+        var points = new List<(double X, double Y)>();
+        for (var i = 0; i < tokens.Count; i++)
+        {
+            var skip = tokens[i] switch { "M" or "L" => 0, "A" => 5, _ => -1 };
+            if (skip < 0)
+            {
+                continue;
+            }
+
+            i += skip;
+            points.Add((double.Parse(tokens[i + 1], CultureInfo.InvariantCulture), double.Parse(tokens[i + 2], CultureInfo.InvariantCulture)));
+            i += 2;
+        }
+
+        Assert.True(points.Min(p => p.X) >= half && points.Min(p => p.Y) >= half, "left/top edge stroke is clipped");
+        Assert.True(points.Max(p => p.X) + half <= Number(root, "width"), "right edge stroke is clipped");
+        Assert.True(points.Max(p => p.Y) + half <= Number(root, "height"), "bottom edge stroke is clipped");
+    }
+
     [Fact]
     public void PerforatedEdge_HasEvenlySpacedHolesOnEverySide()
     {
         // 100×60 with pitch 10: 10 holes across and 6 down, on each of the two sides.
         var d = PostageStampWriter.PerforatedEdge(0, 100, 60, 10);
 
-        Assert.StartsWith("M0 0l2 0a3 3 0 0 0 6 0", d, StringComparison.Ordinal); // first hole centred at 5, radius 3: 2 to 8
-        Assert.Equal(2 * (10 + 6), d.Count(c => c == 'a'));
+        Assert.StartsWith("M0 0L2 0A3 3 0 0 0 8 0", d, StringComparison.Ordinal); // first hole centred at 5, radius 3: 2 to 8
+        Assert.Equal(2 * (10 + 6), d.Count(c => c == 'A'));
         Assert.EndsWith("Z", d, StringComparison.Ordinal);
     }
 
@@ -225,9 +259,11 @@ public class PostageStampTests
         XDocument.Parse(Create(layout));
     }
 
-    [Fact]
-    public void Validate_RejectsInvalidInkColor() =>
-        Assert.Throws<ArgumentException>(() => Create(Singapore with { InkColor = "not a colour" }));
+    [Theory]
+    [InlineData("not a colour")]
+    [InlineData("notacolour")] // looks like a CSS name, but isn't one: a renderer would drop it silently
+    public void Validate_RejectsInvalidInkColor(string color) =>
+        Assert.Throws<ArgumentException>(() => Create(Singapore with { InkColor = color }));
 
     [Fact]
     public void Validate_RejectsBlankCountry() =>

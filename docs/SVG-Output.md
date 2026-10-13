@@ -52,7 +52,7 @@ After [curve fitting](Curve-Fitting.md), the segment count dropped by 45%, but t
 ## Compact path encoding
 
 1. **Relative commands.** Each subpath starts with an absolute `M`, then lowercase `c`/`l` with *deltas* from the previous point, which are small numbers with few digits.
-2. **Tenths precision.** 0.1 px is invisible at any normal zoom. This is for traced geometry and path data, which are measured in image pixels. Layout values computed as fractions of a picture, such as the [postage stamp](Postage-Stamp.md)'s positions, strokes and font sizes, use up to four decimals instead (`SvgFormat.Number`), because they can be far below 0.1 px on a small picture.
+2. **Tenths precision.** 0.1 px is invisible at any normal zoom. This is for traced geometry and path data, which are measured in image pixels. Values computed as fractions of a picture, such as everything the [postage stamp](Postage-Stamp.md) writes (its paper path included), use up to four decimals instead (`SvgFormat.Number`), because they can be far below 0.1 px on a small picture.
 3. **No rounding drift.** Coordinates are rounded to integer tenths *first*, and each delta is taken between rounded points. If you rounded the deltas themselves, the errors would pile up along a long path.
 4. **Shortest number form.** `0.5` → `.5`, `-0.5` → `-.5`. A space is only inserted where a digit would otherwise run into the next number; a minus sign separates numbers by itself.
 5. **Implicit closing line.** If the last segment is a straight line back to the start, it's left out, because `Z` draws it.
