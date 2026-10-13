@@ -20,7 +20,7 @@ File.WriteAllText("character.svg", svg);
 | Trace | `ContourTracer` | Follows pixel *edges*, not pixel centres, so 1-px lines keep their width. Outer borders run clockwise and holes counter-clockwise |
 | Fit curves | `CurveBuilder`, `CornerDetector`, `BezierFitter` | Takes edge midpoints to remove the pixel staircase. Finds corners sharper than `CornerAngle` and snaps them to the pixel corner. Fits cubic Béziers between corners using Schneider's algorithm, within `CurveTolerance` |
 | Recognize shapes | `EllipseFitter` | Outlines that are true ellipses (direct least-squares fit, Fitzgibbon/Halíř–Flusser) become native `<circle>`/`<ellipse>` elements, and rings become one stroked shape |
-| Write | `SvgWriter` | One `<path>` per component under `fill-rule="evenodd"`. Uses compact relative `c`/`l` commands at 0.1 px precision |
+| Write | `SvgWriter`, `SvgStyle` | One `<path>` per component under `fill-rule="evenodd"`. Uses compact relative `c`/`l` commands at 0.1 px precision. Styles add an ink filter (stamp) and decorations (postmark) on top |
 
 Every stage runs in O(pixels) time over flat arrays. The tracer is our own MIT implementation and contains no Potrace or GPL code.
 

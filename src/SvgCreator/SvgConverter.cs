@@ -1,13 +1,11 @@
-using SvgCreator.Fitting;
 using SvgCreator.Imaging;
 using SvgCreator.Svg;
-using SvgCreator.Tracing;
 
 namespace SvgCreator;
 
 /// <summary>
-/// Default <see cref="ISvgConverter"/>: grayscale → line extraction → connected components →
-/// edge contour tracing → Bézier curve fitting → SVG.
+/// Default <see cref="ISvgConverter"/>: traces the image (<see cref="LineArtTracer"/>), then renders
+/// the drawing in the chosen <see cref="OutputStyle"/> (<see cref="SvgWriter"/>).
 /// </summary>
 public sealed class SvgConverter : ISvgConverter
 {
@@ -42,27 +40,11 @@ public sealed class SvgConverter : ISvgConverter
 
     private static string Run(RgbImage rgb, SvgConversionOptions options, CancellationToken cancellationToken)
     {
-        var gray = rgb.ToGray();
-        var binary = options.Mode == ExtractionMode.Lines
-            ? LineExtractor.Extract(
-                gray,
-                options.ColorContrast > 0 ? rgb.ToLabChroma() : null,
-                options.LineSigma,
-                options.LineContrast,
-                options.WeakLineContrast,
-                options.ColorContrast)
-            : Binarizer.Apply(gray, options.Threshold);
-        cancellationToken.ThrowIfCancellationRequested();
+        var drawing = LineArtTracer.Trace(rgb, options, cancellationToken);
 
-        var components = ComponentLabeler.Label(binary, options.MinComponentArea);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var contours = ContourTracer.Trace(components);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var curves = CurveBuilder.Build(contours, options.CurveTolerance, options.CornerAngle, options.DetectEllipses);
         // The stamp texture follows line thickness, which LineSigma sets in Lines mode.
         var stampScale = options.Mode == ExtractionMode.Lines ? options.LineSigma : 1.0;
-        return SvgWriter.Write(gray.Width, gray.Height, curves, options.FillColor, options.Style, options.StampSeed, stampScale);
+        var style = SvgStyle.For(options.Style, drawing, options.StampSeed, stampScale);
+        return SvgWriter.Write(drawing, options.FillColor, style);
     }
 }
