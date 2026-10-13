@@ -1,7 +1,7 @@
-using System.Globalization;
 using System.Text;
 using System.Xml;
 using SvgCreator.Fitting;
+using static SvgCreator.Svg.SvgFormat;
 
 namespace SvgCreator.Svg;
 
@@ -12,84 +12,59 @@ namespace SvgCreator.Svg;
 /// two concentric ellipses becomes one stroked <c>&lt;circle&gt;</c>/<c>&lt;ellipse&gt;</c>, and any
 /// other elliptical contour is drawn with native arc (<c>a</c>) commands inside its path.
 /// </summary>
-internal static partial class SvgWriter
+internal static class SvgWriter
 {
-    private const string SvgNamespace = "http://www.w3.org/2000/svg";
-
     // Ring widths may differ this much (px) between the two axes and still count as uniform.
     private const double RingTolerance = 1.0;
 
     // Radii closer than this (px) are written as a circle.
     private const double CircleTolerance = 0.5;
 
-    // Stamp filter, tuned for LineSigma = 1 and scaled with the line thickness (not the canvas size:
-    // Lines-mode strokes are a few pixels wide at any resolution, so a canvas-scaled texture frays
-    // them on large images). Frequencies divide by the scale, distances multiply by it.
-    private const double EdgeNoiseFrequency = 0.8;  // fine noise that wobbles the ink edges
-    private const double EdgeDisplacement = 2.5;    // how far (px) edges are pushed by that noise
-    private const double WearNoiseFrequency = 0.06; // coarse blotches where ink didn't transfer
-    private const double SpeckNoiseFrequency = 0.9; // small pinholes in the ink
-
-    // Noise → alpha as alpha = Bias − Gain·R. Fractal noise centres on R ≈ 0.5, so ink stays fully
-    // opaque below R = (Bias − 1)/Gain and vanishes above R = Bias/Gain: blotches where R > 0.63–0.70,
-    // pinholes where R > 0.73–0.78. Tuned so the print looks worn but stays readable.
-    private const double WearGain = 14;
-    private const double WearBias = 9.8;
-    private const double SpeckGain = 20;
-    private const double SpeckBias = 15.6;
-
-    public static string Write(
-        int width, int height, IReadOnlyList<CurveContour> contours, string fillColor,
-        OutputStyle style = OutputStyle.Clean, int stampSeed = 1, double stampScale = 1)
+    public static string Write(TracedDrawing drawing, string fillColor, SvgStyle? style = null)
     {
+        style ??= SvgStyle.Clean;
         var settings = new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true };
         var output = new StringBuilder();
         using (var xml = XmlWriter.Create(output, settings))
         {
-            // A postmark's cancellation lines run off to the right, so the canvas may need widening.
-            Cancellation? cancellation = style == OutputStyle.Postmark ? BuildCancellation(contours, width, height) : null;
-            var canvasWidth = cancellation is { } c ? Math.Max(width, c.RequiredWidth) : width;
-            var w = canvasWidth.ToString(CultureInfo.InvariantCulture);
-            var h = height.ToString(CultureInfo.InvariantCulture);
+            // Decorations may run past the drawing (a postmark's waves do), so the canvas may widen.
+            var canvasWidth = style.Decorations.Aggregate(drawing.Width, (w, d) => Math.Max(w, d.RequiredWidth));
+            var w = Integer(canvasWidth);
+            var h = Integer(drawing.Height);
 
-            xml.WriteStartElement("svg", SvgNamespace);
+            xml.WriteStartElement("svg", Namespace);
             xml.WriteAttributeString("width", w);
             xml.WriteAttributeString("height", h);
             xml.WriteAttributeString("viewBox", $"0 0 {w} {h}");
 
-            string? filterId = null;
-            if (style is OutputStyle.Stamp or OutputStyle.Postmark)
-            {
-                filterId = $"svgcreator-stamp-{stampSeed.ToString(CultureInfo.InvariantCulture)}";
-                WriteStampFilter(xml, filterId, canvasWidth, height, stampSeed, stampScale);
-            }
+            style.Filter?.WriteDefinition(xml, canvasWidth, drawing.Height);
 
-            xml.WriteStartElement("g", SvgNamespace);
+            xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("fill", fillColor);
             xml.WriteAttributeString("fill-rule", "evenodd");
             xml.WriteAttributeString("stroke", "none");
-            if (filterId is not null)
+            if (style.Filter is { } filter)
             {
-                xml.WriteAttributeString("filter", $"url(#{filterId})");
+                xml.WriteAttributeString("filter", $"url(#{filter.Id})");
             }
 
-            foreach (var group in GroupByComponent(contours))
+            foreach (var group in GroupByComponent(drawing.Contours))
             {
                 if (TryWriteShape(xml, group, fillColor))
                 {
                     continue;
                 }
 
-                xml.WriteStartElement("path", SvgNamespace);
+                xml.WriteStartElement("path", Namespace);
                 xml.WriteAttributeString("d", PathData(group));
                 xml.WriteEndElement();
             }
 
             xml.WriteEndElement();
 
-            if (cancellation is { } cancel)
+            foreach (var decoration in style.Decorations)
             {
-                WriteCancellation(xml, cancel, fillColor, filterId);
+                decoration.Write(xml, fillColor, style.Filter);
             }
 
             xml.WriteEndElement();
@@ -97,87 +72,6 @@ internal static partial class SvgWriter
 
         return output.ToString();
     }
-
-    /// <summary>
-    /// A rubber-stamp impression made only of native SVG filter primitives, applied at render time:
-    /// fractal noise displaces the ink edges (rough print), and two noise layers turned into alpha
-    /// masks remove blotches and pinholes of ink (worn print). The id carries the seed because ids
-    /// are global when several SVGs are inlined into one HTML page.
-    /// </summary>
-    private static void WriteStampFilter(XmlWriter xml, string id, int width, int height, int seed, double scale)
-    {
-        xml.WriteStartElement("defs", SvgNamespace);
-        xml.WriteStartElement("filter", SvgNamespace);
-        xml.WriteAttributeString("id", id);
-        xml.WriteAttributeString("filterUnits", "userSpaceOnUse");
-        xml.WriteAttributeString("x", "0");
-        xml.WriteAttributeString("y", "0");
-        xml.WriteAttributeString("width", width.ToString(CultureInfo.InvariantCulture));
-        xml.WriteAttributeString("height", height.ToString(CultureInfo.InvariantCulture));
-        xml.WriteAttributeString("color-interpolation-filters", "sRGB");
-
-        // Rough edges.
-        WriteTurbulence(xml, EdgeNoiseFrequency / scale, octaves: 2, seed, "edgeNoise");
-        xml.WriteStartElement("feDisplacementMap", SvgNamespace);
-        xml.WriteAttributeString("in", "SourceGraphic");
-        xml.WriteAttributeString("in2", "edgeNoise");
-        xml.WriteAttributeString("scale", Number(EdgeDisplacement * scale));
-        xml.WriteAttributeString("xChannelSelector", "R");
-        xml.WriteAttributeString("yChannelSelector", "G");
-        xml.WriteAttributeString("result", "rough");
-        xml.WriteEndElement();
-
-        // Worn ink: coarse blotches and fine pinholes, each as an alpha mask.
-        WriteTurbulence(xml, WearNoiseFrequency / scale, octaves: 3, seed + 1, "wearNoise");
-        WriteNoiseToAlpha(xml, "wearNoise", WearGain, WearBias, "wear");
-        WriteTurbulence(xml, SpeckNoiseFrequency / scale, octaves: 1, seed + 2, "speckNoise");
-        WriteNoiseToAlpha(xml, "speckNoise", SpeckGain, SpeckBias, "speck");
-
-        WriteComposite(xml, "wear", "speck", "mask");
-        WriteComposite(xml, "rough", "mask", null);
-
-        xml.WriteEndElement();
-        xml.WriteEndElement();
-    }
-
-    private static void WriteTurbulence(XmlWriter xml, double frequency, int octaves, int seed, string result)
-    {
-        xml.WriteStartElement("feTurbulence", SvgNamespace);
-        xml.WriteAttributeString("type", "fractalNoise");
-        xml.WriteAttributeString("baseFrequency", Number(frequency));
-        xml.WriteAttributeString("numOctaves", octaves.ToString(CultureInfo.InvariantCulture));
-        xml.WriteAttributeString("seed", seed.ToString(CultureInfo.InvariantCulture));
-        xml.WriteAttributeString("result", result);
-        xml.WriteEndElement();
-    }
-
-    // alpha = bias − gain·R; colour channels are irrelevant for a mask.
-    private static void WriteNoiseToAlpha(XmlWriter xml, string input, double gain, double bias, string result)
-    {
-        xml.WriteStartElement("feColorMatrix", SvgNamespace);
-        xml.WriteAttributeString("in", input);
-        xml.WriteAttributeString("type", "matrix");
-        xml.WriteAttributeString("values", $"0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 {Number(-gain)} 0 0 0 {Number(bias)}");
-        xml.WriteAttributeString("result", result);
-        xml.WriteEndElement();
-    }
-
-    // Keeps `input` only where `mask` is opaque (alphas multiply).
-    private static void WriteComposite(XmlWriter xml, string input, string mask, string? result)
-    {
-        xml.WriteStartElement("feComposite", SvgNamespace);
-        xml.WriteAttributeString("in", input);
-        xml.WriteAttributeString("in2", mask);
-        xml.WriteAttributeString("operator", "in");
-        if (result is not null)
-        {
-            xml.WriteAttributeString("result", result);
-        }
-
-        xml.WriteEndElement();
-    }
-
-    private static string Number(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);
 
     // A component that is exactly one solid ellipse, or one elliptical band, becomes a native shape.
     private static bool TryWriteShape(XmlWriter xml, List<CurveContour> group, string fillColor)
@@ -209,7 +103,7 @@ internal static partial class SvgWriter
     private static void WriteEllipse(XmlWriter xml, Ellipse e)
     {
         var circle = e.IsCircle(CircleTolerance);
-        xml.WriteStartElement(circle ? "circle" : "ellipse", SvgNamespace);
+        xml.WriteStartElement(circle ? "circle" : "ellipse", Namespace);
         xml.WriteAttributeString("cx", Format(e.Center.X));
         xml.WriteAttributeString("cy", Format(e.Center.Y));
         if (circle)
@@ -224,13 +118,6 @@ internal static partial class SvgWriter
         {
             xml.WriteAttributeString("transform", $"rotate({Format(e.AngleDegrees)} {Format(e.Center.X)} {Format(e.Center.Y)})");
         }
-    }
-
-    private static string Format(double value)
-    {
-        var sb = new StringBuilder();
-        AppendNumber(sb, (long)Math.Round(value * 10, MidpointRounding.AwayFromZero));
-        return sb.ToString();
     }
 
     private static List<List<CurveContour>> GroupByComponent(IReadOnlyList<CurveContour> contours)
@@ -328,47 +215,10 @@ internal static partial class SvgWriter
     private static void AppendArc(StringBuilder sb, Ellipse e, (long X, long Y) end, (long X, long Y) from)
     {
         sb.Append('a');
-        AppendNumber(sb, (long)Math.Round(e.RadiusX * 10, MidpointRounding.AwayFromZero));
-        AppendNumber(sb, (long)Math.Round(e.RadiusY * 10, MidpointRounding.AwayFromZero));
-        AppendNumber(sb, (long)Math.Round(e.AngleDegrees * 10, MidpointRounding.AwayFromZero));
+        AppendNumber(sb, ToTenths(e.RadiusX));
+        AppendNumber(sb, ToTenths(e.RadiusY));
+        AppendNumber(sb, ToTenths(e.AngleDegrees));
         sb.Append(" 0 1"); // large-arc 0, sweep 1: each half goes the positive-angle way round
         AppendDelta(sb, end, from);
-    }
-
-    private static (long X, long Y) Tenths(PointD p) =>
-        ((long)Math.Round(p.X * 10, MidpointRounding.AwayFromZero), (long)Math.Round(p.Y * 10, MidpointRounding.AwayFromZero));
-
-    private static void AppendDelta(StringBuilder sb, (long X, long Y) point, (long X, long Y) origin)
-    {
-        AppendNumber(sb, point.X - origin.X);
-        AppendNumber(sb, point.Y - origin.Y);
-    }
-
-    // Writes a value given in tenths in its shortest SVG form ("12", "1.5", ".5", "-.5"),
-    // adding a space only where the previous number would otherwise run into this one.
-    private static void AppendNumber(StringBuilder sb, long tenths)
-    {
-        var negative = tenths < 0;
-        var magnitude = Math.Abs(tenths);
-        long whole = magnitude / 10, fraction = magnitude % 10;
-
-        if (negative)
-        {
-            sb.Append('-');
-        }
-        else if (sb.Length > 0 && char.IsAsciiDigit(sb[^1]))
-        {
-            sb.Append(' ');
-        }
-
-        if (whole != 0 || fraction == 0)
-        {
-            sb.Append(whole.ToString(CultureInfo.InvariantCulture));
-        }
-
-        if (fraction != 0)
-        {
-            sb.Append('.').Append((char)('0' + fraction));
-        }
     }
 }

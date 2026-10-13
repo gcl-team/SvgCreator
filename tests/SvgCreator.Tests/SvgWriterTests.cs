@@ -1,5 +1,4 @@
 using System.Xml.Linq;
-using SvgCreator.Svg;
 using SvgCreator.Fitting;
 
 namespace SvgCreator.Tests;
@@ -18,7 +17,7 @@ public class SvgWriterTests
             Polygon(2, false, new(5, 5), new(6, 5), new(6, 6)),
         ];
 
-        var doc = XDocument.Parse(SvgWriter.Write(10, 8, contours, "#000"));
+        var doc = XDocument.Parse(TestSvg.Write(10, 8, contours, "#000"));
 
         var root = doc.Root!;
         Assert.Equal(Svg + "svg", root.Name);
@@ -45,7 +44,7 @@ public class SvgWriterTests
             ]),
         ];
 
-        var d = (string?)XDocument.Parse(SvgWriter.Write(20, 10, contours, "#000")).Descendants(Svg + "path").Single().Attribute("d");
+        var d = (string?)XDocument.Parse(TestSvg.Write(20, 10, contours, "#000")).Descendants(Svg + "path").Single().Attribute("d");
 
         // Relative to the previous rounded end point; tenths precision; minimal separators.
         Assert.Equal("M2 1c1.3 4.7 10 5 10 .5c0-3.5-9.5-3.5-10-.5Z", d);
@@ -60,7 +59,7 @@ public class SvgWriterTests
             new(2, false, [], new Ellipse(new(50, 40), 20, 8, 30)),
         ];
 
-        var g = XDocument.Parse(SvgWriter.Write(80, 60, contours, "#000")).Descendants(Svg + "g").Single();
+        var g = XDocument.Parse(TestSvg.Write(80, 60, contours, "#000")).Descendants(Svg + "g").Single();
 
         var circle = Assert.Single(g.Elements(Svg + "circle"));
         Assert.Equal(("20", "15", "10"), ((string?)circle.Attribute("cx"), (string?)circle.Attribute("cy"), (string?)circle.Attribute("r")));
@@ -78,7 +77,7 @@ public class SvgWriterTests
             new(1, true, [], new Ellipse(new(50.2, 49.9), 37, 37, 0)),
         ];
 
-        var circle = XDocument.Parse(SvgWriter.Write(100, 100, contours, "navy")).Descendants(Svg + "circle").Single();
+        var circle = XDocument.Parse(TestSvg.Write(100, 100, contours, "navy")).Descendants(Svg + "circle").Single();
 
         Assert.Equal("38.5", (string?)circle.Attribute("r"));
         Assert.Equal("none", (string?)circle.Attribute("fill"));
@@ -95,7 +94,7 @@ public class SvgWriterTests
             Polygon(1, true, new(45, 45), new(45, 55), new(55, 55)),
         ];
 
-        var d = (string?)XDocument.Parse(SvgWriter.Write(100, 100, contours, "#000")).Descendants(Svg + "path").Single().Attribute("d");
+        var d = (string?)XDocument.Parse(TestSvg.Write(100, 100, contours, "#000")).Descendants(Svg + "path").Single().Attribute("d");
 
         Assert.Equal("M90 50a40 30 0 0 1-80 0a40 30 0 0 1 80 0ZM45 45l0 10l10 0Z", d);
     }
@@ -105,7 +104,7 @@ public class SvgWriterTests
     [Fact]
     public void Write_CleanStyle_HasNoFilter()
     {
-        var root = XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000")).Root!;
+        var root = XDocument.Parse(TestSvg.Write(10, 10, Square, "#000")).Root!;
 
         Assert.Empty(root.Descendants(Svg + "defs"));
         Assert.Null(root.Element(Svg + "g")!.Attribute("filter"));
@@ -114,7 +113,7 @@ public class SvgWriterTests
     [Fact]
     public void Write_StampStyle_AddsNativeFilterReferencedByTheInkGroup()
     {
-        var root = XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000", OutputStyle.Stamp, stampSeed: 7)).Root!;
+        var root = XDocument.Parse(TestSvg.Write(10, 10, Square, "#000", OutputStyle.Stamp, stampSeed: 7)).Root!;
 
         var filter = Assert.Single(root.Descendants(Svg + "filter"));
         Assert.Equal("svgcreator-stamp-7", (string?)filter.Attribute("id"));
@@ -125,7 +124,7 @@ public class SvgWriterTests
 
         // The geometry itself is untouched.
         Assert.Equal(
-            XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000")).Descendants(Svg + "path").Single().Attribute("d")!.Value,
+            XDocument.Parse(TestSvg.Write(10, 10, Square, "#000")).Descendants(Svg + "path").Single().Attribute("d")!.Value,
             root.Descendants(Svg + "path").Single().Attribute("d")!.Value);
     }
 
@@ -134,7 +133,7 @@ public class SvgWriterTests
     {
         static (double Displacement, double EdgeFrequency) Texture(double scale)
         {
-            var filter = XDocument.Parse(SvgWriter.Write(10, 10, Square, "#000", OutputStyle.Stamp, 1, scale)).Descendants(Svg + "filter").Single();
+            var filter = XDocument.Parse(TestSvg.Write(10, 10, Square, "#000", OutputStyle.Stamp, 1, scale)).Descendants(Svg + "filter").Single();
             var inv = System.Globalization.CultureInfo.InvariantCulture;
             return (
                 double.Parse((string)filter.Element(Svg + "feDisplacementMap")!.Attribute("scale")!, inv),
@@ -150,7 +149,7 @@ public class SvgWriterTests
 
     private static (XElement Root, XElement Cancel, double Width, double WaveStartX) Postmark(params CurveContour[] contours)
     {
-        var root = XDocument.Parse(SvgWriter.Write(200, 100, contours, "#c0392b", OutputStyle.Postmark)).Root!;
+        var root = XDocument.Parse(TestSvg.Write(200, 100, contours, "#c0392b", OutputStyle.Postmark)).Root!;
         var cancel = root.Elements(Svg + "g").Single(g => (string?)g.Attribute("class") == "postmark-cancel");
         var d = (string)cancel.Element(Svg + "path")!.Attribute("d")!;
         var inv = System.Globalization.CultureInfo.InvariantCulture;
@@ -200,7 +199,7 @@ public class SvgWriterTests
     [Fact]
     public void Write_EscapesFillColor()
     {
-        var svg = SvgWriter.Write(1, 1, [], "\"><script>");
+        var svg = TestSvg.Write(1, 1, [], "\"><script>");
 
         Assert.DoesNotContain("<script>", svg, StringComparison.Ordinal);
         XDocument.Parse(svg);

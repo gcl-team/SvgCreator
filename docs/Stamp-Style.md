@@ -6,7 +6,7 @@
 svgcreator input.png --style stamp --ink-color "#c0392b"   # a red seal impression
 ```
 
-Code: `WriteStampFilter` in `src/SvgCreator/Svg/SvgWriter.cs`; options `Style` and `StampSeed`
+Code: `src/SvgCreator/Svg/StampFilter.cs`; options `Style` and `StampSeed`
 
 ## Geometry versus rendering (why it works alongside `--ellipses`)
 
@@ -67,7 +67,7 @@ Roughening the geometry itself would have been worse on every count:
 svgcreator input.png --style postmark --ink-color "#c0392b"
 ```
 
-Code: `src/SvgCreator/Svg/SvgWriter.Postmark.cs`
+Code: `src/SvgCreator/Svg/PostmarkCancellation.cs`
 
 ### The frame
 

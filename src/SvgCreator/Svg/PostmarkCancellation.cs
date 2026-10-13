@@ -1,6 +1,7 @@
 using System.Text;
 using System.Xml;
 using SvgCreator.Fitting;
+using static SvgCreator.Svg.SvgFormat;
 
 namespace SvgCreator.Svg;
 
@@ -10,7 +11,7 @@ namespace SvgCreator.Svg;
 /// the whole picture into the stamp. Parallel waves then overlap the frame's right side and run a
 /// little past it, as real cancellations do, which keeps the canvas growth modest.
 /// </summary>
-internal static partial class SvgWriter
+internal sealed class PostmarkCancellation : IDecoration
 {
     // Sizes are fractions of the frame's vertical half-height, so the mark scales with the frame.
     private const int CancelLineCount = 6;
@@ -28,17 +29,30 @@ internal static partial class SvgWriter
     // Rectangular frame inset from the canvas edge, as a fraction of the shorter side.
     private const double RectFrameInset = 0.01;
 
-    private readonly record struct Cancellation(string PathData, double StrokeWidth, int RequiredWidth, RectFrame? Frame);
-
     private readonly record struct RectFrame(double X, double Y, double Width, double Height);
 
-    private static Cancellation BuildCancellation(IReadOnlyList<CurveContour> contours, int width, int height)
+    private readonly string pathData;
+    private readonly double strokeWidth;
+    private readonly RectFrame? frame;
+
+    private PostmarkCancellation(string pathData, double strokeWidth, int requiredWidth, RectFrame? frame)
     {
+        this.pathData = pathData;
+        this.strokeWidth = strokeWidth;
+        this.frame = frame;
+        RequiredWidth = requiredWidth;
+    }
+
+    public int RequiredWidth { get; }
+
+    public static PostmarkCancellation For(TracedDrawing drawing)
+    {
+        var (width, height) = (drawing.Width, drawing.Height);
         PointD center;
         double halfWidth, halfHeight, strokeWidth;
         RectFrame? rect = null;
 
-        if (FindEllipseFrame(contours, width, height) is { } frame)
+        if (FindEllipseFrame(drawing.Contours, width, height) is { } frame)
         {
             var angle = frame.AngleDegrees * Math.PI / 180;
             double cos = Math.Cos(angle), sin = Math.Sin(angle);
@@ -67,9 +81,9 @@ internal static partial class SvgWriter
 
         // A quadratic whose control point is offset by 2A peaks at A, so q + repeated t (which
         // mirrors the previous control point) traces a sine-like wave in a few bytes per hump.
-        var halfWaveTenths = (long)Math.Round(halfWave * 10, MidpointRounding.AwayFromZero);
+        var halfWaveTenths = ToTenths(halfWave);
         var controlXTenths = halfWaveTenths / 2;
-        var controlYTenths = (long)Math.Round(-2 * amplitude * 10, MidpointRounding.AwayFromZero);
+        var controlYTenths = ToTenths(-2 * amplitude);
 
         var sb = new StringBuilder();
         for (var i = 0; i < CancelLineCount; i++)
@@ -92,34 +106,34 @@ internal static partial class SvgWriter
         }
 
         var end = startX + length + (2 * strokeWidth);
-        return new Cancellation(sb.ToString(), strokeWidth, (int)Math.Ceiling(end), rect);
+        return new PostmarkCancellation(sb.ToString(), strokeWidth, (int)Math.Ceiling(end), rect);
     }
 
-    private static void WriteCancellation(XmlWriter xml, Cancellation cancellation, string color, string? filterId)
+    public void Write(XmlWriter xml, string color, IInkFilter? filter)
     {
-        xml.WriteStartElement("g", SvgNamespace);
+        xml.WriteStartElement("g", Namespace);
         xml.WriteAttributeString("class", "postmark-cancel");
         xml.WriteAttributeString("fill", "none");
         xml.WriteAttributeString("stroke", color);
-        xml.WriteAttributeString("stroke-width", Format(cancellation.StrokeWidth));
+        xml.WriteAttributeString("stroke-width", Format(strokeWidth));
         xml.WriteAttributeString("stroke-linecap", "round");
-        if (filterId is not null)
+        if (filter is not null)
         {
-            xml.WriteAttributeString("filter", $"url(#{filterId})");
+            xml.WriteAttributeString("filter", $"url(#{filter.Id})");
         }
 
-        if (cancellation.Frame is { } frame)
+        if (frame is { } rect)
         {
-            xml.WriteStartElement("rect", SvgNamespace);
-            xml.WriteAttributeString("x", Format(frame.X));
-            xml.WriteAttributeString("y", Format(frame.Y));
-            xml.WriteAttributeString("width", Format(frame.Width));
-            xml.WriteAttributeString("height", Format(frame.Height));
+            xml.WriteStartElement("rect", Namespace);
+            xml.WriteAttributeString("x", Format(rect.X));
+            xml.WriteAttributeString("y", Format(rect.Y));
+            xml.WriteAttributeString("width", Format(rect.Width));
+            xml.WriteAttributeString("height", Format(rect.Height));
             xml.WriteEndElement();
         }
 
-        xml.WriteStartElement("path", SvgNamespace);
-        xml.WriteAttributeString("d", cancellation.PathData);
+        xml.WriteStartElement("path", Namespace);
+        xml.WriteAttributeString("d", pathData);
         xml.WriteEndElement();
         xml.WriteEndElement();
     }
