@@ -40,7 +40,7 @@ public class SvgGoldenTests
     [Fact]
     public void PostmarkWithoutCircle() => AssertGolden("postmark-rect.svg", TestSvg.Write(80, 80, Square, "#c0392b", OutputStyle.Postmark, 3, 1));
 
-    private static void AssertGolden(string name, string actual, [CallerFilePath] string testFile = "")
+    internal static void AssertGolden(string name, string actual, [CallerFilePath] string testFile = "")
     {
         // XmlWriter uses the platform newline; git may check the files out with either.
         actual = actual.ReplaceLineEndings("\n") + "\n";

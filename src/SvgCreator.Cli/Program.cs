@@ -89,6 +89,36 @@ var inkColorOption = new Option<string>("--ink-color")
     DefaultValueFactory = _ => SvgConversionOptions.Default.FillColor,
 };
 
+var postageStampOption = new Option<string?>("--postage-stamp")
+{
+    Description = "Make a postage stamp with this country name: the image embedded unchanged on perforated paper, with --fee and --caption. --style still applies (Stamp wears the printing; Postmark cancels the stamp).",
+};
+
+var feeOption = new Option<string?>("--fee")
+{
+    Description = "Postage stamp: the fee, such as 50c or $1.20.",
+};
+
+var captionOption = new Option<string?>("--caption")
+{
+    Description = "Postage stamp: a small caption describing the picture.",
+};
+
+var countryCornerOption = new Option<StampCorner?>("--country-corner")
+{
+    Description = "Postage stamp: where the country name goes (default TopLeft).",
+};
+
+var feeCornerOption = new Option<StampCorner?>("--fee-corner")
+{
+    Description = "Postage stamp: where the fee goes (default TopRight).",
+};
+
+var captionCornerOption = new Option<StampCorner?>("--caption-corner")
+{
+    Description = "Postage stamp: where the caption goes (default BottomLeft).",
+};
+
 var rootCommand = new RootCommand("Convert an image into a line-art SVG (black ink outlines, no colouring).")
 {
     inputArgument,
@@ -106,6 +136,12 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     styleOption,
     stampSeedOption,
     inkColorOption,
+    postageStampOption,
+    feeOption,
+    captionOption,
+    countryCornerOption,
+    feeCornerOption,
+    captionCornerOption,
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -127,7 +163,24 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
         Style = parseResult.GetValue(styleOption),
         StampSeed = parseResult.GetValue(stampSeedOption),
         FillColor = parseResult.GetRequiredValue(inkColorOption),
+        Layout = parseResult.GetValue(postageStampOption) is { } country ? StampLayout(country) : null,
     };
+
+    PostageStampLayout StampLayout(string country)
+    {
+        var layout = new PostageStampLayout
+        {
+            Country = country,
+            Fee = parseResult.GetValue(feeOption),
+            Caption = parseResult.GetValue(captionOption),
+        };
+        return layout with
+        {
+            CountryCorner = parseResult.GetValue(countryCornerOption) ?? layout.CountryCorner,
+            FeeCorner = parseResult.GetValue(feeCornerOption) ?? layout.FeeCorner,
+            CaptionCorner = parseResult.GetValue(captionCornerOption) ?? layout.CaptionCorner,
+        };
+    }
 
     try
     {

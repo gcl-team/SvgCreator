@@ -55,6 +55,9 @@ dotnet run --project src/SvgCreator.Cli -- input.png --style stamp --ink-color "
 # postal cancellation: stamp + wavy lines over the circular (or rectangular) frame
 dotnet run --project src/SvgCreator.Cli -- input.png --style postmark --ink-color "#c0392b"
 
+# postage stamp: the image embedded on perforated paper, with country, fee and caption
+dotnet run --project src/SvgCreator.Cli -- input.png --postage-stamp SINGAPORE --fee '$1.20' --caption 'Lion City' --style postmark
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 

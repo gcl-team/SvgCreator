@@ -88,6 +88,12 @@ public sealed partial record SvgConversionOptions
     /// </summary>
     public string FillColor { get; init; } = "#000";
 
+    /// <summary>
+    /// Arranges the picture into a larger design, such as a <see cref="PostageStampLayout"/>.
+    /// Default: <see langword="null"/>, the traced drawing alone.
+    /// </summary>
+    public OutputLayout? Layout { get; init; }
+
     internal void Validate()
     {
         if (!Enum.IsDefined(Mode))
@@ -120,6 +126,8 @@ public sealed partial record SvgConversionOptions
                 $"'{FillColor}' is not a valid colour. Use hex (#c0392b), a CSS name (navy) or rgb()/hsl().",
                 nameof(FillColor));
         }
+
+        Layout?.Validate();
     }
 
     // Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), a CSS named colour, or rgb()/rgba()/hsl()/hsla().

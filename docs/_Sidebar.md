@@ -9,6 +9,7 @@
 - [Shape Recognition](Shape-Recognition.md)
 - [SVG Output](SVG-Output.md)
 - [Stamp and Postmark Styles](Stamp-Style.md)
+- [Postage Stamp Layout](Postage-Stamp.md)
 
 **Cross-cutting**
 - [Native AOT](Native-AOT.md)

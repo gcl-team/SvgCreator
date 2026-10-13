@@ -5,7 +5,8 @@ namespace SvgCreator;
 
 /// <summary>
 /// Default <see cref="ISvgConverter"/>: traces the image (<see cref="LineArtTracer"/>), then renders
-/// the drawing in the chosen <see cref="OutputStyle"/> (<see cref="SvgWriter"/>).
+/// the drawing in the chosen <see cref="OutputStyle"/> (<see cref="SvgWriter"/>). A
+/// <see cref="PostageStampLayout"/> embeds the image untraced instead (<see cref="PostageStampWriter"/>).
 /// </summary>
 public sealed class SvgConverter : ISvgConverter
 {
@@ -16,6 +17,11 @@ public sealed class SvgConverter : ISvgConverter
         options ??= SvgConversionOptions.Default;
         options.Validate();
 
+        if (options.Layout is PostageStampLayout stamp)
+        {
+            return PostageStampWriter.Write(ImageLoader.LoadEncoded(image), stamp, options.FillColor, options.Style, options.StampSeed);
+        }
+
         return Run(ImageLoader.Load(image), options, CancellationToken.None);
     }
 
@@ -25,6 +31,12 @@ public sealed class SvgConverter : ISvgConverter
         ArgumentNullException.ThrowIfNull(image);
         options ??= SvgConversionOptions.Default;
         options.Validate();
+
+        if (options.Layout is PostageStampLayout stamp)
+        {
+            var encoded = await ImageLoader.LoadEncodedAsync(image, cancellationToken).ConfigureAwait(false);
+            return PostageStampWriter.Write(encoded, stamp, options.FillColor, options.Style, options.StampSeed);
+        }
 
         var rgb = await ImageLoader.LoadAsync(image, cancellationToken).ConfigureAwait(false);
         return Run(rgb, options, cancellationToken);
@@ -44,7 +56,7 @@ public sealed class SvgConverter : ISvgConverter
 
         // The stamp texture follows line thickness, which LineSigma sets in Lines mode.
         var stampScale = options.Mode == ExtractionMode.Lines ? options.LineSigma : 1.0;
-        var style = SvgStyle.For(options.Style, drawing, options.StampSeed, stampScale);
+        var style = SvgStyle.For(options.Style, options.StampSeed, stampScale, () => PostmarkCancellation.For(drawing));
         return SvgWriter.Write(drawing, options.FillColor, style);
     }
 }
