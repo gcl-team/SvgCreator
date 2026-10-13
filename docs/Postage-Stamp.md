@@ -62,7 +62,9 @@ Native `<text>` stays small and editable, but the library never knows which font
 | Lowercase | 0.54 |
 | Space, punctuation, `i l j` | 0.30 |
 
-Regular weight is 8% narrower. If a row's estimate plus the gap between items is wider than the picture, the whole row shrinks evenly. A flat 0.62 em for every character underestimated bold capitals by about 15%, which is exactly the overlap the first render showed.
+Regular weight is 8% narrower. If a row's estimate plus the gap between items is wider than the picture, the text shrinks evenly into the space left after the gap. A flat 0.62 em for every character underestimated bold capitals by about 15%, which is exactly the overlap the first render showed.
+
+**Scale only what actually scales.** The first fix divided the available width by *text + gap*. But the items are anchored to the picture's edges, so the gap never shrinks. The row then came out `gap × (1 − scale)` too wide: 61.2 px in a 60 px row in the long-country test, which is enough for the labels to touch. The scale is now `(available − gap) / text`. The test checks the fitted width at full precision, because the SVG rounds `font-size` to tenths, which is coarser than the error.
 
 ## Checking renders
 

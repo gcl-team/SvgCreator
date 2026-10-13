@@ -42,7 +42,7 @@ internal static class PostageStampWriter
     private const string PaperEdgeColor = "#bbb";
     private const string FontFamily = "Georgia, 'Times New Roman', serif";
 
-    private sealed record Item(string ClassName, string Text, StampCorner Corner, double Size, bool Bold, bool Italic)
+    internal sealed record Item(string ClassName, string Text, StampCorner Corner, double Size, bool Bold, bool Italic)
     {
         public bool IsTop => Corner is StampCorner.TopLeft or StampCorner.TopRight;
 
@@ -130,18 +130,27 @@ internal static class PostageStampWriter
         return items;
     }
 
-    // Shrinks a row's type evenly when its estimated width would run past the picture.
-    private static List<Item> FitRow(List<Item> row, double available, double unit)
+    // Shrinks a row's type evenly when its estimated width would run past the picture. Only the
+    // text scales: the items are anchored to the picture's edges, so the gap between them stays
+    // fixed and the text gets the space that remains. (A row holds at most two items, and the gap
+    // is a small fraction of the picture's shorter side, so that space is always positive.)
+    internal static List<Item> FitRow(List<Item> row, double available, double unit)
     {
-        var estimated = row.Sum(i => EstimateWidth(i)) + (Math.Max(0, row.Count - 1) * ItemGap * unit);
-        if (estimated <= available)
+        var text = row.Sum(EstimateWidth);
+        var gap = Gap(row, unit);
+        if (text + gap <= available)
         {
             return row;
         }
 
-        var scale = available / estimated;
+        var scale = (available - gap) / text;
         return [.. row.Select(i => i with { Size = i.Size * scale })];
     }
+
+    /// <summary>The estimated width a row takes: its text plus the fixed gaps between items.</summary>
+    internal static double RowWidth(List<Item> row, double unit) => row.Sum(EstimateWidth) + Gap(row, unit);
+
+    private static double Gap(List<Item> row, double unit) => Math.Max(0, row.Count - 1) * ItemGap * unit;
 
     private static double EstimateWidth(Item item)
     {

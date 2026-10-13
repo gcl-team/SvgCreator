@@ -91,6 +91,32 @@ public class PostageStampTests
     }
 
     [Fact]
+    public void FitRow_ShrinksOnlyTheTextSoTheRowWithItsFixedGapFits()
+    {
+        // The 60×40 picture with a long country and the fee: about 61 px if the gap were scaled too.
+        const double Unit = 40, Available = 60;
+        List<PostageStampWriter.Item> row =
+        [
+            new("stamp-country", "UNITED KINGDOM OF GREAT BRITAIN", StampCorner.TopLeft, 0.12 * Unit, Bold: true, Italic: false),
+            new("stamp-fee", "$1.20", StampCorner.TopRight, 0.11 * Unit, Bold: true, Italic: false),
+        ];
+        Assert.True(PostageStampWriter.RowWidth(row, Unit) > Available);
+
+        var fitted = PostageStampWriter.FitRow(row, Available, Unit);
+
+        Assert.Equal(Available, PostageStampWriter.RowWidth(fitted, Unit), 9);
+        Assert.Equal(row[0].Size / row[1].Size, fitted[0].Size / fitted[1].Size, 9); // shrunk together
+    }
+
+    [Fact]
+    public void FitRow_LeavesARowThatFitsUnchanged()
+    {
+        List<PostageStampWriter.Item> row = [new("stamp-country", "JAPAN", StampCorner.TopLeft, 4.8, Bold: true, Italic: false)];
+
+        Assert.Same(row, PostageStampWriter.FitRow(row, 60, 40));
+    }
+
+    [Fact]
     public void Create_EscapesText()
     {
         var svg = Create(new PostageStampOptions { Country = "<script>", Caption = "\"&'" });
