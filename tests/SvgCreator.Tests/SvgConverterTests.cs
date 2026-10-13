@@ -89,6 +89,7 @@ public class SvgConverterTests
     [InlineData("#C0392B80")]
     [InlineData("#f00")]
     [InlineData("navy")]
+    [InlineData("RebeccaPurple")]
     [InlineData("rgb(192, 57, 43)")]
     [InlineData("hsl(6 63% 46% / .5)")]
     public void Convert_CustomInkColor_IsUsedAsFill(string color)
@@ -104,6 +105,7 @@ public class SvgConverterTests
     [Theory]
     [InlineData("#00g")]
     [InlineData("#12345")]
+    [InlineData("notacolour")]
     [InlineData("red;stroke:blue")]
     [InlineData("url(#x)")]
     [InlineData("\"><script>")]
