@@ -147,6 +147,8 @@ public class SvgWriterTests
     [InlineData(1.5, 2.0)]
     public void StampFilter_SharesAnIdExactlyWhenTheWrittenDefinitionsMatch(double a, double b)
     {
+        // The definition without its id: comparing the id too would make the test circular, since
+        // filters with different ids would always differ, whatever primitives they write.
         static string Definition(StampFilter filter)
         {
             var sb = new System.Text.StringBuilder();
@@ -155,7 +157,9 @@ public class SvgWriterTests
                 filter.WriteDefinition(xml, 120, 100);
             }
 
-            return sb.ToString();
+            var definition = XElement.Parse(sb.ToString());
+            definition.Descendants().Attributes("id").Remove();
+            return definition.ToString();
         }
 
         var (first, second) = (new StampFilter(1, a), new StampFilter(1, b));
