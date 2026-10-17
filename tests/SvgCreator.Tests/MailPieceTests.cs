@@ -117,7 +117,7 @@ public class MailPieceTests
         var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
         var ring = new Ellipse(new PointD(50, 60), 40, 40, 0); // in the traced drawing's coordinates
 
-        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp, 1100);
+        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp, (1100, 550));
         var scale = rect.Height / 120;
         var centreX = rect.X + (50 * scale);
 
@@ -135,7 +135,7 @@ public class MailPieceTests
         var stamp = new MailPieceComposer.Rect(700, 70, 300, 200);
         var ring = new Ellipse(new PointD(50, 60), 40, 40, 0);
 
-        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp, 1100);
+        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp, (1100, 550));
 
         Assert.Equal(stamp.X, rect.X + (50 * rect.Height / 120), 9);
     }
@@ -147,12 +147,13 @@ public class MailPieceTests
     public void PostmarkRect_EllipticalFrame_SizesItsHeightAndBoundsItsWidth(double angle, double halfHeight, double halfWidth)
     {
         // A portrait stamp, 150 wide and 200 tall: the frame's vertical reach is sized to
-        // 0.42 × 200 = 84, and its horizontal reach at that size may cover only 150 / 3 = 50.
-        var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
+        // 0.42 × 200 = 84, and its horizontal reach at that size may cover only 150 / 3 = 50. The
+        // envelope is wide, and the stamp low, enough that keeping the canvas on it doesn't narrow it.
+        var stamp = new MailPieceComposer.Rect(800, 100, 150, 200);
         var ring = new Ellipse(new PointD(100, 100), 80, 40, angle);
         Assert.Equal((halfWidth, halfHeight), ring.HalfExtents, new ExtentComparer());
 
-        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp, 1200); // wide enough not to narrow it
+        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp, (1200, 550));
         var scale = rect.Height / 200;
         var centreX = rect.X + (100 * scale);
 
@@ -171,7 +172,7 @@ public class MailPieceTests
         var stamp = MailPieceComposer.StampRect(null, 550, 550);
         var ring = new Ellipse(new PointD(200, 100), 180, 60, 0);
 
-        var rect = MailPieceComposer.PostmarkRect((420, 200), ring, 200, stamp, 550);
+        var rect = MailPieceComposer.PostmarkRect((420, 200), ring, 200, stamp, (550, 550));
         var scale = rect.Width / 420;
         var centreX = rect.X + (200 * scale);
 
@@ -182,6 +183,30 @@ public class MailPieceTests
         Assert.InRange(centreX - (180 * scale), 0, stamp.X);         // so is the ring's left edge
         Assert.Equal(Math.Min(180 * scale, stamp.Width / 3), centreX + (180 * scale) - stamp.X, 9); // and it still covers a third
         Assert.Equal(stamp.Y + (0.62 * stamp.Height), rect.Y + (100 * scale), 9);
+    }
+
+    [Theory]
+    [InlineData(1100, 550, 200, 200, 100, 100, 55, 55)]   // a centred ring: fits as sized
+    [InlineData(1100, 550, 200, 200, 100, 140, 55, 55)]   // artwork above the ring: would start at y = −17.42
+    [InlineData(1100, 550, 200, 600, 100, 60, 55, 55)]    // artwork far below it: would end past y = 550
+    [InlineData(550, 550, 420, 200, 200, 100, 180, 60)]   // a wide ellipse: would start at x = −119.46
+    public void PostmarkRect_FramedPostmark_StaysOnTheEnvelopeAndOverTheStamp(
+        double envelopeWidth, double envelopeHeight, double width, double height, double centreX, double centreY, double radiusX, double radiusY)
+    {
+        // No postage stamp: the postmark goes where the stamp would be.
+        var stamp = MailPieceComposer.StampRect(null, envelopeWidth, Math.Min(envelopeWidth, envelopeHeight));
+        var ring = new Ellipse(new PointD(centreX, centreY), radiusX, radiusY, 0);
+
+        var rect = MailPieceComposer.PostmarkRect((width, height), ring, (int)height, stamp, (envelopeWidth, envelopeHeight));
+        var scale = rect.Height / height;
+
+        Assert.InRange(rect.X, -1e-9, envelopeWidth);
+        Assert.InRange(rect.X + rect.Width, 0, envelopeWidth + 1e-9);
+        Assert.InRange(rect.Y, -1e-9, envelopeHeight);
+        Assert.InRange(rect.Y + rect.Height, 0, envelopeHeight + 1e-9);
+        Assert.True(scale <= 0.42 * stamp.Height / radiusY + 1e-9);                          // never larger than sized
+        Assert.Equal(stamp.Y + (0.62 * stamp.Height), rect.Y + (centreY * scale), 9);       // the ring keeps its height
+        Assert.InRange(rect.X + ((centreX + radiusX) * scale) - stamp.X, 1e-9, stamp.Width / 3 + 1e-9); // and still covers the stamp
     }
 
     [Fact]
@@ -228,7 +253,7 @@ public class MailPieceTests
         // 120 tall, scales by 4/3 to 320 wide), and its right quarter, 80, lies over the stamp.
         var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
 
-        var rect = MailPieceComposer.PostmarkRect((240, 120), null, 120, stamp, 1100);
+        var rect = MailPieceComposer.PostmarkRect((240, 120), null, 120, stamp, (1100, 550));
 
         Assert.Equal(0.8 * 200, rect.Height, 9);
         Assert.Equal(240 * rect.Height / 120, rect.Width, 9);

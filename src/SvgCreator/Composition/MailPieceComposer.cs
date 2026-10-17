@@ -62,7 +62,7 @@ internal static class MailPieceComposer
         {
             var drawing = LineArtTracer.Trace(m.Image, m.Options, cancellationToken);
             postmarkSvg = SvgConverter.Render(drawing, m.Options);
-            postmarkRect = PostmarkRect(Size(postmarkSvg), PostmarkCancellation.FrameOf(drawing), drawing.Height, stamp, width);
+            postmarkRect = PostmarkRect(Size(postmarkSvg), PostmarkCancellation.FrameOf(drawing), drawing.Height, stamp, (width, height));
         }
 
         return SvgWriter.WriteDocument(width, height, envelope.PaperColor, SvgStyle.Clean, (xml, _) =>
@@ -97,10 +97,11 @@ internal static class MailPieceComposer
     /// <summary>
     /// The postmark's place. With a circular frame, the ring is scaled to a share of the stamp's
     /// height and centred on the stamp's left edge; without one, the whole picture overlaps it.
-    /// Either way, a postmark too wide for the envelope is made smaller until it fits.
+    /// Either way, the whole postmark is kept on the envelope, made smaller if it must be.
     /// </summary>
-    internal static Rect PostmarkRect((double Width, double Height) size, Fitting.Ellipse? frame, int drawingHeight, Rect stamp, double envelopeWidth)
+    internal static Rect PostmarkRect((double Width, double Height) size, Fitting.Ellipse? frame, int drawingHeight, Rect stamp, (double Width, double Height) envelope)
     {
+        var envelopeWidth = envelope.Width;
         if (frame is { } ring)
         {
             // The frame may be an ellipse, and rotated: size its vertical reach, and bound the
@@ -112,17 +113,24 @@ internal static class MailPieceComposer
             // waves off the right. The canvas's left edge is stamp.X − Cx·s − max(0, hw·s − cover)
             // and its right edge that plus W·s. Each is the lesser of two lines in the scale s (the
             // ring moved or not): the left edge fits only if both lines do, the right if either does.
+            // Vertically the ring's centre doesn't move, so a frame off the drawing's centre (with
+            // artwork above or below it) only has to fit the room above and below that centre.
+            var cy = stamp.Y + (RingCentreY * stamp.Height);
             var (left, right) = (ring.Center.X, size.Width - ring.Center.X);
-            var scale = Math.Min(RingRadius * stamp.Height / halfHeight, Math.Min(
-                Math.Min(Limit(stamp.X, left), Limit(stamp.X + cover, left + halfWidth)),
-                Math.Max(Limit(envelopeWidth - stamp.X, right), Limit(envelopeWidth - stamp.X - cover, right - halfWidth))));
+            var (above, below) = (ring.Center.Y, size.Height - ring.Center.Y);
+            var scale = Math.Min(
+                Math.Min(RingRadius * stamp.Height / halfHeight, Math.Min(Limit(cy, above), Limit(envelope.Height - cy, below))),
+                Math.Min(
+                    Math.Min(Limit(stamp.X, left), Limit(stamp.X + cover, left + halfWidth)),
+                    Math.Max(Limit(envelopeWidth - stamp.X, right), Limit(envelopeWidth - stamp.X - cover, right - halfWidth))));
             var shift = Math.Max(0, (halfWidth * scale) - cover);
-            var (cx, cy) = (stamp.X - shift, stamp.Y + (RingCentreY * stamp.Height));
+            var cx = stamp.X - shift;
             return new Rect(cx - (ring.Center.X * scale), cy - (ring.Center.Y * scale), size.Width * scale, size.Height * scale);
         }
 
         // A wide picture is narrowed until it fits on the envelope on both sides of the stamp's
-        // left edge, keeping its quarter over the stamp.
+        // left edge, keeping its quarter over the stamp. It always fits vertically: it is shorter
+        // than the stamp and centred on it.
         var pictureScale = Math.Min(
             PictureHeight * stamp.Height / drawingHeight,
             Math.Min(stamp.X / (1 - PictureOverlap), (envelopeWidth - stamp.X) / PictureOverlap) / size.Width);
