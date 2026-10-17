@@ -161,6 +161,60 @@ public class MailPieceTests
         Assert.Equal(Math.Min(halfWidth * scale, 150.0 / 3), centreX + (halfWidth * scale) - stamp.X, 3);
     }
 
+    [Fact]
+    public void PostmarkRect_NoFrame_ScalesThePictureAndOverlapsAQuarter()
+    {
+        // A 150 × 200 stamp: the picture is 0.8 × 200 = 160 tall (its 240 × 120 canvas, drawn at
+        // 120 tall, scales by 4/3 to 320 wide), and its right quarter, 80, lies over the stamp.
+        var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
+
+        var rect = MailPieceComposer.PostmarkRect((240, 120), null, 120, stamp);
+
+        Assert.Equal(0.8 * 200, rect.Height, 9);
+        Assert.Equal(240 * rect.Height / 120, rect.Width, 9);
+        Assert.Equal(rect.Width / 4, rect.X + rect.Width - stamp.X, 9);
+        Assert.Equal(stamp.Y + (stamp.Height / 2), rect.Y + (rect.Height / 2), 9);
+    }
+
+    [Fact]
+    public void Create_PostmarkWithoutCircleOrStamp_OverlapsWhereTheStampWouldBe()
+    {
+        // Three bars and no ring: the postmark is the whole picture, laid against the stamp a
+        // 440 × 220 envelope would have. That stamp is 3:4, 0.36 × 220 tall, inset 0.13 × 220.
+        var root = XDocument.Parse(new MailPieceGenerator().Create(Envelope, postmark: new PostmarkPiece(Bars())
+        {
+            Options = PostmarkPiece.DefaultOptions with { Mode = ExtractionMode.Threshold },
+        })).Root!;
+        var postmark = Piece(root, "mail-postmark");
+        var (stampHeight, stampY) = (0.36 * 220, 0.13 * 220);
+        var stampX = 440 - stampY - (0.75 * stampHeight);
+        var (x, y, w, h) = (Number(postmark, "x"), Number(postmark, "y"), Number(postmark, "width"), Number(postmark, "height"));
+
+        Assert.Equal(["mail-envelope", "mail-postmark"], root.Elements(Svg + "svg").Select(e => (string?)e.Attribute("class")));
+        Assert.Empty(postmark.Descendants(Svg + "circle"));
+        Assert.Equal(0.8 * stampHeight, h, 1);
+        Assert.Equal(w / 4, x + w - stampX, 1);
+        Assert.Equal(stampY + (stampHeight / 2), y + (h / 2), 1);
+    }
+
+    // Three black bars on white, too thin to be taken for a frame.
+    private static MemoryStream Bars()
+    {
+        using var bitmap = new SKBitmap(120, 80);
+        for (var y = 0; y < 80; y++)
+        {
+            for (var x = 0; x < 120; x++)
+            {
+                bitmap.SetPixel(x, y, x is >= 10 and < 110 && y is >= 15 and < 65 && (y - 15) % 20 < 10 ? SKColors.Black : SKColors.White);
+            }
+        }
+
+        var png = new MemoryStream();
+        bitmap.Encode(png, SKEncodedImageFormat.Png, 100);
+        png.Position = 0;
+        return png;
+    }
+
     private sealed class ExtentComparer : IEqualityComparer<(double, double)>
     {
         public bool Equals((double, double) a, (double, double) b) => Math.Abs(a.Item1 - b.Item1) < 1e-3 && Math.Abs(a.Item2 - b.Item2) < 1e-3;
