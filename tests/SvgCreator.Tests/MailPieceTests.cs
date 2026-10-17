@@ -117,7 +117,7 @@ public class MailPieceTests
         var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
         var ring = new Ellipse(new PointD(50, 60), 40, 40, 0); // in the traced drawing's coordinates
 
-        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp);
+        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp, 1100);
         var scale = rect.Height / 120;
         var centreX = rect.X + (50 * scale);
 
@@ -135,7 +135,7 @@ public class MailPieceTests
         var stamp = new MailPieceComposer.Rect(700, 70, 300, 200);
         var ring = new Ellipse(new PointD(50, 60), 40, 40, 0);
 
-        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp);
+        var rect = MailPieceComposer.PostmarkRect((180, 120), ring, 120, stamp, 1100);
 
         Assert.Equal(stamp.X, rect.X + (50 * rect.Height / 120), 9);
     }
@@ -152,7 +152,7 @@ public class MailPieceTests
         var ring = new Ellipse(new PointD(100, 100), 80, 40, angle);
         Assert.Equal((halfWidth, halfHeight), ring.HalfExtents, new ExtentComparer());
 
-        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp);
+        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp, 1100);
         var scale = rect.Height / 200;
         var centreX = rect.X + (100 * scale);
 
@@ -168,7 +168,7 @@ public class MailPieceTests
         // 120 tall, scales by 4/3 to 320 wide), and its right quarter, 80, lies over the stamp.
         var stamp = new MailPieceComposer.Rect(800, 70, 150, 200);
 
-        var rect = MailPieceComposer.PostmarkRect((240, 120), null, 120, stamp);
+        var rect = MailPieceComposer.PostmarkRect((240, 120), null, 120, stamp, 1100);
 
         Assert.Equal(0.8 * 200, rect.Height, 9);
         Assert.Equal(240 * rect.Height / 120, rect.Width, 9);
@@ -197,15 +197,35 @@ public class MailPieceTests
         Assert.Equal(stampY + (stampHeight / 2), y + (h / 2), 1);
     }
 
-    // Three black bars on white, too thin to be taken for a frame.
-    private static MemoryStream Bars()
+    [Fact]
+    public void Create_WidePostmarkWithoutCircle_StaysOnTheEnvelope()
     {
-        using var bitmap = new SKBitmap(120, 80);
-        for (var y = 0; y < 80; y++)
+        // A 1000 × 100 picture at 0.8 of the default envelope's 198 px stamp height would be at
+        // least 1584 wide, from x ≤ −308 to x ≥ 1276. It is narrowed to the room right of the
+        // stamp's left edge (x = 880), 220, which takes its quarter: 880 wide, from 220 to 1100.
+        var root = XDocument.Parse(new MailPieceGenerator().Create(new EnvelopeOptions(), postmark: new PostmarkPiece(Bars(1000, 100))
         {
-            for (var x = 0; x < 120; x++)
+            Options = PostmarkPiece.DefaultOptions with { Mode = ExtractionMode.Threshold },
+        })).Root!;
+        var postmark = Piece(root, "mail-postmark");
+        var (x, w) = (Number(postmark, "x"), Number(postmark, "width"));
+        const double stampX = 1100 - 71.5 - 148.5; // a 3:4 stamp, 0.36 × 550 tall, inset 0.13 × 550
+
+        Assert.True(Number(postmark, "height") < 0.8 * 198);
+        Assert.InRange(x, 0, 1100);
+        Assert.InRange(x + w, 0, 1100.01);
+        Assert.Equal(w / 4, x + w - stampX, 1);
+    }
+
+    // Three black bars on white, too thin to be taken for a frame.
+    private static MemoryStream Bars(int width = 120, int height = 80)
+    {
+        using var bitmap = new SKBitmap(width, height);
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
             {
-                bitmap.SetPixel(x, y, x is >= 10 and < 110 && y is >= 15 and < 65 && (y - 15) % 20 < 10 ? SKColors.Black : SKColors.White);
+                bitmap.SetPixel(x, y, x >= 10 && x < width - 10 && y is >= 15 and < 65 && (y - 15) % 20 < 10 ? SKColors.Black : SKColors.White);
             }
         }
 

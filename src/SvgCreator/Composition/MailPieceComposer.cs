@@ -38,8 +38,8 @@ internal static class MailPieceComposer
     // across the stamp.
     private const double MaxRingCover = 1.0 / 3;
 
-    // A postmark without a circle is the whole traced picture: this tall, its right quarter over
-    // the stamp's left edge.
+    // A postmark without a circle is the whole traced picture: this tall (or less, if it is too
+    // wide for the envelope), its right quarter over the stamp's left edge.
     private const double PictureHeight = 0.8;
     private const double PictureOverlap = 0.25;
 
@@ -62,7 +62,7 @@ internal static class MailPieceComposer
         {
             var drawing = LineArtTracer.Trace(m.Image, m.Options, cancellationToken);
             postmarkSvg = SvgConverter.Render(drawing, m.Options);
-            postmarkRect = PostmarkRect(Size(postmarkSvg), PostmarkCancellation.FrameOf(drawing), drawing.Height, stamp);
+            postmarkRect = PostmarkRect(Size(postmarkSvg), PostmarkCancellation.FrameOf(drawing), drawing.Height, stamp, width);
         }
 
         return SvgWriter.WriteDocument(width, height, envelope.PaperColor, SvgStyle.Clean, (xml, _) =>
@@ -96,9 +96,10 @@ internal static class MailPieceComposer
 
     /// <summary>
     /// The postmark's place. With a circular frame, the ring is scaled to a share of the stamp's
-    /// height and centred on the stamp's left edge; without one, the whole picture overlaps it.
+    /// height and centred on the stamp's left edge; without one, the whole picture overlaps it,
+    /// made smaller if it is too wide for the envelope.
     /// </summary>
-    internal static Rect PostmarkRect((double Width, double Height) size, Fitting.Ellipse? frame, int drawingHeight, Rect stamp)
+    internal static Rect PostmarkRect((double Width, double Height) size, Fitting.Ellipse? frame, int drawingHeight, Rect stamp, double envelopeWidth)
     {
         if (frame is { } ring)
         {
@@ -111,7 +112,11 @@ internal static class MailPieceComposer
             return new Rect(cx - (ring.Center.X * scale), cy - (ring.Center.Y * scale), size.Width * scale, size.Height * scale);
         }
 
-        var pictureScale = PictureHeight * stamp.Height / drawingHeight;
+        // A wide picture is narrowed until it fits on the envelope on both sides of the stamp's
+        // left edge, keeping its quarter over the stamp.
+        var pictureScale = Math.Min(
+            PictureHeight * stamp.Height / drawingHeight,
+            Math.Min(stamp.X / (1 - PictureOverlap), (envelopeWidth - stamp.X) / PictureOverlap) / size.Width);
         var (w, h) = (size.Width * pictureScale, size.Height * pictureScale);
         return new Rect(stamp.X - (w * (1 - PictureOverlap)), stamp.Y + ((stamp.Height - h) / 2), w, h);
     }
