@@ -225,6 +225,29 @@ public class SvgWriterTests
     }
 
     [Fact]
+    public void Write_PostmarkWithThickRingBand_KeepsTheWavesInsideTheCanvasHeight()
+    {
+        // A band 40 px wide (radii 48 and 8) filling the 100 px height: at the usual band of
+        // 1.2 × 48, the 40 px waves would reach from about y = −2.3 to 102.3, outside the canvas
+        // and the filter region, which only grow sideways. The band narrows to fit instead.
+        var (root, cancel, _, _) = Postmark(
+            new CurveContour(1, false, [], new Ellipse(new(100, 50), 48, 48, 0)),
+            new CurveContour(1, true, [], new Ellipse(new(100, 50), 8, 8, 0)));
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var stroke = double.Parse((string)cancel.Attribute("stroke-width")!, inv);
+        var lines = ((string)cancel.Element(Svg + "path")!.Attribute("d")!)
+            .Split('M', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => System.Text.RegularExpressions.Regex.Matches(line, @"-?[\d.]+").Select(n => double.Parse(n.Value, inv)).ToArray())
+            .ToList();
+        var amplitude = Math.Abs(lines[0][3]) / 2; // a quadratic's control offset is twice its peak
+
+        Assert.Equal(40, stroke);
+        Assert.Equal("100", (string?)root.Attribute("height"));
+        Assert.InRange(lines.Min(l => l[1]) - amplitude - (stroke / 2), 0, 100);
+        Assert.InRange(lines.Max(l => l[1]) + amplitude + (stroke / 2), 0, 100);
+    }
+
+    [Fact]
     public void Write_PostmarkWithSolidDiscFrame_UsesAShareOfTheFrameHeight()
     {
         // No hole, so no band to match: 0.018 of the half-height of 100 is 1.8 (above the 1.5 floor).

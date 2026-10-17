@@ -73,7 +73,12 @@ internal sealed class PostmarkCancellation : IDecoration
             halfHeight = (height / 2.0) - inset;
         }
 
-        var band = CancelBandHeight * halfHeight;
+        // The canvas only grows sideways, so the outer waves, with their amplitude and half the
+        // stroke, must fit above and below: a thick ring near the edges narrows the band. The
+        // reserve is one tenth short, the precision the path is written at.
+        var room = Math.Min(center.Y, height - center.Y) - (strokeWidth / 2) - 0.1;
+        var reach = 0.5 + (CancelAmplitude / (CancelLineCount - 1)); // of the band, from its middle
+        var band = Math.Clamp(room / reach, 0, CancelBandHeight * halfHeight);
         var spacing = band / (CancelLineCount - 1);
         var length = (CancelOverlap + CancelOverhang) * halfHeight;
         var halfWave = length / CancelHalfWaves;
