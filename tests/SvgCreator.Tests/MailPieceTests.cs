@@ -152,13 +152,73 @@ public class MailPieceTests
         var ring = new Ellipse(new PointD(100, 100), 80, 40, angle);
         Assert.Equal((halfWidth, halfHeight), ring.HalfExtents, new ExtentComparer());
 
-        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp, 1100);
+        var rect = MailPieceComposer.PostmarkRect((300, 200), ring, 200, stamp, 1200); // wide enough not to narrow it
         var scale = rect.Height / 200;
         var centreX = rect.X + (100 * scale);
 
         Assert.Equal(0.42 * 200, halfHeight * scale, 3);                    // sized by how far it reaches up and down
         // Covers at most a third, however wide: a frame that already fits stays on the stamp's edge.
         Assert.Equal(Math.Min(halfWidth * scale, 150.0 / 3), centreX + (halfWidth * scale) - stamp.X, 3);
+    }
+
+    [Fact]
+    public void PostmarkRect_WideEllipticalFrame_IsMadeSmallerToFitTheEnvelope()
+    {
+        // A 550 × 550 envelope with no postage stamp: its stamp is 148.5 × 198 at x = 330. A
+        // frame 180 × 60 centred in a 400 × 200 drawing would scale by 0.42 × 198 / 60 = 1.386,
+        // and after the cover rule its ring would span x = −119.46 to 379.5. The canvas is 420
+        // wide, as the Postmark style widens it for the waves.
+        var stamp = MailPieceComposer.StampRect(null, 550, 550);
+        var ring = new Ellipse(new PointD(200, 100), 180, 60, 0);
+
+        var rect = MailPieceComposer.PostmarkRect((420, 200), ring, 200, stamp, 550);
+        var scale = rect.Width / 420;
+        var centreX = rect.X + (200 * scale);
+
+        Assert.True(scale < 0.42 * 198 / 60);
+        // The canvas, ring and waves, is on the envelope: here its left edge is what limits it.
+        Assert.Equal(0, rect.X, 9);
+        Assert.InRange(rect.X + rect.Width, 0, 550);
+        Assert.InRange(centreX - (180 * scale), 0, stamp.X);         // so is the ring's left edge
+        Assert.Equal(Math.Min(180 * scale, stamp.Width / 3), centreX + (180 * scale) - stamp.X, 9); // and it still covers a third
+        Assert.Equal(stamp.Y + (0.62 * stamp.Height), rect.Y + (100 * scale), 9);
+    }
+
+    [Fact]
+    public void Create_WideEllipticalPostmark_StaysOnTheEnvelope()
+    {
+        // The same frame traced from a picture: a band 6 px wide, so the real waves set the canvas.
+        var root = XDocument.Parse(new MailPieceGenerator().Create(new EnvelopeOptions { Width = 550, Height = 550 }, postmark: new PostmarkPiece(EllipticalSeal())
+        {
+            Options = PostmarkPiece.DefaultOptions with { Mode = ExtractionMode.Threshold },
+        })).Root!;
+        var postmark = Piece(root, "mail-postmark");
+        var (x, w) = (Number(postmark, "x"), Number(postmark, "width"));
+        var stamp = MailPieceComposer.StampRect(null, 550, 550);
+
+        Assert.Empty(postmark.Descendants(Svg + "rect"));                 // the ellipse was taken as the frame
+        Assert.InRange(x, 0, 550);
+        Assert.InRange(x + w, 0, 550.01);
+        Assert.True(x + w > stamp.X);                                      // the postmark still reaches the stamp
+    }
+
+    // A 400 × 200 picture of an elliptical band, outer radii 180 × 60 and inner 174 × 54.
+    private static MemoryStream EllipticalSeal()
+    {
+        using var bitmap = new SKBitmap(400, 200);
+        for (var y = 0; y < 200; y++)
+        {
+            for (var x = 0; x < 400; x++)
+            {
+                double Reach(double rx, double ry) => Math.Pow((x + 0.5 - 200) / rx, 2) + Math.Pow((y + 0.5 - 100) / ry, 2);
+                bitmap.SetPixel(x, y, Reach(180, 60) <= 1 && Reach(174, 54) >= 1 ? SKColors.Black : SKColors.White);
+            }
+        }
+
+        var png = new MemoryStream();
+        bitmap.Encode(png, SKEncodedImageFormat.Png, 100);
+        png.Position = 0;
+        return png;
     }
 
     [Fact]

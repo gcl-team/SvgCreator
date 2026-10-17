@@ -96,8 +96,8 @@ internal static class MailPieceComposer
 
     /// <summary>
     /// The postmark's place. With a circular frame, the ring is scaled to a share of the stamp's
-    /// height and centred on the stamp's left edge; without one, the whole picture overlaps it,
-    /// made smaller if it is too wide for the envelope.
+    /// height and centred on the stamp's left edge; without one, the whole picture overlaps it.
+    /// Either way, a postmark too wide for the envelope is made smaller until it fits.
     /// </summary>
     internal static Rect PostmarkRect((double Width, double Height) size, Fitting.Ellipse? frame, int drawingHeight, Rect stamp, double envelopeWidth)
     {
@@ -106,8 +106,17 @@ internal static class MailPieceComposer
             // The frame may be an ellipse, and rotated: size its vertical reach, and bound the
             // cover by its horizontal reach at that size.
             var (halfWidth, halfHeight) = ring.HalfExtents;
-            var scale = RingRadius * stamp.Height / halfHeight;
-            var shift = Math.Max(0, (halfWidth * scale) - (MaxRingCover * stamp.Width));
+            var cover = MaxRingCover * stamp.Width;
+
+            // A wide frame, moved left by the cover rule, may run off the envelope, and its
+            // waves off the right. The canvas's left edge is stamp.X − Cx·s − max(0, hw·s − cover)
+            // and its right edge that plus W·s. Each is the lesser of two lines in the scale s (the
+            // ring moved or not): the left edge fits only if both lines do, the right if either does.
+            var (left, right) = (ring.Center.X, size.Width - ring.Center.X);
+            var scale = Math.Min(RingRadius * stamp.Height / halfHeight, Math.Min(
+                Math.Min(Limit(stamp.X, left), Limit(stamp.X + cover, left + halfWidth)),
+                Math.Max(Limit(envelopeWidth - stamp.X, right), Limit(envelopeWidth - stamp.X - cover, right - halfWidth))));
+            var shift = Math.Max(0, (halfWidth * scale) - cover);
             var (cx, cy) = (stamp.X - shift, stamp.Y + (RingCentreY * stamp.Height));
             return new Rect(cx - (ring.Center.X * scale), cy - (ring.Center.Y * scale), size.Width * scale, size.Height * scale);
         }
@@ -120,6 +129,9 @@ internal static class MailPieceComposer
         var (w, h) = (size.Width * pictureScale, size.Height * pictureScale);
         return new Rect(stamp.X - (w * (1 - PictureOverlap)), stamp.Y + ((stamp.Height - h) / 2), w, h);
     }
+
+    // The largest scale at which a length growing by perScale fits in room (none if it doesn't grow).
+    private static double Limit(double room, double perScale) => perScale > 0 ? room / perScale : double.PositiveInfinity;
 
     // A generated document's canvas size, from its root.
     private static (double Width, double Height) Size(string svg)
