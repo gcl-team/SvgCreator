@@ -271,6 +271,20 @@ public class SvgWriterTests
         Assert.InRange(width, 201, 200 * 1.35);
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void Write_PostmarkWithoutCircle_OnATinyCanvas_StillWrites(int height)
+    {
+        // The rectangle's 2.25 px inset is more than half of these heights, so the frame's
+        // half-height is negative: the waves' band must still be a valid size.
+        var root = XDocument.Parse(TestSvg.Write(100, height, [], "#000", OutputStyle.Postmark)).Root!;
+
+        Assert.Single(root.Elements(Svg + "g"), g => (string?)g.Attribute("class") == "postmark-cancel");
+    }
+
     [Fact]
     public void Write_PostmarkSmallEllipse_IsNotTreatedAsFrame()
     {
