@@ -25,7 +25,7 @@ Roughening the geometry itself would have been worse on every count:
 ## The filter, step by step
 
 ```xml
-<filter id="svgcreator-stamp-1" filterUnits="userSpaceOnUse" x="0" y="0" width="W" height="H"
+<filter id="svgcreator-stamp-1-W×H-0.8-2.5-0.06-0.9" filterUnits="userSpaceOnUse" x="0" y="0" width="W" height="H"
         color-interpolation-filters="sRGB">
   <!-- 1. rough edges -->
   <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="1" result="edgeNoise"/>
@@ -57,7 +57,7 @@ Roughening the geometry itself would have been worse on every count:
 - **The first attempt was too worn.** Thresholds at R ≈ 0.55–0.62 broke thin face lines and made every stroke grainy. Raising them to the values above keeps the drawing readable while still looking worn.
 - **Scale by line thickness, not image size.** The original plan scaled the texture with the canvas, ×4 for a 2032 px image. That gave 10 px edge displacement on lines only 2–4 px wide, so they frayed. In Lines mode, stroke width comes from `LineSigma` (pixels, at any resolution), so the texture scales with `LineSigma` instead: frequencies are divided by it, displacement is multiplied by it.
 - **The seed is deterministic.** The same `StampSeed` always gives the same file, so tests are stable and AOT output matches JIT output. Change it (`--stamp-seed 2`) for a differently worn impression.
-- **Unique filter ids.** The id includes the seed (`svgcreator-stamp-1`). Element ids are global when several SVGs are placed inline in one HTML page, so a generic id could make one SVG pick up another's filter.
+- **Unique filter ids.** The id names everything the definition depends on: the seed, the canvas size, and the four texture values *as written* (`svgcreator-stamp-{seed}-{W}x{H}-{edge}-{displacement}-{wear}-{speck}`). It uses the written values rather than the scale, because the scale only reaches the definition through those values. Rounding the scale itself for the id let 1.00001 and 1.00004 share an id while writing different displacements (2.5 and 2.5001). Element ids are global when several SVGs share an HTML page or a composed canvas. An id with just the seed let two stamped pieces with the same seed but different sizes share an id with *different* definitions, so one would render with the other's filter. Now two pieces only share an id when their filters are identical, and then either copy works.
 
 ## Postmark style
 
@@ -78,7 +78,9 @@ Code: `src/SvgCreator/Svg/PostmarkCancellation.cs`
 
 - **6 parallel waves** spanning the middle 60% of the frame's height.
 - **Like real cancellations, they overlap the stamp.** They start half a frame-radius *inside* the frame's right side and run 0.6 radius *past* it.
-- **Everything scales with the frame's half-height:** spacing, wavelength, amplitude, and stroke width (1.8%, which is about the ring's own stroke).
+- **Everything scales with the frame's half-height:** spacing, wavelength and amplitude.
+- **The waves are as thick as the ring.** When the frame is a band (an outline with a concentric hole, the same pair the writer turns into one stroked circle), the waves use the band's width, so they read as part of the same stamp. A frame without a band (a solid disc) and the rectangle fallback keep using 1.8% of the frame's half-height. Both have a 1.5 px floor, so the waves survive the worn-ink filter. The first version used that 1.8% for every frame, described as "about the ring's own stroke". Measured, a bold ring traced from a white-page screenshot was 2.5× thicker than the waves, and the filter's pinholes take proportionally more ink from a thin line, so the waves looked faint.
+- **A thick band narrows the waves to fit.** The canvas only grows sideways, and the filter region follows the canvas, so anything above y = 0 or below the height is cut off. Matching a very thick band can push the outer waves out: radii 48 and 8 on a 100 px drawing give a 40 px stroke, and at the usual band of 1.2 × 48 the waves would reach from about y = −2.3 to 102.3. So the band is capped: the outer lines, plus their amplitude and half the stroke, must fit between the frame's centre and the nearer edge. Ordinary rings are far from the cap and don't change. Narrowing the band was chosen over growing the canvas upward, because the mail piece sizes the postmark by the drawing's height.
 - **Each wave costs a few bytes per hump.** A quadratic Bézier whose control point is offset by 2A peaks at height A, and SVG's `t` command repeats a quadratic by mirroring the previous control point. So one `q` followed by `t`s draws a sine-like wave: `M377.4 110q22.6-35.5 45.2 0t45.2 0t45.2 0…`.
 - **They're generated, not traced,** so they sit in their own `<g class="postmark-cancel">` (with the `<rect>` frame, if any), separate from the drawing. The same stamp filter applies to both groups, so the whole mark looks equally worn.
 

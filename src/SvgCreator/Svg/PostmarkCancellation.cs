@@ -20,7 +20,11 @@ internal sealed class PostmarkCancellation : IDecoration
     private const double CancelOverhang = 0.6;      // how far they run past it
     private const int CancelHalfWaves = 6;
     private const double CancelAmplitude = 0.3;     // fraction of the line spacing
-    private const double CancelStrokeWidth = 0.018; // ≈ the ring's own stroke on typical seals
+    // The waves are drawn as thick as the frame's ring when it is a band (an outline with a
+    // concentric hole), so they read as part of the same stamp. A frame without a band, such as a
+    // solid disc, and the rectangle fallback use this share of the frame's half-height instead.
+    // Either way, the floor keeps them visible through the worn-ink filter.
+    private const double CancelStrokeWidth = 0.018;
     private const double CancelMinStrokeWidth = 1.5;
 
     // An ellipse only becomes the postmark when it is a frame, not a small detail like an eye.
@@ -52,14 +56,11 @@ internal sealed class PostmarkCancellation : IDecoration
         double halfWidth, halfHeight, strokeWidth;
         RectFrame? rect = null;
 
-        if (FindEllipseFrame(drawing.Contours, width, height) is { } frame)
+        if (FindFrame(drawing.Contours, width, height) is { Ellipse: { } frame } frameContour)
         {
-            var angle = frame.AngleDegrees * Math.PI / 180;
-            double cos = Math.Cos(angle), sin = Math.Sin(angle);
             center = frame.Center;
-            halfWidth = Math.Sqrt(Math.Pow(frame.RadiusX * cos, 2) + Math.Pow(frame.RadiusY * sin, 2));
-            halfHeight = Math.Sqrt(Math.Pow(frame.RadiusX * sin, 2) + Math.Pow(frame.RadiusY * cos, 2));
-            strokeWidth = Math.Max(CancelMinStrokeWidth, CancelStrokeWidth * halfHeight);
+            (halfWidth, halfHeight) = frame.HalfExtents;
+            strokeWidth = Math.Max(CancelMinStrokeWidth, RingWidth(drawing.Contours, frameContour) ?? (CancelStrokeWidth * halfHeight));
         }
         else
         {
@@ -72,7 +73,13 @@ internal sealed class PostmarkCancellation : IDecoration
             halfHeight = (height / 2.0) - inset;
         }
 
-        var band = CancelBandHeight * halfHeight;
+        // The canvas only grows sideways, so the outer waves, with their amplitude and half the
+        // stroke, must fit above and below: a thick ring near the edges narrows the band. The
+        // reserve is one tenth short, the precision the path is written at. On a canvas only a
+        // few pixels tall the rectangle's inset exceeds its half-height, so the band can be zero.
+        var room = Math.Min(center.Y, height - center.Y) - (strokeWidth / 2) - 0.1;
+        var reach = 0.5 + (CancelAmplitude / (CancelLineCount - 1)); // of the band, from its middle
+        var band = Math.Clamp(room / reach, 0, Math.Max(0, CancelBandHeight * halfHeight));
         var spacing = band / (CancelLineCount - 1);
         var length = (CancelOverlap + CancelOverhang) * halfHeight;
         var halfWave = length / CancelHalfWaves;
@@ -109,7 +116,7 @@ internal sealed class PostmarkCancellation : IDecoration
         return new PostmarkCancellation(sb.ToString(), strokeWidth, (int)Math.Ceiling(end), rect);
     }
 
-    public void Write(XmlWriter xml, string color, IInkFilter? filter)
+    public void Write(XmlWriter xml, string color, string? filterId)
     {
         xml.WriteStartElement("g", Namespace);
         xml.WriteAttributeString("class", "postmark-cancel");
@@ -117,9 +124,9 @@ internal sealed class PostmarkCancellation : IDecoration
         xml.WriteAttributeString("stroke", color);
         xml.WriteAttributeString("stroke-width", Format(strokeWidth));
         xml.WriteAttributeString("stroke-linecap", "round");
-        if (filter is not null)
+        if (filterId is not null)
         {
-            xml.WriteAttributeString("filter", $"url(#{filter.Id})");
+            xml.WriteAttributeString("filter", $"url(#{filterId})");
         }
 
         if (frame is { } rect)
@@ -138,20 +145,43 @@ internal sealed class PostmarkCancellation : IDecoration
         xml.WriteEndElement();
     }
 
-    // The largest recognized ellipse big enough to be the drawing's frame.
-    private static Ellipse? FindEllipseFrame(IReadOnlyList<CurveContour> contours, int width, int height)
+    /// <summary>
+    /// The drawing's circular frame, which the cancellation runs from; none when it has no circle.
+    /// For a ring this is its outer ellipse, the edge you see, not the midline its stroke is drawn on.
+    /// </summary>
+    public static Ellipse? FrameOf(TracedDrawing drawing) => FindFrame(drawing.Contours, drawing.Width, drawing.Height)?.Ellipse;
+
+    // The outline of the largest recognized ellipse big enough to be the drawing's frame.
+    private static CurveContour? FindFrame(IReadOnlyList<CurveContour> contours, int width, int height)
     {
-        Ellipse? frame = null;
+        CurveContour? frame = null;
         foreach (var contour in contours)
         {
             if (contour is { IsHole: false, Ellipse: { } e }
                 && e.RadiusY >= MinFrameFraction * Math.Min(width, height)
-                && (frame is null || e.RadiusX > frame.Value.RadiusX))
+                && (frame?.Ellipse is not { } best || e.RadiusX > best.RadiusX))
             {
-                frame = e;
+                frame = contour;
             }
         }
 
         return frame;
+    }
+
+    // The width of the frame's ring: its outline paired with a concentric elliptical hole in the
+    // same component, as the writer pairs them into one stroked circle. None for a solid frame.
+    private static double? RingWidth(IReadOnlyList<CurveContour> contours, CurveContour frame)
+    {
+        foreach (var contour in contours)
+        {
+            if (contour is { IsHole: true, Ellipse: { } hole }
+                && contour.Label == frame.Label
+                && Ellipse.TryMakeRing(frame.Ellipse!.Value, hole, SvgWriter.RingTolerance, out _, out var width))
+            {
+                return width;
+            }
+        }
+
+        return null;
     }
 }

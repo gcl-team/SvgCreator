@@ -27,6 +27,7 @@ flowchart LR
 | Optional stamp / postmark look | [Stamp and Postmark Styles](Stamp-Style.md) | `Svg/SvgStyle.cs`, `Svg/StampFilter.cs`, `Svg/PostmarkCancellation.cs` |
 | Postage stamp (separate generator) | [Postage Stamp](Postage-Stamp.md) | `PostageStampGenerator.cs`, `Svg/PostageStampWriter.cs` |
 | Airmail envelope (separate generator) | [Envelope](Envelope.md) | `EnvelopeGenerator.cs`, `Svg/EnvelopeWriter.cs` |
+| Envelope + stamp + postmark, composed | [Mail Piece](Mail-Piece.md) | `MailPieceGenerator.cs`, `Composition/MailPieceComposer.cs` |
 
 Cross-cutting topics:
 

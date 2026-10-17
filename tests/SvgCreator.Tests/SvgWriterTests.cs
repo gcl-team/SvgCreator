@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using SvgCreator.Fitting;
+using SvgCreator.Svg;
 
 namespace SvgCreator.Tests;
 
@@ -116,8 +117,8 @@ public class SvgWriterTests
         var root = XDocument.Parse(TestSvg.Write(10, 10, Square, "#000", OutputStyle.Stamp, stampSeed: 7)).Root!;
 
         var filter = Assert.Single(root.Descendants(Svg + "filter"));
-        Assert.Equal("svgcreator-stamp-7", (string?)filter.Attribute("id"));
-        Assert.Equal("url(#svgcreator-stamp-7)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
+        Assert.Equal("svgcreator-stamp-7-10x10-0.8-2.5-0.06-0.9", (string?)filter.Attribute("id"));
+        Assert.Equal("url(#svgcreator-stamp-7-10x10-0.8-2.5-0.06-0.9)", (string?)root.Element(Svg + "g")!.Attribute("filter"));
         Assert.Equal(["7", "8", "9"], filter.Elements(Svg + "feTurbulence").Select(t => (string?)t.Attribute("seed")));
         Assert.Single(filter.Elements(Svg + "feDisplacementMap"));
         Assert.Equal(2, filter.Elements(Svg + "feComposite").Count());
@@ -126,6 +127,44 @@ public class SvgWriterTests
         Assert.Equal(
             XDocument.Parse(TestSvg.Write(10, 10, Square, "#000")).Descendants(Svg + "path").Single().Attribute("d")!.Value,
             root.Descendants(Svg + "path").Single().Attribute("d")!.Value);
+    }
+
+    [Fact]
+    public void StampFilter_IdNamesEverythingItsDefinitionDependsOn()
+    {
+        // Ids are global on a shared canvas: filters may only share one when their definitions match.
+        var filter = new StampFilter(Seed: 1, Scale: 1.5);
+
+        Assert.Equal(filter.Id(120, 100), new StampFilter(1, 1.5).Id(120, 100));
+        Assert.NotEqual(filter.Id(120, 100), filter.Id(121, 100));               // canvas
+        Assert.NotEqual(filter.Id(120, 100), new StampFilter(1, 2).Id(120, 100)); // texture scale
+        Assert.NotEqual(filter.Id(120, 100), new StampFilter(2, 1.5).Id(120, 100)); // seed
+    }
+
+    [Theory]
+    [InlineData(1.00001, 1.00004)]     // round to the same scale (1) but write different displacements
+    [InlineData(1.0, 1.0000000001)]    // write identical definitions, so sharing an id is safe
+    [InlineData(1.5, 2.0)]
+    public void StampFilter_SharesAnIdExactlyWhenTheWrittenDefinitionsMatch(double a, double b)
+    {
+        // The definition without its id: comparing the id too would make the test circular, since
+        // filters with different ids would always differ, whatever primitives they write.
+        static string Definition(StampFilter filter)
+        {
+            var sb = new System.Text.StringBuilder();
+            using (var xml = System.Xml.XmlWriter.Create(sb, new System.Xml.XmlWriterSettings { OmitXmlDeclaration = true }))
+            {
+                filter.WriteDefinition(xml, 120, 100);
+            }
+
+            var definition = XElement.Parse(sb.ToString());
+            definition.Descendants().Attributes("id").Remove();
+            return definition.ToString();
+        }
+
+        var (first, second) = (new StampFilter(1, a), new StampFilter(1, b));
+
+        Assert.Equal(Definition(first) == Definition(second), first.Id(120, 100) == second.Id(120, 100));
     }
 
     [Fact]
@@ -171,7 +210,52 @@ public class SvgWriterTests
         Assert.Equal(200, width);                         // the waves already fit: no widening needed
         Assert.Equal("#c0392b", (string?)cancel.Attribute("stroke"));
         Assert.Equal("none", (string?)cancel.Attribute("fill"));
-        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1)", (string?)g.Attribute("filter")));
+        Assert.All(root.Elements(Svg + "g"), g => Assert.Equal("url(#svgcreator-stamp-1-200x100-0.8-2.5-0.06-0.9)", (string?)g.Attribute("filter")));
+    }
+
+    [Fact]
+    public void Write_PostmarkWithRingBand_DrawsTheWavesAsThickAsTheRing()
+    {
+        // A ring 6 px wide (radii 43 and 37): the waves match it, so they read as one stamp.
+        var (_, cancel, _, _) = Postmark(
+            new CurveContour(1, false, [], new Ellipse(new(100, 50), 43, 43, 0)),
+            new CurveContour(1, true, [], new Ellipse(new(100, 50), 37, 37, 0)));
+
+        Assert.Equal("6", (string?)cancel.Attribute("stroke-width"));
+    }
+
+    [Fact]
+    public void Write_PostmarkWithThickRingBand_KeepsTheWavesInsideTheCanvasHeight()
+    {
+        // A band 40 px wide (radii 48 and 8) filling the 100 px height: at the usual band of
+        // 1.2 × 48, the 40 px waves would reach from about y = −2.3 to 102.3, outside the canvas
+        // and the filter region, which only grow sideways. The band narrows to fit instead.
+        var (root, cancel, _, _) = Postmark(
+            new CurveContour(1, false, [], new Ellipse(new(100, 50), 48, 48, 0)),
+            new CurveContour(1, true, [], new Ellipse(new(100, 50), 8, 8, 0)));
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var stroke = double.Parse((string)cancel.Attribute("stroke-width")!, inv);
+        var lines = ((string)cancel.Element(Svg + "path")!.Attribute("d")!)
+            .Split('M', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => System.Text.RegularExpressions.Regex.Matches(line, @"-?[\d.]+").Select(n => double.Parse(n.Value, inv)).ToArray())
+            .ToList();
+        var amplitude = Math.Abs(lines[0][3]) / 2; // a quadratic's control offset is twice its peak
+
+        Assert.Equal(40, stroke);
+        Assert.Equal("100", (string?)root.Attribute("height"));
+        Assert.InRange(lines.Min(l => l[1]) - amplitude - (stroke / 2), 0, 100);
+        Assert.InRange(lines.Max(l => l[1]) + amplitude + (stroke / 2), 0, 100);
+    }
+
+    [Fact]
+    public void Write_PostmarkWithSolidDiscFrame_UsesAShareOfTheFrameHeight()
+    {
+        // No hole, so no band to match: 0.018 of the half-height of 100 is 1.8 (above the 1.5 floor).
+        CurveContour[] disc = [new(1, false, [], new Ellipse(new(200, 200), 100, 100, 0))];
+        var root = XDocument.Parse(TestSvg.Write(400, 400, disc, "#000", OutputStyle.Postmark)).Root!;
+        var cancel = root.Elements(Svg + "g").Single(g => (string?)g.Attribute("class") == "postmark-cancel");
+
+        Assert.Equal("1.8", (string?)cancel.Attribute("stroke-width"));
     }
 
     [Fact]
@@ -185,6 +269,20 @@ public class SvgWriterTests
         Assert.InRange(right, 190, 200);                  // inset just inside the original canvas
         Assert.InRange(startX, 100, right);               // waves overlap the frame's right side
         Assert.InRange(width, 201, 200 * 1.35);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public void Write_PostmarkWithoutCircle_OnATinyCanvas_StillWrites(int height)
+    {
+        // The rectangle's 2.25 px inset is more than half of these heights, so the frame's
+        // half-height is negative: the waves' band must still be a valid size.
+        var root = XDocument.Parse(TestSvg.Write(100, height, [], "#000", OutputStyle.Postmark)).Root!;
+
+        Assert.Single(root.Elements(Svg + "g"), g => (string?)g.Attribute("class") == "postmark-cancel");
     }
 
     [Fact]

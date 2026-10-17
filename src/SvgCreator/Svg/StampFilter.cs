@@ -29,35 +29,48 @@ internal sealed record StampFilter(int Seed, double Scale) : IInkFilter
     private const double SpeckGain = 20;
     private const double SpeckBias = 15.6;
 
-    public string Id => $"svgcreator-stamp-{Integer(Seed)}";
+    // The scale only reaches the definition through these four values, as written. The id is
+    // built from the same strings, so two filters share an id exactly when their definitions match:
+    // rounding the scale itself would let scales such as 1.00001 and 1.00004 share an id while
+    // writing different displacements (2.5 and 2.5001).
+    private (string Edge, string Displacement, string Wear, string Speck) Texture =>
+        (Number(EdgeNoiseFrequency / Scale), Number(EdgeDisplacement * Scale), Number(WearNoiseFrequency / Scale), Number(SpeckNoiseFrequency / Scale));
+
+    // The definition depends on the seed, the canvas it covers and the written texture values.
+    public string Id(int canvasWidth, int canvasHeight)
+    {
+        var t = Texture;
+        return $"svgcreator-stamp-{Integer(Seed)}-{Integer(canvasWidth)}x{Integer(canvasHeight)}-{t.Edge}-{t.Displacement}-{t.Wear}-{t.Speck}";
+    }
 
     public void WriteDefinition(XmlWriter xml, int canvasWidth, int canvasHeight)
     {
         xml.WriteStartElement("defs", Namespace);
         xml.WriteStartElement("filter", Namespace);
-        xml.WriteAttributeString("id", Id);
+        xml.WriteAttributeString("id", Id(canvasWidth, canvasHeight));
         xml.WriteAttributeString("filterUnits", "userSpaceOnUse");
         xml.WriteAttributeString("x", "0");
         xml.WriteAttributeString("y", "0");
         xml.WriteAttributeString("width", Integer(canvasWidth));
         xml.WriteAttributeString("height", Integer(canvasHeight));
         xml.WriteAttributeString("color-interpolation-filters", "sRGB");
+        var texture = Texture;
 
         // Rough edges.
-        WriteTurbulence(xml, EdgeNoiseFrequency / Scale, octaves: 2, Seed, "edgeNoise");
+        WriteTurbulence(xml, texture.Edge, octaves: 2, Seed, "edgeNoise");
         xml.WriteStartElement("feDisplacementMap", Namespace);
         xml.WriteAttributeString("in", "SourceGraphic");
         xml.WriteAttributeString("in2", "edgeNoise");
-        xml.WriteAttributeString("scale", Number(EdgeDisplacement * Scale));
+        xml.WriteAttributeString("scale", texture.Displacement);
         xml.WriteAttributeString("xChannelSelector", "R");
         xml.WriteAttributeString("yChannelSelector", "G");
         xml.WriteAttributeString("result", "rough");
         xml.WriteEndElement();
 
         // Worn ink: coarse blotches and fine pinholes, each as an alpha mask.
-        WriteTurbulence(xml, WearNoiseFrequency / Scale, octaves: 3, Seed + 1, "wearNoise");
+        WriteTurbulence(xml, texture.Wear, octaves: 3, Seed + 1, "wearNoise");
         WriteNoiseToAlpha(xml, "wearNoise", WearGain, WearBias, "wear");
-        WriteTurbulence(xml, SpeckNoiseFrequency / Scale, octaves: 1, Seed + 2, "speckNoise");
+        WriteTurbulence(xml, texture.Speck, octaves: 1, Seed + 2, "speckNoise");
         WriteNoiseToAlpha(xml, "speckNoise", SpeckGain, SpeckBias, "speck");
 
         WriteComposite(xml, "wear", "speck", "mask");
@@ -67,11 +80,11 @@ internal sealed record StampFilter(int Seed, double Scale) : IInkFilter
         xml.WriteEndElement();
     }
 
-    private static void WriteTurbulence(XmlWriter xml, double frequency, int octaves, int seed, string result)
+    private static void WriteTurbulence(XmlWriter xml, string frequency, int octaves, int seed, string result)
     {
         xml.WriteStartElement("feTurbulence", Namespace);
         xml.WriteAttributeString("type", "fractalNoise");
-        xml.WriteAttributeString("baseFrequency", Number(frequency));
+        xml.WriteAttributeString("baseFrequency", frequency);
         xml.WriteAttributeString("numOctaves", Integer(octaves));
         xml.WriteAttributeString("seed", Integer(seed));
         xml.WriteAttributeString("result", result);

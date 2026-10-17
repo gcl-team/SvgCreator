@@ -1,6 +1,6 @@
 <svg width="120" height="100" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="svgcreator-stamp-7" filterUnits="userSpaceOnUse" x="0" y="0" width="120" height="100" color-interpolation-filters="sRGB">
+    <filter id="svgcreator-stamp-7-120x100-0.5333-3.75-0.04-0.6" filterUnits="userSpaceOnUse" x="0" y="0" width="120" height="100" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.5333" numOctaves="2" seed="7" result="edgeNoise" />
       <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="3.75" xChannelSelector="R" yChannelSelector="G" result="rough" />
       <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="8" result="wearNoise" />
@@ -11,7 +11,7 @@
       <feComposite in="rough" in2="mask" operator="in" />
     </filter>
   </defs>
-  <g fill="navy" fill-rule="evenodd" stroke="none" filter="url(#svgcreator-stamp-7)">
+  <g fill="navy" fill-rule="evenodd" stroke="none" filter="url(#svgcreator-stamp-7-120x100-0.5333-3.75-0.04-0.6)">
     <circle cx="60" cy="50" r="39.5" fill="none" stroke="navy" stroke-width="3" />
     <path d="M40 35l20 0l0 20l-20 0ZM45 40l0 10l10 0l0-10Z" />
     <path d="M65 60c1.2 4.7 10 5 10 .5c0-3.5-9.5-3.5-10-.5Z" />
