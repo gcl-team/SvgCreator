@@ -159,13 +159,12 @@ public class PostageStampTests
     }
 
     [Fact]
-    public void RowWidth_GivesFullWidthGlyphsTheWidestAdvance()
+    public void RowWidth_GivesCjkGlyphsAnEmEach()
     {
-        // Five CJK glyphs are about 50 px at size 10; the estimate allows the widest measured glyph.
+        // CJK fonts set every character on a 1 em square, so five are exactly 50 px at size 10.
         List<PostageStampWriter.Item> row = [Country("日本郵便局")];
 
-        Assert.Equal(5 * 10 * FontMetrics.Serif.WidestAdvance, PostageStampWriter.RowWidth(row, 40), 9);
-        Assert.True(PostageStampWriter.RowWidth(row, 40) >= 50);
+        Assert.Equal(50, PostageStampWriter.RowWidth(row, 40), 9);
     }
 
     [Theory]

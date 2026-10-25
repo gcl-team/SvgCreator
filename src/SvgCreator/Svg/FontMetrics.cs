@@ -67,6 +67,11 @@ internal sealed class FontMetrics
         "RrRrUuUuSsTt**Hh******AaEeOoOoOoOoYy************" +
         "****************";
 
+    // CJK fonts set Han, kana, Hangul and full-width forms on a square: every one is 1 em, regular
+    // or bold, in PingFang, Hiragino, Microsoft YaHei and Noto Sans CJK alike. The Latin fonts in
+    // the stacks have none, so the viewer falls back to one of those whichever stack is asked for.
+    private const double CjkAdvance = 1.0;
+
     private readonly double[] asciiAdvance;
 
     private FontMetrics(string family, double[] asciiAdvance)
@@ -96,6 +101,7 @@ internal sealed class FontMetrics
                 >= 0xC0 and <= 0x24F when LatinBaseLetters[rune.Value - 0xC0] is not '*' and var b => asciiAdvance[b - 0x20],
                 _ when Rune.GetUnicodeCategory(rune) is UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark => 0,
                 < 0x20 or 0x7F => 0, // control characters
+                _ when TextWrap.IsCjk(rune) => CjkAdvance,
                 _ => WidestAdvance,
             };
         }

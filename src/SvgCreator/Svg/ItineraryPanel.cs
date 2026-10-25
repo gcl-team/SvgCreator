@@ -2,6 +2,7 @@ using System.Xml;
 using SvgCreator.Fitting;
 using SvgCreator.Mapping;
 using static SvgCreator.Svg.SvgFormat;
+using static SvgCreator.Svg.TextWrap;
 using static SvgCreator.Svg.TravelMapWriter;
 
 namespace SvgCreator.Svg;

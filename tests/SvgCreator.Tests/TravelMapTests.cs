@@ -205,13 +205,13 @@ public class TravelMapTests
         const string name = "Jinshajiang Road Station 金沙江路";
         var width = FontMetrics.Sans.Width("Jinshajiang Road Station 金", 10);
 
-        Assert.Equal(["Jinshajiang Road Station", "金沙江路"], TravelMapWriter.Wrap(name, 10, width));
+        Assert.Equal(["Jinshajiang Road Station", "金沙江路"], TextWrap.Wrap(name, 10, width));
     }
 
     [Fact]
     public void Wrap_StartsAChineseNameTooLongForOneLineOnAFreshLine()
     {
-        var lines = TravelMapWriter.Wrap("Hanting Hotel 汉庭酒店(上海金沙江路地铁站店)", 10, FontMetrics.Sans.Width("Hanting Hotel 汉庭", 10));
+        var lines = TextWrap.Wrap("Hanting Hotel 汉庭酒店(上海金沙江路地铁站店)", 10, FontMetrics.Sans.Width("Hanting Hotel 汉庭", 10));
 
         Assert.Equal("Hanting Hotel", lines[0]);
         Assert.Equal("汉庭酒店(上海金沙江路地铁站店)", string.Concat(lines.Skip(1)));
@@ -605,12 +605,12 @@ public class TravelMapTests
     [InlineData("明日方舟：终末地", "明|日|方|舟：|终|末|地")]
     [InlineData("Take Line 2 towards", "Take|Line|2|towards")]
     public void Tokens_BreakBetweenCjkCharactersAndKeepPunctuationAttached(string text, string expected) =>
-        Assert.Equal(expected, string.Join('|', TravelMapWriter.Tokens(text).Select(t => t.Token)));
+        Assert.Equal(expected, string.Join('|', TextWrap.Tokens(text).Select(t => t.Token)));
 
     [Fact]
     public void Wrap_BreaksCjkWithoutAddingSpaces()
     {
-        var lines = TravelMapWriter.Wrap("汉庭酒店上海金沙江路地铁站店", 20, 20 * 6);
+        var lines = TextWrap.Wrap("汉庭酒店上海金沙江路地铁站店", 20, 20 * 6);
 
         Assert.True(lines.Count > 1);
         Assert.Equal("汉庭酒店上海金沙江路地铁站店", string.Concat(lines));
@@ -705,10 +705,10 @@ public class TravelMapTests
     {
         var width = FontMetrics.Sans.Width("Breakfast with", 10);
 
-        Assert.Equal(["Breakfast with", "orangutans"], TravelMapWriter.Wrap("Breakfast with orangutans", 10, width));
-        Assert.Equal(["Breakfast", "with", "orangutans"], TravelMapWriter.Wrap("Breakfast with orangutans", 10, width - 0.01));
-        Assert.Equal(["Supercalifragilistic", "is"], TravelMapWriter.Wrap("Supercalifragilistic is", 10, 30));
-        Assert.Equal(["One line"], TravelMapWriter.Wrap("  One   line ", 10, 1000));
+        Assert.Equal(["Breakfast with", "orangutans"], TextWrap.Wrap("Breakfast with orangutans", 10, width));
+        Assert.Equal(["Breakfast", "with", "orangutans"], TextWrap.Wrap("Breakfast with orangutans", 10, width - 0.01));
+        Assert.Equal(["Supercalifragilistic", "is"], TextWrap.Wrap("Supercalifragilistic is", 10, 30));
+        Assert.Equal(["One line"], TextWrap.Wrap("  One   line ", 10, 1000));
     }
 
     [Fact]

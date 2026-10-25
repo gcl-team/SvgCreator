@@ -69,11 +69,12 @@ Native `<text>` stays small and editable, but the library never knows which font
 | Printable ASCII | Its own measured advance, from 0.26 em (space) to 1.13 em (`W`) |
 | Accented Latin (`é Ö ñ Ŵ`, U+00C0–U+024F) | Its base letter's advance, from a decomposition table generated from Unicode data. `string.Normalize` isn't used because the CLI runs with invariant globalization |
 | Combining marks (an accent typed after its letter) | 0 |
-| Everything else: `æ ø ß ł`, CJK, Greek, Cyrillic, emoji… | The widest measured advance (1.13 em) |
+| CJK: Han, kana, Hangul, full-width forms (`日本郵便`, `，`) | 1 em. CJK fonts set every character on a square, and the viewer falls back to one whichever stack is asked for |
+| Everything else: `æ ø ß ł`, Greek, Cyrillic, emoji… | The widest measured advance (1.13 em) |
 
 If a row's estimate plus the gap between items is wider than the picture, the text shrinks evenly into the space left after the gap.
 
-**Lesson: averages don't bound anything.** The first estimator used one value per class (capitals 0.74 em, lowercase 0.54, digits 0.62), taken from one render of "SINGAPORE". That fixed the first overlap but not the problem. Fitting has to hold for *every* row, and averages say nothing about a row full of wide letters. Measured, `W` is 1.13 em, `M` 1.03, `m` 1.02, `w` 0.87 and `@` 0.97, so a row like `MMMMMWWWWW` was judged to fit at three quarters of its real width. Unmeasured text also used to get a flat 1 em, which is exact for CJK but less than `W`, so it isn't an upper bound. It now gets the widest measured advance instead. Overestimating only shrinks the text a little, but underestimating lets it overrun.
+**Lesson: averages don't bound anything.** The first estimator used one value per class (capitals 0.74 em, lowercase 0.54, digits 0.62), taken from one render of "SINGAPORE". That fixed the first overlap but not the problem. Fitting has to hold for *every* row, and averages say nothing about a row full of wide letters. Measured, `W` is 1.13 em, `M` 1.03, `m` 1.02, `w` 0.87 and `@` 0.97, so a row like `MMMMMWWWWW` was judged to fit at three quarters of its real width. Unmeasured text also used to get a flat 1 em, which is less than `W`, so it isn't an upper bound. It now gets the widest measured advance instead, except CJK, where 1 em is exact. Overestimating only shrinks the text a little, but underestimating lets it overrun.
 
 The table only covers fonts that were measured. A viewer whose `serif` is something else, such as DejaVu Serif on many Linux systems, may render somewhat wider. Width is counted per Unicode scalar (`Rune`), so a character outside the Basic Multilingual Plane counts once, not once per UTF-16 half.
 
