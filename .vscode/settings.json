@@ -1,0 +1,6 @@
+{
+  // JSON files may carry comments and trailing commas.
+  "files.associations": {
+    "*.json": "jsonc"
+  }
+}
