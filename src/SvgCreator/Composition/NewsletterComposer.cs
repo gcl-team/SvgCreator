@@ -586,7 +586,7 @@ internal static class NewsletterComposer
             Scale = MapTextScale,
             Route = map.Route,
             Breaks = map.Breaks,
-            Layout = map.Layout,
+            Layout = map.Layout ?? TravelMapLayout.Names,
         });
         var drawnHeight = height * c.Unit;
 

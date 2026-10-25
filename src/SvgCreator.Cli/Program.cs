@@ -351,7 +351,7 @@ static Command MapCommand()
     var scale = new Option<double>("--scale") { Description = "Size of the text, markers and arrows, as a multiple of the default. They don't grow with the canvas, so a bigger canvas gives the stops more room.", DefaultValueFactory = _ => defaults.Scale };
     var route = new Option<TravelMapRoute>("--route") { Description = "Arrows: an arrow for each leg. Lines: a line without a head (the numbers give the direction). None: no route, markers only.", DefaultValueFactory = _ => defaults.Route };
     var breaks = new Option<TravelMapBreaks>("--breaks") { Description = "Auto: pull a far stop (an airport 40 km out) in towards the rest, with a dotted break labelled with the real distance. None: everything to scale.", DefaultValueFactory = _ => defaults.Breaks };
-    var layout = new Option<TravelMapLayout>("--layout") { Description = "Labels: each stop's text beside its marker. Panel: names on the map, the full itinerary in a side panel. Auto: Labels when they fit, else Panel.", DefaultValueFactory = _ => defaults.Layout };
+    var layout = new Option<TravelMapLayout>("--layout") { Description = "Labels: each stop's text beside its marker. Panel: names on the map, the full itinerary in a side panel. Names: names on the map and nothing more. Auto: Labels when they fit, else Panel.", DefaultValueFactory = _ => defaults.Layout };
 
     var command = new Command("map", "Make a travel map: numbered stops at their real relative positions, joined by arrows in travel order, on a plain background.")
     {

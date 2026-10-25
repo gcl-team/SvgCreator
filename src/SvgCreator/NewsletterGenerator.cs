@@ -190,7 +190,7 @@ public sealed class NewsletterGenerator : INewsletterGenerator
                     break;
                 case NewsletterMap map:
                     TravelMapOptions.Validate(map.Stops);
-                    new TravelMapOptions { Route = map.Route, Breaks = map.Breaks, Layout = map.Layout }.Validate();
+                    new TravelMapOptions { Route = map.Route, Breaks = map.Breaks, Layout = map.Layout ?? TravelMapLayout.Names }.Validate();
                     break;
                 default:
                     throw new ArgumentException($"{where}: unknown block type {newsletter.Blocks[i].GetType().Name}.", nameof(newsletter));

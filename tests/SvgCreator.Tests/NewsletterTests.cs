@@ -347,6 +347,17 @@ public class NewsletterTests
     }
 
     [Fact]
+    public void Map_ShowsOnlyThePlacesNames_UnlessAskedOtherwise()
+    {
+        var map = new NewsletterMap { Stops = Stops };
+        var names = Root(Minimal with { Blocks = [map] });
+        var labels = Root(Minimal with { Blocks = [map with { Layout = TravelMapLayout.Labels }] });
+
+        Assert.Empty(ByClass(names, "travel-time"));
+        Assert.NotEmpty(ByClass(labels, "travel-time"));
+    }
+
+    [Fact]
     public void Options_AreValidated()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => Create(Minimal, new NewsletterOptions { Width = 100 }));

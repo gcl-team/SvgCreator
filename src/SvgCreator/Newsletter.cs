@@ -236,8 +236,13 @@ public sealed record NewsletterMap : NewsletterBlock
     /// <summary>Whether far stops are pulled in. Default: <see cref="TravelMapBreaks.Auto"/>.</summary>
     public TravelMapBreaks Breaks { get; init; } = TravelMapBreaks.Auto;
 
-    /// <summary>Where each stop's time and description go. Default: <see cref="TravelMapLayout.Auto"/>.</summary>
-    public TravelMapLayout Layout { get; init; } = TravelMapLayout.Auto;
+    /// <summary>
+    /// Where each stop's time and description go. Default (null): <see cref="TravelMapLayout.Names"/>,
+    /// the places' names alone, since a map the column's width is too small for a day's details;
+    /// the cards around it tell the story.
+    /// </summary>
+    /// <remarks>Nullable, not defaulting to Names, because a JSON reader sets a missing enum to 0 (<see cref="TravelMapLayout.Auto"/>).</remarks>
+    public TravelMapLayout? Layout { get; init; }
 }
 
 /// <summary>

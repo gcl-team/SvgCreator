@@ -6,6 +6,7 @@
 svgcreator map stops.json -o trip.svg                     # 1024 × 560, white on deep blue
 svgcreator map stops.json -o trip.svg --width 1600 --height 1000   # more room, same text size
 svgcreator map stops.json -o trip.svg --layout panel      # names on the map, details in a side panel
+svgcreator map stops.json -o trip.svg --layout names      # names on the map and nothing more: an overview
 svgcreator map stops.json -o trip.svg --route lines       # route lines without arrowheads; --route none for markers only
 svgcreator map stops.json -o trip.svg --breaks none       # strictly to scale: don't pull far stops in
 svgcreator map stops.json -o trip.svg --waypoint-color '#7fdbca'   # waypoints in another colour
@@ -53,7 +54,10 @@ Text, markers, arrows and margins are fractions of a fixed unit, 560 px times `-
 |---|---|---|
 | `labels` | Each stop's name, time and description beside its marker | On the map |
 | `panel` | Each marker's place names | A numbered itinerary beside the map |
+| `names` | Each marker's place names | Left out |
 | `auto` (default) | `labels` when every label fits without covering an arrow, a marker or another label; otherwise `panel` | |
+
+`names` is for small maps, such as a map in a [newsletter](Newsletter.md), where it's the default. A Shanghai day of 23 stops with metro directions, drawn 576 px wide, put its panel text at about 6 px. Nobody can read that, and the newsletter's cards tell the story anyway.
 
 The panel (`Svg/ItineraryPanel.cs`) takes the right 40% of a landscape canvas or the bottom 45% of a portrait one, behind a faint divider. It lists every stop in travel order, revisits included, each with a number badge like its marker. Its text is 80% of the map's, since it's a reference list. Entries flow down in up to three columns. For each column count, the largest text that fits is found by bisection, which works because smaller text never wraps later. Among the counts within 10% of the largest text, the one that wraps the fewest lines wins, with fewer columns on a tie. Otherwise two narrow columns can beat one at slightly smaller text and break even "Day 1 · 8 am" in two. All the panel's text shrinks evenly, to no less than 30%, when even three columns don't fit.
 

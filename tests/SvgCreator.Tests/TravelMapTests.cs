@@ -725,4 +725,15 @@ public class TravelMapTests
         Assert.Throws<ArgumentException>(() => generator.Create([CityHall], options with { BackgroundColor = "bluish" }));
         Assert.Throws<ArgumentException>(() => generator.Create([CityHall], options with { WaypointColor = "goldish" }));
     }
+
+    [Fact]
+    public void Layout_Names_ShowsOnlyTheNames_WithNoPanel()
+    {
+        var root = Create(new TravelMapOptions { Layout = TravelMapLayout.Names }, CityHall, Zoo, Changi);
+
+        Assert.Empty(ByClass(root, "travel-panel"));
+        Assert.Empty(ByClass(root, "travel-time"));
+        Assert.Empty(ByClass(root, "travel-description"));
+        Assert.Equal(["Changi Airport", "City Hall", "Singapore Zoo"], ByClass(root, "travel-name").Select(n => n.Value).Order());
+    }
 }

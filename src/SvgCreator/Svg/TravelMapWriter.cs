@@ -112,11 +112,15 @@ internal static class TravelMapWriter
         var foreground = options.ForegroundColor;
 
         // Auto keeps the text beside the markers when it fits there without colliding, and moves
-        // it to the itinerary panel when it doesn't.
+        // it to the itinerary panel when it doesn't. Names leaves it out.
         var whole = new RectD(0, 0, width, height);
         MapLayout? layout = null;
         ItineraryPanel.PanelLayout? panel = null;
-        if (options.Layout != TravelMapLayout.Panel)
+        if (options.Layout == TravelMapLayout.Names)
+        {
+            layout = Layout(ordered, whole, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: options.Breaks == TravelMapBreaks.Auto));
+        }
+        else if (options.Layout != TravelMapLayout.Panel)
         {
             layout = Layout(ordered, whole, unit, new MapStyle(Route: options.Route, Breaks: options.Breaks == TravelMapBreaks.Auto));
         }

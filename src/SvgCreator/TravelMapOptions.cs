@@ -19,6 +19,12 @@ public enum TravelMapLayout
     /// order in a panel beside it (on the right of a landscape canvas, at the bottom of a portrait one).
     /// </summary>
     Panel,
+
+    /// <summary>
+    /// Markers named on the map, and nothing more: no times, descriptions or panel. An overview at
+    /// a glance, for a small map (such as in a newsletter) where the details wouldn't be readable.
+    /// </summary>
+    Names,
 }
 
 /// <summary>How a travel map shows the route from one place to the next.</summary>
