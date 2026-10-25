@@ -7,7 +7,8 @@ svgcreator newsletter trip/trip.json -o trip.svg                  # 640 px colum
 svgcreator newsletter trip/trip.json -o print.svg --width 1280     # everything twice the size
 svgcreator newsletter trip/trip.json -o plain.svg --margin 0       # the column alone, no backdrop
 svgcreator newsletter trip/trip.json -o big.svg --image-density 0  # embed the pictures unchanged
-svgcreator newsletter trip/trip.json -o teal.svg --page-color '#0f5257' --accent-color '#ffb347'
+svgcreator newsletter trip/trip.json -o space.svg --theme cosmos           # a built-in theme in place of the file's own
+svgcreator newsletter trip/trip.json -o shop.svg --theme themes/shop.json  # or a theme file
 ```
 
 The file is JSON. Picture paths, and the paths of stops files, are relative to the file, so a trip folder can move anywhere:
@@ -58,7 +59,7 @@ var svg = new NewsletterGenerator().Create(
     name => File.OpenRead(Path.Combine(folder, name)));
 ```
 
-Code: `src/SvgCreator/Newsletter.cs`, `NewsletterOptions.cs`, `NewsletterGenerator.cs` (public API and validation), `src/SvgCreator/Composition/NewsletterComposer.cs` (layout and drawing), `Composition/NewsletterImages.cs` (embedding pictures), `Composition/AccentText.cs` (`[[accent]]` text), `src/SvgCreator.Cli/NewsletterJson.cs` (the file)
+Code: `src/SvgCreator/Newsletter.cs`, `NewsletterOptions.cs`, `NewsletterTheme.cs`, `NewsletterGenerator.cs` (public API and validation), `src/SvgCreator/Composition/NewsletterComposer.cs` (layout and drawing), `Composition/NewsletterImages.cs` (embedding pictures), `Composition/AccentText.cs` (`[[accent]]` text), `src/SvgCreator.Cli/NewsletterJson.cs` (the file)
 
 ## A fixed frame around a list of blocks
 
@@ -137,16 +138,51 @@ Cards, image blocks, buttons, stats and footer links can link, as SVG `<a href>`
 
 Every part has a class for restyling: `newsletter-backdrop`, `newsletter-column`, `newsletter-page`, `newsletter-header`, `newsletter-title`, `newsletter-hero`, `newsletter-hero-edge`, `newsletter-intro`, `newsletter-ribbon`, `newsletter-ribbon-text`, `newsletter-text`, `newsletter-cards`, `newsletter-card`, `newsletter-card-title`, `newsletter-card-text`, `newsletter-image`, `newsletter-caption`, `newsletter-button`, `newsletter-button-text`, `newsletter-stats`, `newsletter-stats-label`, `newsletter-stats-value`, `newsletter-callout`, `newsletter-callout-text`, `newsletter-sticker-stamp`, `newsletter-sticker-postmark`, `newsletter-map`, `newsletter-map-drawing`, `newsletter-picture`, `newsletter-accent`, `newsletter-footer`, `newsletter-footer-links`, `newsletter-footer-link`, `newsletter-footer-bar` and `newsletter-footer-text`.
 
-## Colours
+## Themes
 
-| Option | Default | Used for |
+A theme sets how the newsletter looks: nine colours, the typeface and four shapes. The layout (the frame, the blocks and their spacing) is the same in every theme, so every theme fits every newsletter.
+
+| | `starlight` (default) | `postcard` | `minimal` | `cosmos` |
+|---|---|---|---|---|
+| For | Games, fun trips | Trips, with stamps and postmarks | A blog, a small business | A blog on outer space and planets |
+| Page / text | Purple / white | Cream / navy | White / near black | Deep navy / pale blue |
+| Accent / button | Orange / red | Red / navy | Blue / blue | Cyan / violet |
+| `font` | `sans` | `serif` | `sans` | `sans` |
+| `ribbon` | `pixel` | `plain` | `tab` | `tab` |
+| `heroEdge` | `wave` | `straight` | `straight` | `arc` |
+| `backdrop` | `diamonds` | `none` | `none` | `stars` |
+| `corners` | `round` | `round` | `square` | `round` |
+
+The newsletter file picks a theme in one of three ways:
+
+```jsonc
+"theme": "postcard"                                                     // a built-in theme
+"theme": { "base": "postcard", "accentColor": "#e4572e", "heroEdge": "wave" }  // with changes
+"theme": "themes/shop.json"                                             // a theme file, relative to the newsletter
+```
+
+A theme file holds the same object, so a shop keeps its colours in one place and every newsletter points at it. `--theme` (a name or a file) takes the place of the file's theme, which makes it quick to try the same newsletter in each theme. The library has the same order: `NewsletterOptions.Theme`, else `Newsletter.Theme`, else `starlight`.
+
+| Setting | Choices | Notes |
 |---|---|---|
-| `--backdrop-color` | `#231a45` deep indigo | Around the column |
-| `--page-color` | `#5a4d7b` purple | The column, and the backdrop's diamonds |
-| `--band-color` | `#0b0b0f` near black | Header and footer bands |
-| `--text-color` | `#ffffff` | Text, the map's markers and route, postmark stickers |
-| `--accent-color` | `#f0764a` orange | Ribbons, the hero's wave, `[[accented]]` text, map waypoints |
-| `--button-color` | `#a3292b` red | Buttons |
-| `--panel-color` | `#463a66` dark purple | Stats boxes, map backgrounds |
+| `backdropColor` | CSS colour | Around the column |
+| `pageColor` | | The column, and the backdrop's diamonds and dots |
+| `bandColor`, `bandTextColor` | | The header and footer bands, and their text |
+| `textColor` | | Text on the page, a map's markers and route, a postmark sticker's ink, the stars |
+| `accentColor` | | Ribbons, the hero's edge, `[[accented]]` text, map waypoints |
+| `labelColor` | | Text on the accent and button colours: headings on ribbon bars, button labels |
+| `buttonColor`, `panelColor` | | Buttons; stats boxes and map backgrounds |
+| `font` | `sans`, `serif` | |
+| `ribbon` | `pixel`, `plain`, `tab` | Pixel-art bar, plain bar, or a heading underlined in the accent |
+| `heroEdge` | `wave`, `straight`, `arc` | `arc`: the page rises into the hero like a planet's horizon, with a glow |
+| `backdrop` | `diamonds`, `dots`, `stars`, `none` | |
+| `corners` | `round`, `square` | `square` also makes buttons boxes, not pills |
 
-The defaults are taken from the email that inspired the layout. Each is any CSS colour, checked as the other generators check theirs.
+- **Shapes are short lists of choices, not CSS.** Every combination has been drawn and checked, and a theme can't break the layout.
+- **Fonts are the measured stacks only.** Line breaks come from per-character widths measured for each stack (`FontMetrics.Sans` and `Serif`). An unmeasured font would wrap wrongly, and text would overrun or break early. The serif stack is `Georgia, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif CJK SC', serif`. The maps keep their sans text in every theme.
+- **The colour flags went.** `--page-color`, `--accent-color` and the rest were replaced by `--theme`, which keeps the command short. A one-off colour goes in the file's theme instead.
+- **Settings are nullable and filled from the base.** A source-generated JSON reader sets every property the file leaves out to null or 0. With defaults, `{ "accentColor": "#e4572e" }` would have made every other colour null and every shape the first choice. Null means "from the base" instead, and `Resolve()` fills it in.
+
+**Lesson: one text colour isn't enough.** The first themes had a single text colour, as `starlight` did. `postcard`'s navy text then vanished on its navy footer band, and white button labels were unreadable on `cosmos`'s cyan. Text sits on three kinds of background, so a theme has three text colours: `textColor` on the page, `bandTextColor` on the bands, and `labelColor` on accent bars and buttons.
+
+The stars are placed from a fixed seed, so every render is the same, as the golden files require. They're dots of different sizes and brightness, plus four sparkles (eight-point paths drawn as four narrow kites) in each 200 px tile. The arc's glow is a wide, faint stroke under the line, so it needs no SVG filter.

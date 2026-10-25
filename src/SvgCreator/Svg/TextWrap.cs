@@ -4,8 +4,8 @@ namespace SvgCreator.Svg;
 
 /// <summary>
 /// Breaks text into lines for native <c>&lt;text&gt;</c>, which never wraps by itself: at spaces,
-/// and between CJK characters, which need none. Widths are estimated with
-/// <see cref="FontMetrics.Sans"/>, so they err wide.
+/// and between CJK characters, which need none. Widths are estimated with a
+/// <see cref="FontMetrics"/> (<see cref="FontMetrics.Sans"/> unless another is given), so they err wide.
 /// </summary>
 internal static class TextWrap
 {
@@ -14,11 +14,12 @@ internal static class TextWrap
     // Chinese half, moves to the next line whole when it fits there, and only one wider than a
     // whole line is broken inside. A piece wider than that on its own keeps its own line rather
     // than being split.
-    internal static List<string> Wrap(string text, double size, double maxWidth)
+    internal static List<string> Wrap(string text, double size, double maxWidth, FontMetrics? metrics = null)
     {
+        metrics ??= FontMetrics.Sans;
         var lines = new List<string>();
         var current = new StringBuilder();
-        bool Fits(string line) => FontMetrics.Sans.Width(line, size) <= maxWidth;
+        bool Fits(string line) => metrics.Width(line, size) <= maxWidth;
 
         void Add(string token, bool spaced)
         {

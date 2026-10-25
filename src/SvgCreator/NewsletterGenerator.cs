@@ -22,7 +22,7 @@ public sealed class NewsletterGenerator : INewsletterGenerator
             images[name] = Load(name, () => ImageLoader.LoadEncoded(stream));
         }
 
-        return NewsletterComposer.Compose(newsletter, options, images, CancellationToken.None);
+        return NewsletterComposer.Compose(newsletter, options, Theme(newsletter, options), images, CancellationToken.None);
     }
 
     /// <inheritdoc/>
@@ -44,8 +44,12 @@ public sealed class NewsletterGenerator : INewsletterGenerator
             }
         }
 
-        return NewsletterComposer.Compose(newsletter, options, images, cancellationToken);
+        return NewsletterComposer.Compose(newsletter, options, Theme(newsletter, options), images, cancellationToken);
     }
+
+    // The options' theme, else the newsletter's, else Starlight, with every setting filled.
+    private static NewsletterTheme Theme(Newsletter newsletter, NewsletterOptions options) =>
+        (options.Theme ?? newsletter.Theme ?? NewsletterTheme.Starlight).Resolve();
 
     // Names the picture in the message, so a newsletter of twenty photos says which one is broken.
     private static EncodedImage Load(string name, Func<EncodedImage> load)
@@ -97,6 +101,7 @@ public sealed class NewsletterGenerator : INewsletterGenerator
         ArgumentNullException.ThrowIfNull(newsletter);
         ArgumentNullException.ThrowIfNull(options);
         options.Validate();
+        _ = Theme(newsletter, options);
 
         if (newsletter.Header is null || string.IsNullOrWhiteSpace(newsletter.Header.Title))
         {

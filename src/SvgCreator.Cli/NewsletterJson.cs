@@ -9,8 +9,9 @@ namespace SvgCreator.Cli;
 /// Reads the <c>newsletter</c> command's file: a JSON object with camelCase properties, blocks
 /// told apart by their <c>"type"</c>, which may come anywhere in the block. A map block's
 /// <c>"stops"</c> may be the list itself or the path of a stops file, as the <c>map</c> command
-/// reads (see <see cref="TravelStopsJson"/>), relative to the newsletter file. Source-generated, so
-/// it needs no reflection under Native AOT.
+/// reads (see <see cref="TravelStopsJson"/>), relative to the newsletter file; the
+/// <c>"theme"</c> may be a built-in theme's name or the path of a theme file (ending in
+/// <c>.json</c>), also relative to it. Source-generated, so it needs no reflection under Native AOT.
 /// </summary>
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
@@ -20,6 +21,7 @@ namespace SvgCreator.Cli;
     AllowOutOfOrderMetadataProperties = true,
     UseStringEnumConverter = true)]
 [JsonSerializable(typeof(Newsletter))]
+[JsonSerializable(typeof(NewsletterTheme))]
 internal sealed partial class NewsletterJson : JsonSerializerContext
 {
     // The same leniency as the source-generated options, for reading the file as a tree first.
@@ -38,6 +40,7 @@ internal sealed partial class NewsletterJson : JsonSerializerContext
             }
 
             await InlineStopsFilesAsync(root, file, cancellationToken);
+            await InlineThemeFileAsync(root, file, cancellationToken);
             return (root ?? throw new InvalidDataException($"{file.Name}: expected a newsletter object, found null.")).Deserialize(Default.Newsletter)
                 ?? throw new InvalidDataException($"{file.Name}: expected a newsletter object, found null.");
         }
@@ -91,6 +94,59 @@ internal sealed partial class NewsletterJson : JsonSerializerContext
 
             block[key] = stops as JsonArray
                 ?? throw new InvalidDataException($"{stopsFile} (stops for block {i + 1} of {file.Name}): expected a JSON array of stops, as the map command reads.");
+        }
+    }
+
+    /// <summary>
+    /// A theme for <c>--theme</c>: a built-in theme's name, or the path of a theme file (ending in
+    /// <c>.json</c>) relative to the current folder.
+    /// </summary>
+    public static async Task<SvgCreator.NewsletterTheme> ReadThemeAsync(string theme, CancellationToken cancellationToken)
+    {
+        if (!IsThemeFile(theme))
+        {
+            return SvgCreator.NewsletterTheme.Named(theme);
+        }
+
+        var node = await ReadThemeFileAsync(Path.GetFullPath(theme), theme, cancellationToken);
+        try
+        {
+            return node.Deserialize(Default.NewsletterTheme)!;
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException($"{theme}: {ex.Message}", ex);
+        }
+    }
+
+    // A theme given as a path rather than a built-in name.
+    private static bool IsThemeFile(string theme) => theme.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Replaces a <c>"theme"</c> that names a theme file with the object in that file.</summary>
+    private static async Task InlineThemeFileAsync(JsonNode? root, FileInfo file, CancellationToken cancellationToken)
+    {
+        if (root is JsonObject newsletter && PropertyName(newsletter, "theme") is { } key
+            && newsletter[key] is JsonValue value && value.TryGetValue(out string? theme) && IsThemeFile(theme))
+        {
+            newsletter[key] = await ReadThemeFileAsync(Path.Combine(file.DirectoryName!, theme), theme, cancellationToken);
+        }
+    }
+
+    private static async Task<JsonObject> ReadThemeFileAsync(string path, string name, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = File.OpenRead(path);
+            return await JsonNode.ParseAsync(stream, documentOptions: DocumentOptions, cancellationToken: cancellationToken) as JsonObject
+                ?? throw new InvalidDataException($"{name}: expected a theme object, such as {{ \"base\": \"minimal\", \"accentColor\": \"#e4572e\" }}.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidDataException($"Can't read the theme file {name}: {ex.Message}", ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException($"{name}: {ex.Message}", ex);
         }
     }
 

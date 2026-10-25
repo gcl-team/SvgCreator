@@ -31,6 +31,13 @@ public sealed record Newsletter
 
     /// <summary>The band at the bottom: links and small print.</summary>
     public required NewsletterFooter Footer { get; init; }
+
+    /// <summary>
+    /// How it looks: a built-in theme, or one with settings changed. Default: none, which is
+    /// <see cref="NewsletterTheme.Starlight"/>. <see cref="NewsletterOptions.Theme"/> takes its place when set.
+    /// </summary>
+    [JsonConverter(typeof(NewsletterThemeJsonConverter))]
+    public NewsletterTheme? Theme { get; init; }
 }
 
 /// <summary>The newsletter's header band.</summary>

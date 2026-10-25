@@ -56,12 +56,12 @@ internal static class AccentText
     public static string Plain(string text) => Parse(text).Plain;
 
     /// <summary>The text broken into lines no wider than <paramref name="maxWidth"/>, each as its runs.</summary>
-    public static List<IReadOnlyList<Run>> Wrap(string text, double size, double maxWidth)
+    public static List<IReadOnlyList<Run>> Wrap(string text, double size, double maxWidth, FontMetrics? metrics = null)
     {
         var (plain, accent) = Parse(text);
         var lines = new List<IReadOnlyList<Run>>();
         var position = 0;
-        foreach (var line in TextWrap.Wrap(plain, size, maxWidth))
+        foreach (var line in TextWrap.Wrap(plain, size, maxWidth, metrics))
         {
             // Wrapping drops the spaces at breaks and squeezes runs of them into one.
             while (position < plain.Length && char.IsWhiteSpace(plain[position]))

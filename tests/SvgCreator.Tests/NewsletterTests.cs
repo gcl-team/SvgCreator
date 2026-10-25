@@ -106,6 +106,13 @@ public class NewsletterTests
     [Fact]
     public void Golden() => SvgGoldenTests.AssertGolden("newsletter.svg", Create(Everything(), images: EverythingImages()));
 
+    [Theory]
+    [InlineData("postcard")]
+    [InlineData("minimal")]
+    [InlineData("cosmos")]
+    public void Golden_Themes(string theme) =>
+        SvgGoldenTests.AssertGolden($"newsletter-{theme}.svg", Create(Everything() with { Theme = new NewsletterTheme { Base = theme } }, images: EverythingImages()));
+
     [Fact]
     public async Task CreateAsync_MakesTheSameDocument()
     {
@@ -183,7 +190,7 @@ public class NewsletterTests
     [Fact]
     public void Text_MarkedSpansAreInTheAccentColour()
     {
-        var root = Root(Minimal with { Intro = ["Far too many [[xiaolongbao]]!"] }, new NewsletterOptions { AccentColor = "#ff8800" });
+        var root = Root(Minimal with { Intro = ["Far too many [[xiaolongbao]]!"] }, new NewsletterOptions { Theme = new NewsletterTheme { AccentColor = "#ff8800" } });
         var accent = ByClass(root, "newsletter-accent").Single();
 
         Assert.Equal("xiaolongbao", accent.Value);
@@ -339,7 +346,7 @@ public class NewsletterTests
     [Fact]
     public void Map_IsTheTravelMapNestedInThePanelColour()
     {
-        var root = Root(Minimal with { Blocks = [new NewsletterMap { Stops = Stops }] }, new NewsletterOptions { PanelColor = "#123456" });
+        var root = Root(Minimal with { Blocks = [new NewsletterMap { Stops = Stops }] }, new NewsletterOptions { Theme = new NewsletterTheme { PanelColor = "#123456" } });
         var map = root.Descendants(Svg + "svg").Single(e => (string?)e.Attribute("class") == "newsletter-map-drawing");
 
         Assert.Equal(2, ByClass(map, "travel-marker").Count());
@@ -363,7 +370,71 @@ public class NewsletterTests
         Assert.Throws<ArgumentOutOfRangeException>(() => Create(Minimal, new NewsletterOptions { Width = 100 }));
         Assert.Throws<ArgumentOutOfRangeException>(() => Create(Minimal, new NewsletterOptions { Margin = -1 }));
         Assert.Throws<ArgumentOutOfRangeException>(() => Create(Minimal, new NewsletterOptions { ImageDensity = double.NaN }));
-        Assert.Throws<ArgumentException>(() => Create(Minimal, new NewsletterOptions { AccentColor = "orangeish" }));
+        Assert.Throws<ArgumentException>(() => Create(Minimal, new NewsletterOptions { Theme = new NewsletterTheme { AccentColor = "orangeish" } }));
+    }
+
+    [Fact]
+    public void Theme_SettingsLeftOutComeFromTheBase()
+    {
+        var theme = new NewsletterTheme { Base = "postcard", AccentColor = "#e4572e" }.Resolve();
+
+        Assert.Equal("#e4572e", theme.AccentColor);
+        Assert.Equal(NewsletterTheme.Postcard.PageColor, theme.PageColor);
+        Assert.Equal(NewsletterFont.Serif, theme.Font);
+        Assert.Equal(NewsletterTheme.Starlight, new NewsletterTheme().Resolve());
+    }
+
+    [Fact]
+    public void Theme_UnknownName_ListsTheBuiltIns()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => Create(Minimal with { Theme = new NewsletterTheme { Base = "galaxy" } }));
+
+        Assert.Contains("starlight, postcard, minimal or cosmos", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Theme_TheOptionsThemeTakesTheNewslettersPlace()
+    {
+        var root = Root(Minimal with { Theme = NewsletterTheme.Postcard }, new NewsletterOptions { Theme = NewsletterTheme.Cosmos });
+
+        Assert.Equal(NewsletterTheme.Cosmos.PageColor, (string?)ByClass(root, "newsletter-page").Single().Attribute("fill"));
+    }
+
+    [Fact]
+    public void Theme_Serif_SetsTheFontAndWrapsWithItsWidths()
+    {
+        var root = Root(Minimal with { Theme = NewsletterTheme.Postcard });
+
+        Assert.StartsWith("Georgia", (string?)Column(root).Attribute("font-family"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Theme_SquareCorners_RoundNothing()
+    {
+        var newsletter = Everything() with { Theme = NewsletterTheme.Minimal };
+        var root = Root(newsletter, images: EverythingImages());
+
+        Assert.DoesNotContain(Column(root).Descendants(), e => e.Attribute("rx") is not null && e.Ancestors(Svg + "svg").Count() == 1);
+    }
+
+    [Fact]
+    public void Theme_BandsAndLabels_HaveTheirOwnTextColours()
+    {
+        var root = Root(Minimal with { Blocks = [new NewsletterButton("Go")] }, new NewsletterOptions { Theme = NewsletterTheme.Postcard });
+
+        Assert.Equal(NewsletterTheme.Postcard.BandTextColor, (string?)ByClass(root, "newsletter-header").Single().Attribute("fill"));
+        Assert.Equal(NewsletterTheme.Postcard.LabelColor, (string?)ByClass(root, "newsletter-button-text").Single().Attribute("fill"));
+    }
+
+    [Theory]
+    [InlineData("starlight", true)]
+    [InlineData("cosmos", true)]
+    [InlineData("minimal", false)]
+    public void Theme_BackdropPattern_OnlyWhenTheThemeHasOne(string theme, bool pattern)
+    {
+        var root = Root(Minimal with { Theme = NewsletterTheme.Named(theme) });
+
+        Assert.Equal(pattern, root.Descendants(Svg + "pattern").Any());
     }
 
     [Fact]
@@ -415,6 +486,8 @@ public class NewsletterTests
 
         var newsletter = JsonSerializer.Deserialize<Newsletter>(json, JsonOptions)!;
 
+        Assert.Null(newsletter.Theme);
+
         Assert.Equal(["One paragraph."], newsletter.Intro);
         var text = Assert.IsType<NewsletterText>(newsletter.Blocks[0]);
         Assert.Equal(["Two", "paragraphs"], text.Text);
@@ -423,6 +496,19 @@ public class NewsletterTests
         Assert.Equal(StampCorner.TopRight, Assert.IsType<NewsletterCallout>(newsletter.Blocks[2]).Sticker!.Stamp!.ToOptions().FeeCorner);
         Assert.Equal(TravelMapRoute.Lines, Assert.IsType<NewsletterMap>(newsletter.Blocks[3]).Route);
         Assert.Equal(["Bye"], newsletter.Footer.Lines);
+    }
+
+    [Theory]
+    [InlineData("\"cosmos\"", "cosmos", null)]
+    [InlineData("{ \"base\": \"minimal\", \"accentColor\": \"#e4572e\", \"ribbon\": \"plain\" }", "minimal", "#e4572e")]
+    public void Json_ThemeIsANameOrSettings(string theme, string expectedBase, string? expectedAccent)
+    {
+        var json = $$"""{ "header": { "title": "T" }, "footer": { "lines": "x" }, "theme": {{theme}} }""";
+
+        var parsed = JsonSerializer.Deserialize<Newsletter>(json, JsonOptions)!.Theme!;
+
+        Assert.Equal((expectedBase, expectedAccent), (parsed.Base, parsed.AccentColor));
+        Assert.Null(parsed.PageColor);
     }
 
     [Fact]
