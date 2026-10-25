@@ -72,7 +72,8 @@ dotnet run --project src/SvgCreator.Cli -- map stops.json -o trip.svg --route li
 # mark transit stops "waypoint": true in the stops file: unnumbered dots the route runs through
 
 # newsletter: header, hero and intro, then ribbons, text, picture cards, buttons, stats, callouts
-# and travel maps in any order, and a footer, from a JSON file (picture paths relative to it)
+# and travel maps in any order, and a footer, from a JSON file (picture paths relative to it;
+# a map block's "stops" can name the same stops file the map command reads)
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --width 1280 --margin 0
 

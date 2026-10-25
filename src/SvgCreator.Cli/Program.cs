@@ -396,7 +396,7 @@ static Command NewsletterCommand()
     var defaults = new NewsletterOptions();
     var input = new Argument<FileInfo>("newsletter")
     {
-        Description = "JSON file: header, hero, intro, blocks and footer. Picture paths are relative to this file.",
+        Description = "JSON file: header, hero, intro, blocks and footer. Picture paths, and a map's stops file (\"stops\": \"stops-day1.json\"), are relative to this file.",
     }.AcceptExistingOnly();
     var output = new Option<FileInfo>("--output", "-o") { Description = "Output SVG path.", Required = true };
     var width = new Option<int>("--width") { Description = "Width of the newsletter's column in pixels. Everything scales with it; the height follows the content.", DefaultValueFactory = _ => defaults.Width };

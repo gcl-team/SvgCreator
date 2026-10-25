@@ -10,7 +10,16 @@ svgcreator newsletter trip/trip.json -o big.svg --image-density 0  # embed the p
 svgcreator newsletter trip/trip.json -o teal.svg --page-color '#0f5257' --accent-color '#ffb347'
 ```
 
-The file is JSON. Picture paths are relative to the file, so a folder holding `trip.json`, `photos/` and a logo can move anywhere:
+The file is JSON. Picture paths, and the paths of stops files, are relative to the file, so a trip folder can move anywhere:
+
+```
+shanghai/
+  trip.json          the newsletter
+  stops-day1.json    one day's stops: "stops": "stops-day1.json" in a map block,
+                     and svgcreator map stops-day1.json -o day1.svg reads it too
+  logo.png
+  photos/
+```
 
 ```jsonc
 {
@@ -20,7 +29,7 @@ The file is JSON. Picture paths are relative to the file, so a folder holding `t
   "blocks": [
     { "type": "button",  "text": "Full itinerary", "link": "https://example.com/shanghai" },
     { "type": "ribbon",  "text": "Day 1 · 外滩" },
-    { "type": "map",     "route": "lines", "stops": [ { "sequence": 1, "name": "外滩 The Bund", "latitude": 31.24, "longitude": 121.49 } ] },
+    { "type": "map",     "route": "lines", "stops": "stops-day1.json" },
     { "type": "cards",   "items": [
         { "image": "photos/bund.jpg", "title": "外滩 The Bund", "text": "The skyline lights up at 7 pm." },
         { "image": "photos/yuyuan.jpg", "title": "豫园 Yu Garden", "text": ["Go early.", "It fills up by ten."], "link": "https://example.com/yuyuan" } ] },
@@ -64,7 +73,7 @@ The header, hero, intro and footer always sit in the same order, so every newsle
 | `button` | A pill, at least half the column wide, optionally a link | 版本情报, 了解更多 |
 | `stats` | A small label over a box with the value set large, underlined if it's a link | The redeem code |
 | `callout` | Text beside a sticker: the picture as it is, a [postage stamp](Postage-Stamp.md) of it, or a [postmark](Stamp-Style.md) traced from it | The mascot and the Messenger text |
-| `map` | A [travel map](Travel-Map.md) of the stops, with its `route`, `breaks` and `layout` | (new) |
+| `map` | A [travel map](Travel-Map.md) of the stops, with its `route`, `breaks` and `layout`. `"stops"` is the list itself, or the path of a stops file as the `map` command reads | (new) |
 
 Only the header (its title) and the footer (one link or line) are required. The hero and intro are optional, so a two-line "new posts this week" newsletter doesn't need a big picture. The title is always the document's `<title>`, which browser tabs and screen readers show, even when a logo takes its place in the band.
 
@@ -81,6 +90,7 @@ Every name is checked before any picture is opened, as are links, colours and ac
 - **Blocks are told apart by `"type"`**, using System.Text.Json's `[JsonPolymorphic]` attributes on `NewsletterBlock`. That works with the source generator, so the CLI stays AOT-safe. By default the `"type"` must be a block's first property; `AllowOutOfOrderMetadataProperties` lets it come anywhere, since people write these files by hand. A missing or unknown type gets a message in the file's terms (`every block needs a "type" (ribbon, text, …); missing at $.blocks[0]`), not System.Text.Json's one about abstract types and type discriminators.
 - **Text can be a string or an array of paragraphs.** `NewsletterTextJsonConverter` reads either, so `"text": "One line."` needs no brackets.
 - **Enums are strings** (`"align": "left"`, `"route": "lines"`), with `UseStringEnumConverter`.
+- **A map's stops can be a file.** `"stops": "stops-day1.json"` names the same file the `map` command reads, so each day's stops live in one place. The CLI reads the newsletter as a `JsonNode` tree first, replaces each map block's `"stops"` path with the array from that file, then deserializes the tree. The library still sees a plain list of stops, and, as with pictures, never opens a file itself. A missing or broken stops file is named in the error, with the block it belongs to. The sample trip came out byte-identical either way.
 
 **Lesson: source-generated JSON sets every init property, those missing from the file too.** A sticker's stamp first used `PostageStampOptions` directly. A stamp with only `"country"` then failed with "Value cannot be null (InkColor)", and every corner came out top left. To build a record with init-only properties, the generated code passes all of them in one object initializer, those missing from the JSON as null or 0. `TravelStop` meets the same thing (`init => field = value ?? []`). The fix is a small `NewsletterStamp` whose fields are nullable and fall back to the stamp's defaults in `ToOptions()`. Lists elsewhere in the newsletter use the `?? []` pattern, and its enums default to 0 on purpose: `Center`, `Arrows`, `Auto`.
 
