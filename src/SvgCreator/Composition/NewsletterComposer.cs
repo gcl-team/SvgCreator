@@ -32,6 +32,10 @@ internal static class NewsletterComposer
     private const double LogoWidth = 300;
     private const double LogoHeight = 52;
     private const double TitleSize = 28;
+    private const double StackedLogoHeight = 44; // a logo with the title under it
+    private const double StackedTitleSize = 22;
+    private const double StackedGap = 6;         // between the logo and the title under it
+    private const double BandPadding = 16;       // above and below a stacked logo and title
 
     private const double HeroMinShape = 0.4;     // height per width: 5:2
     private const double HeroMaxShape = 0.8;     // 5:4
@@ -257,21 +261,26 @@ internal static class NewsletterComposer
         });
     }
 
-    // The header band: the logo, or the title when there's none.
+    // The header band: the title alone, the logo alone, or by default the logo with the title
+    // stacked under it, the pair centred in a taller band.
     private static Section Header(Context c, NewsletterHeader header)
     {
-        var height = HeaderHeight * c.Unit;
-        Text? title = null;
-        RectD logoBox = default;
-        if (header.Logo is { } logo)
+        var logo = header.Logo;
+        var showTitle = logo is null || !header.HideTitle;
+        var stacked = logo is not null && showTitle;
+        var logoHeight = (stacked ? StackedLogoHeight : LogoHeight) * c.Unit;
+        var title = showTitle ? OneLine(c, header.Title, (stacked ? StackedTitleSize : TitleSize) * c.Unit, c.Content) : null;
+        var gap = StackedGap * c.Unit;
+
+        // Stacked, the band is as tall as the pair plus room above and below; otherwise it's fixed.
+        var height = stacked ? logoHeight + gap + title!.Height + (2 * BandPadding * c.Unit) : HeaderHeight * c.Unit;
+        var logoBox = default(RectD);
+        if (logo is not null)
         {
-            var (w, h) = (Math.Min(LogoWidth * c.Unit, c.Content), LogoHeight * c.Unit);
-            logoBox = new RectD((c.Width - w) / 2, (height - h) / 2, w, h);
-            c.Images.Need(logo, w, h, cover: false);
-        }
-        else
-        {
-            title = OneLine(c, header.Title, TitleSize * c.Unit, c.Content);
+            var width = Math.Min(LogoWidth * c.Unit, c.Content);
+            var y = stacked ? BandPadding * c.Unit : (height - logoHeight) / 2;
+            logoBox = new RectD((c.Width - width) / 2, y, width, logoHeight);
+            c.Images.Need(logo, width, logoHeight, cover: false);
         }
 
         return new Section(height, (xml, top) =>
@@ -283,13 +292,15 @@ internal static class NewsletterComposer
             xml.WriteAttributeString("fill", c.BandColor);
             xml.WriteEndElement();
 
-            if (header.Logo is { } logo)
+            if (logo is not null)
             {
                 c.Images.Draw(xml, logo, logoBox with { Y = top + logoBox.Y }, cover: false);
             }
-            else
+
+            if (title is not null)
             {
-                WriteText(xml, c, title!, c.Width / 2, top + ((height - title!.Height) / 2), "middle", "newsletter-title", bold: true);
+                var titleTop = stacked ? top + logoBox.Bottom + gap : top + ((height - title.Height) / 2);
+                WriteText(xml, c, title, c.Width / 2, titleTop, "middle", "newsletter-title", bold: true);
             }
 
             xml.WriteEndElement();

@@ -175,16 +175,36 @@ public class NewsletterTests
     }
 
     [Fact]
-    public void Header_TitleIsTheDocumentsTitle_AndALogoTakesItsPlaceInTheBand()
+    public void Header_TitleIsTheDocumentsTitle_AndPrintedInTheBand()
     {
-        var withTitle = Root(Minimal with { Header = new("Shanghai [[trip]]") });
-        var withLogo = Root(Minimal with { Header = new("Shanghai") { Logo = "logo.png" } });
+        var root = Root(Minimal with { Header = new("Shanghai [[trip]]") });
 
-        Assert.Equal("Shanghai trip", withTitle.Element(Svg + "title")!.Value);
-        Assert.Single(ByClass(withTitle, "newsletter-title"));
-        Assert.Equal("Shanghai", withLogo.Element(Svg + "title")!.Value);
-        Assert.Empty(ByClass(withLogo, "newsletter-title"));
-        Assert.Single(ByClass(ByClass(withLogo, "newsletter-header").Single(), "newsletter-picture"));
+        Assert.Equal("Shanghai trip", root.Element(Svg + "title")!.Value);
+        Assert.Equal("Shanghai trip", ByClass(root, "newsletter-title").Single().Value);
+    }
+
+    [Fact]
+    public void Header_WithALogo_StacksTheTitleUnderIt_InATallerBand()
+    {
+        var plain = Root(Minimal with { Header = new("Shanghai") });
+        var root = Root(Minimal with { Header = new("Shanghai") { Logo = "logo.png" } });
+        var header = ByClass(root, "newsletter-header").Single();
+
+        var logo = ByClass(header, "newsletter-picture").Single();
+        var logoTop = double.Parse(((string)logo.Element(Svg + "use")!.Attribute("transform")!).Split('(', ' ', ')')[2], CultureInfo.InvariantCulture);
+        var titleBaseline = Number(ByClass(header, "newsletter-title").Single().Element(Svg + "tspan")!, "y");
+        Assert.True(titleBaseline > logoTop + 44, $"title at {titleBaseline}, logo from {logoTop}");
+        Assert.True(Number(header.Element(Svg + "rect")!, "height") > Number(ByClass(plain, "newsletter-header").Single().Element(Svg + "rect")!, "height"));
+    }
+
+    [Fact]
+    public void Header_HideTitle_LeavesTheLogoAlone_ButKeepsTheDocumentsTitle()
+    {
+        var root = Root(Minimal with { Header = new("Shanghai") { Logo = "logo.png", HideTitle = true } });
+
+        Assert.Empty(ByClass(root, "newsletter-title"));
+        Assert.Equal("Shanghai", root.Element(Svg + "title")!.Value);
+        Assert.Equal(84, Number(ByClass(root, "newsletter-header").Single().Element(Svg + "rect")!, "height"));
     }
 
     [Fact]

@@ -42,13 +42,19 @@ public sealed record Newsletter
 
 /// <summary>The newsletter's header band.</summary>
 /// <param name="Title">
-/// The newsletter's name: printed in the band when there's no <see cref="Logo"/>, and always the
-/// document's <c>&lt;title&gt;</c>, which screen readers and browser tabs show.
+/// The newsletter's name: printed in the band (under the <see cref="Logo"/>, if there is one), and
+/// always the document's <c>&lt;title&gt;</c>, which screen readers and browser tabs show.
 /// </param>
 public sealed record NewsletterHeader(string Title)
 {
-    /// <summary>A picture shown in the band in place of the title. Default: none.</summary>
+    /// <summary>A picture shown in the band, with the title under it. Default: none.</summary>
     public string? Logo { get; init; }
+
+    /// <summary>
+    /// Show the logo alone, for a logo that already says the name; the title is still the
+    /// document's <c>&lt;title&gt;</c>. Ignored without a logo. Default: false.
+    /// </summary>
+    public bool HideTitle { get; init; }
 }
 
 /// <summary>The hero: a picture across the full width under the header, with a wave cut along its bottom.</summary>

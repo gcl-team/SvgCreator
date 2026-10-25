@@ -76,7 +76,9 @@ The header, hero, intro and footer always sit in the same order, so every newsle
 | `callout` | Text beside a sticker: the picture as it is, a [postage stamp](Postage-Stamp.md) of it, or a [postmark](Stamp-Style.md) traced from it | The mascot and the Messenger text |
 | `map` | A [travel map](Travel-Map.md) of the stops, with its `route`, `breaks` and `layout` (default `names`: the places' names alone). `"stops"` is the list itself, or the path of a stops file as the `map` command reads | (new) |
 
-Only the header (its title) and the footer (one link or line) are required. The hero and intro are optional, so a two-line "new posts this week" newsletter doesn't need a big picture. The title is always the document's `<title>`, which browser tabs and screen readers show, even when a logo takes its place in the band.
+Only the header (its title) and the footer (one link or line) are required. The hero and intro are optional, so a two-line "new posts this week" newsletter doesn't need a big picture. The title is always the document's `<title>`, which browser tabs and screen readers show.
+
+The header band shows the title alone (84 px tall, 28 px type) or, with a `"logo"`, the logo with the title stacked under it: the logo fitted into 300 × 44 px, the title at 22 px, and the band growing to fit the pair with 16 px above and below. A logo that already says the name can stand alone with `"hideTitle": true`, which keeps the 84 px band and a 52 px logo. It's `hideTitle`, not `showTitle`, because a source-generated JSON reader would turn a missing `showTitle` into false and hide everyone's titles.
 
 A fixed template (days, then stops with photos) was considered first, since the trip was the first use. A list of blocks won because the same command should make a blog's or a shop's newsletter, and the frame keeps every one of them looking finished.
 
