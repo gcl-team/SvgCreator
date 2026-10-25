@@ -13,6 +13,7 @@
 - [Envelope](Envelope.md)
 - [Mail Piece](Mail-Piece.md)
 - [Travel Map](Travel-Map.md)
+- [Newsletter](Newsletter.md)
 
 **Cross-cutting**
 - [Native AOT](Native-AOT.md)

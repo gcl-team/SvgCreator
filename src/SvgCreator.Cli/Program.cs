@@ -111,6 +111,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     EnvelopeCommand(),
     MailCommand(),
     MapCommand(),
+    NewsletterCommand(),
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -375,6 +376,70 @@ static Command MapCommand()
                 Breaks = parseResult.GetValue(breaks),
                 Layout = parseResult.GetValue(layout),
             });
+            await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
+            Console.WriteLine($"Wrote {target.FullName}");
+            return 0;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or ArgumentException or IOException)
+        {
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
+            return 1;
+        }
+    });
+
+    return command;
+}
+
+// A newsletter from a JSON file; the pictures it names are paths relative to that file.
+static Command NewsletterCommand()
+{
+    var defaults = new NewsletterOptions();
+    var input = new Argument<FileInfo>("newsletter")
+    {
+        Description = "JSON file: header, hero, intro, blocks and footer. Picture paths are relative to this file.",
+    }.AcceptExistingOnly();
+    var output = new Option<FileInfo>("--output", "-o") { Description = "Output SVG path.", Required = true };
+    var width = new Option<int>("--width") { Description = "Width of the newsletter's column in pixels. Everything scales with it; the height follows the content.", DefaultValueFactory = _ => defaults.Width };
+    var margin = new Option<int>("--margin") { Description = "Patterned backdrop around the column, in pixels. 0 for none.", DefaultValueFactory = _ => defaults.Margin };
+    var density = new Option<double>("--image-density") { Description = "Pixels of each picture per pixel drawn: bigger pictures are scaled down before embedding. 0 embeds them unchanged.", DefaultValueFactory = _ => defaults.ImageDensity };
+    var backdrop = new Option<string>("--backdrop-color") { Description = "Backdrop around the column: hex, a CSS name or rgb()/hsl().", DefaultValueFactory = _ => defaults.BackdropColor };
+    var page = new Option<string>("--page-color") { Description = "The column's background.", DefaultValueFactory = _ => defaults.PageColor };
+    var band = new Option<string>("--band-color") { Description = "The header and footer bands.", DefaultValueFactory = _ => defaults.BandColor };
+    var text = new Option<string>("--text-color") { Description = "The text.", DefaultValueFactory = _ => defaults.TextColor };
+    var accent = new Option<string>("--accent-color") { Description = "Ribbons, the hero's wave and [[marked]] text.", DefaultValueFactory = _ => defaults.AccentColor };
+    var button = new Option<string>("--button-color") { Description = "Buttons.", DefaultValueFactory = _ => defaults.ButtonColor };
+    var panel = new Option<string>("--panel-color") { Description = "Stats boxes and maps' background.", DefaultValueFactory = _ => defaults.PanelColor };
+
+    var command = new Command("newsletter", "Make a newsletter: a header, hero and intro, then ribbons, text, picture cards, buttons, stats, callouts and travel maps in any order, and a footer.")
+    {
+        input, output, width, margin, density, backdrop, page, band, text, accent, button, panel,
+    };
+
+    command.SetAction(async (parseResult, cancellationToken) =>
+    {
+        var file = parseResult.GetRequiredValue(input);
+        var target = parseResult.GetRequiredValue(output);
+        try
+        {
+            var newsletter = await NewsletterJson.ReadAsync(file, cancellationToken);
+            var folder = file.DirectoryName!;
+            var svg = await new NewsletterGenerator().CreateAsync(
+                newsletter,
+                new NewsletterOptions
+                {
+                    Width = parseResult.GetValue(width),
+                    Margin = parseResult.GetValue(margin),
+                    ImageDensity = parseResult.GetValue(density),
+                    BackdropColor = parseResult.GetRequiredValue(backdrop),
+                    PageColor = parseResult.GetRequiredValue(page),
+                    BandColor = parseResult.GetRequiredValue(band),
+                    TextColor = parseResult.GetRequiredValue(text),
+                    AccentColor = parseResult.GetRequiredValue(accent),
+                    ButtonColor = parseResult.GetRequiredValue(button),
+                    PanelColor = parseResult.GetRequiredValue(panel),
+                },
+                (name, ct) => Task.FromResult<Stream>(File.OpenRead(Path.Combine(folder, name))),
+                cancellationToken);
             await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
             Console.WriteLine($"Wrote {target.FullName}");
             return 0;

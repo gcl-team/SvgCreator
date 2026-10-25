@@ -71,6 +71,11 @@ dotnet run --project src/SvgCreator.Cli -- map stops.json -o trip.svg --route li
 # a far stop (an airport 40 km out) is pulled in with a dotted, labelled break; --breaks none keeps strict scale
 # mark transit stops "waypoint": true in the stops file: unnumbered dots the route runs through
 
+# newsletter: header, hero and intro, then ribbons, text, picture cards, buttons, stats, callouts
+# and travel maps in any order, and a footer, from a JSON file (picture paths relative to it)
+dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg
+dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --width 1280 --margin 0
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 

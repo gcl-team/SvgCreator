@@ -1,8 +1,5 @@
-using System.Globalization;
-using System.Xml;
 using SvgCreator.Imaging;
 using SvgCreator.Svg;
-using static SvgCreator.Svg.SvgFormat;
 
 namespace SvgCreator.Composition;
 
@@ -54,7 +51,7 @@ internal static class MailPieceComposer
 
         // Where the stamp goes. Without a postage stamp, the postmark still goes where it would be.
         var stampSvg = postageStamp is { } p ? PostageStampWriter.Write(p.Image, p.Options) : null;
-        var stamp = StampRect(stampSvg is null ? null : Size(stampSvg), width, unit);
+        var stamp = StampRect(stampSvg is null ? null : NestedSvg.Size(stampSvg), width, unit);
 
         string? postmarkSvg = null;
         Rect postmarkRect = default;
@@ -62,20 +59,20 @@ internal static class MailPieceComposer
         {
             var drawing = LineArtTracer.Trace(m.Image, m.Options, cancellationToken);
             postmarkSvg = SvgConverter.Render(drawing, m.Options);
-            postmarkRect = PostmarkRect(Size(postmarkSvg), PostmarkCancellation.FrameOf(drawing), drawing.Height, stamp, (width, height));
+            postmarkRect = PostmarkRect(NestedSvg.Size(postmarkSvg), PostmarkCancellation.FrameOf(drawing), drawing.Height, stamp, (width, height));
         }
 
         return SvgWriter.WriteDocument(width, height, envelope.PaperColor, SvgStyle.Clean, (xml, _) =>
         {
-            Nest(xml, "mail-envelope", EnvelopeWriter.Write(envelope), new Rect(0, 0, width, height));
+            NestedSvg.Nest(xml, "mail-envelope", EnvelopeWriter.Write(envelope), (0, 0, width, height));
             if (stampSvg is not null)
             {
-                Nest(xml, "mail-postage-stamp", stampSvg, stamp);
+                NestedSvg.Nest(xml, "mail-postage-stamp", stampSvg, (stamp.X, stamp.Y, stamp.Width, stamp.Height));
             }
 
             if (postmarkSvg is not null)
             {
-                Nest(xml, "mail-postmark", postmarkSvg, postmarkRect);
+                NestedSvg.Nest(xml, "mail-postmark", postmarkSvg, (postmarkRect.X, postmarkRect.Y, postmarkRect.Width, postmarkRect.Height));
             }
         });
     }
@@ -140,41 +137,4 @@ internal static class MailPieceComposer
 
     // The largest scale at which a length growing by perScale fits in room (none if it doesn't grow).
     private static double Limit(double room, double perScale) => perScale > 0 ? room / perScale : double.PositiveInfinity;
-
-    // A generated document's canvas size, from its root.
-    private static (double Width, double Height) Size(string svg)
-    {
-        using var reader = XmlReader.Create(new StringReader(svg));
-        reader.MoveToContent();
-        return (double.Parse(reader.GetAttribute("width")!, CultureInfo.InvariantCulture), double.Parse(reader.GetAttribute("height")!, CultureInfo.InvariantCulture));
-    }
-
-    /// <summary>
-    /// Writes a generated document as an inner <c>&lt;svg&gt;</c> filling <paramref name="rect"/>:
-    /// its view box maps its own canvas onto the rectangle, and its children are copied as they are.
-    /// </summary>
-    private static void Nest(XmlWriter xml, string className, string svg, Rect rect)
-    {
-        using var reader = XmlReader.Create(new StringReader(svg), new XmlReaderSettings { IgnoreWhitespace = true });
-        reader.MoveToContent();
-
-        xml.WriteStartElement("svg", Namespace);
-        xml.WriteAttributeString("class", className);
-        xml.WriteAttributeString("x", Number(rect.X));
-        xml.WriteAttributeString("y", Number(rect.Y));
-        xml.WriteAttributeString("width", Number(rect.Width));
-        xml.WriteAttributeString("height", Number(rect.Height));
-        xml.WriteAttributeString("viewBox", reader.GetAttribute("viewBox"));
-
-        if (!reader.IsEmptyElement)
-        {
-            reader.Read();
-            while (reader.NodeType != XmlNodeType.EndElement)
-            {
-                xml.WriteNode(reader, defattr: true);
-            }
-        }
-
-        xml.WriteEndElement();
-    }
 }

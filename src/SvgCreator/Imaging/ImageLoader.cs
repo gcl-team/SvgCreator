@@ -10,6 +10,9 @@ namespace SvgCreator.Imaging;
 /// </summary>
 internal static class ImageLoader
 {
+    // Quality for pictures Downscale saves as JPEG: past 85, files grow fast for little a viewer sees.
+    private const int JpegQuality = 85;
+
     public static RgbImage Load(Stream stream)
     {
         using var codec = OpenCodec(stream);
@@ -91,14 +94,66 @@ internal static class ImageLoader
 
     private static SKData Upright(SKBitmap decoded, SKEncodedOrigin origin)
     {
+        using var bitmap = Oriented(decoded, origin);
+        return bitmap.Encode(SKEncodedImageFormat.Png, 100);
+    }
+
+    // The decoded pixels turned upright, as a new bitmap.
+    private static SKBitmap Oriented(SKBitmap decoded, SKEncodedOrigin origin)
+    {
         var (rgba, width, height) = Orient(decoded.GetPixelSpan(), decoded.Width, decoded.Height, decoded.RowBytes, 4, origin);
-        using var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+        var bitmap = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
         for (var y = 0; y < height; y++)
         {
             Marshal.Copy(rgba, y * width * 4, bitmap.GetPixels() + (y * bitmap.RowBytes), width * 4);
         }
 
-        return bitmap.Encode(SKEncodedImageFormat.Png, 100);
+        return bitmap;
+    }
+
+    /// <summary>
+    /// The image scaled down to <paramref name="width"/> × <paramref name="height"/> (its displayed
+    /// size, upright) and saved as JPEG, or as PNG where any of it is transparent. The image is kept
+    /// as it is when it's no bigger than that already, when it's a GIF (which may be animated), and
+    /// when the smaller version would take more bytes, as a small, well-compressed PNG can.
+    /// </summary>
+    public static EncodedImage Downscale(EncodedImage image, int width, int height)
+    {
+        if ((width >= image.Width && height >= image.Height) || image.MediaType == "image/gif")
+        {
+            return image;
+        }
+
+        width = Math.Clamp(width, 1, image.Width);
+        height = Math.Clamp(height, 1, image.Height);
+        using var codec = OpenCodec(new MemoryStream(image.Data));
+        using var decoded = Decode(codec);
+        using var upright = codec.EncodedOrigin is SKEncodedOrigin.TopLeft ? null : Oriented(decoded, codec.EncodedOrigin);
+
+        // Premultiplied, so transparent pixels' colours don't bleed into their neighbours' edges.
+        var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using var resized = (upright ?? decoded).Resize(info, new SKSamplingOptions(SKCubicResampler.Mitchell))
+            ?? throw new InvalidDataException("Failed to scale the image down.");
+
+        var opaque = true;
+        var pixels = resized.GetPixelSpan();
+        for (var y = 0; y < height && opaque; y++)
+        {
+            var row = pixels.Slice(y * resized.RowBytes, width * 4);
+            for (var x = 3; x < row.Length; x += 4)
+            {
+                if (row[x] != 255)
+                {
+                    opaque = false;
+                    break;
+                }
+            }
+        }
+
+        using var data = opaque ? resized.Encode(SKEncodedImageFormat.Jpeg, JpegQuality) : resized.Encode(SKEncodedImageFormat.Png, 100);
+        return data.Size < image.Data.Length
+            ? new EncodedImage(data.ToArray(), opaque ? "image/jpeg" : "image/png", width, height)
+            : image;
     }
 
     /// <summary>

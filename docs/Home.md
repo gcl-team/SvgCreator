@@ -29,6 +29,7 @@ flowchart LR
 | Airmail envelope (separate generator) | [Envelope](Envelope.md) | `EnvelopeGenerator.cs`, `Svg/EnvelopeWriter.cs` |
 | Envelope + stamp + postmark, composed | [Mail Piece](Mail-Piece.md) | `MailPieceGenerator.cs`, `Composition/MailPieceComposer.cs` |
 | Travel map from a list of stops (separate generator) | [Travel Map](Travel-Map.md) | `TravelMapGenerator.cs`, `Mapping/`, `Svg/TravelMapWriter.cs`, `Svg/ItineraryPanel.cs` |
+| Newsletter: a header, hero and footer around blocks, travel maps and stamps among them | [Newsletter](Newsletter.md) | `NewsletterGenerator.cs`, `Composition/NewsletterComposer.cs`, `Composition/NewsletterImages.cs` |
 
 Cross-cutting topics:
 

@@ -6,7 +6,7 @@
 
 - The library sets **`<IsAotCompatible>true</IsAotCompatible>`**. That enables the trim, AOT and single-file analyzers.
 - **`TreatWarningsAsErrors`** is on everywhere, so any trim or AOT warning (IL2xxx / IL3xxx) fails the build.
-- **Banned APIs:** reflection, `dynamic`, `Activator.CreateInstance`, `XmlSerializer` and reflection-based `System.Text.Json`. Use `XmlWriter`/`StringBuilder`. Future JSON should use source-generated `JsonSerializerContext`.
+- **Banned APIs:** reflection, `dynamic`, `Activator.CreateInstance`, `XmlSerializer` and reflection-based `System.Text.Json`. Use `XmlWriter`/`StringBuilder`. JSON uses a source-generated `JsonSerializerContext` (`TravelStopsJson`, `NewsletterJson`). Polymorphic types (`[JsonPolymorphic]` and `[JsonDerivedType]` on the newsletter's blocks) and custom converters named in `[JsonConverter]` attributes work with it too: the generator writes code for each derived type and creates each converter directly.
 - Generic APIs are fine, e.g. `Enum.IsDefined<T>`, and System.CommandLine 2.x's typed options.
 - **Hot loops** use flat arrays and `Span<T>`, with no per-pixel allocation.
 
