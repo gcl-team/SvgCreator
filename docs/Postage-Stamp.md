@@ -62,7 +62,7 @@ The paper is white with a light grey edge, because on a white page white paper w
 
 ## Lesson: text width without a font
 
-Native `<text>` stays small and editable, but the library never knows which font the viewer will pick, so it can't measure text. Long names would run into each other ("SINGAPORE$1.20"). The writer estimates widths from a table instead: the advance of each of the 95 printable ASCII characters, measured in Chrome (`measureText` at 1000 px). Each entry is the widest value across the font stack, bold and italic, Georgia and Times New Roman (Chrome's generic `serif` resolves to Times here), rounded up.
+Native `<text>` stays small and editable, but the library never knows which font the viewer will pick, so it can't measure text. Long names would run into each other ("SINGAPORE$1.20"). The writer estimates widths from a table instead: the advance of each of the 95 printable ASCII characters, measured in Chrome (`measureText` at 1000 px). Each entry is the widest value across the font stack, bold and italic, Georgia and Times New Roman (Chrome's generic `serif` resolves to Times here), rounded up. The table lives in `Svg/FontMetrics.cs`, next to the sans-serif one the [travel map](Travel-Map.md) uses.
 
 | Characters | Estimate |
 |---|---|

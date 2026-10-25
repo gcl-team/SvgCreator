@@ -64,6 +64,13 @@ dotnet run --project src/SvgCreator.Cli -- envelope -o envelope.svg --style crum
 # all together: envelope, postage stamp and postmark
 dotnet run --project src/SvgCreator.Cli -- mail -o mail.svg --stamp-image picture.png --country SINGAPORE --postmark-image seal.png --postmark-mode Threshold
 
+# travel map: numbered stops from a JSON file, joined by arrows in travel order
+dotnet run --project src/SvgCreator.Cli -- map stops.json -o trip.svg
+dotnet run --project src/SvgCreator.Cli -- map stops.json -o trip.svg --layout panel --width 1600 --height 1000
+dotnet run --project src/SvgCreator.Cli -- map stops.json -o trip.svg --route lines
+# a far stop (an airport 40 km out) is pulled in with a dotted, labelled break; --breaks none keeps strict scale
+# mark transit stops "waypoint": true in the stops file: unnumbered dots the route runs through
+
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
 

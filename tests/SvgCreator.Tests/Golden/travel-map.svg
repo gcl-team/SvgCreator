@@ -1,0 +1,43 @@
+<svg width="1024" height="560" viewBox="0 0 1024 560" xmlns="http://www.w3.org/2000/svg">
+  <rect class="travel-background" width="1024" height="560" fill="#1446a0" />
+  <g class="travel-arrows" fill="#ffffff" stroke="#ffffff" stroke-width="4.48" stroke-linecap="round" stroke-linejoin="round">
+    <g class="travel-arrow">
+      <path class="travel-arrow-shaft" d="M449.0977 469.458L258.6062 110.3305" fill="none" />
+      <path class="travel-arrow-head" d="M248.1098 90.542L269.4899 104.5575L247.7226 116.1035Z" />
+    </g>
+    <g class="travel-arrow">
+      <path class="travel-arrow-shaft" d="M259.0007 75.9376L938.617 212.5855" fill="none" />
+      <path class="travel-arrow-head" d="M960.5775 217.001L936.1885 224.6638L941.0456 200.5073Z" />
+    </g>
+  </g>
+  <g class="travel-markers" font-family="Helvetica, Arial, sans-serif" font-weight="bold">
+    <g class="travel-marker">
+      <circle cx="459.0693" cy="488.2571" r="14.56" fill="#ffffff" />
+      <text x="459.0693" y="494.1371" font-size="16.8" fill="#1446a0" text-anchor="middle">1</text>
+    </g>
+    <g class="travel-marker">
+      <circle cx="238.1383" cy="71.7429" r="14.56" fill="#ffffff" />
+      <text x="238.1383" y="77.6229" font-size="16.8" fill="#1446a0" text-anchor="middle">2</text>
+    </g>
+    <g class="travel-marker">
+      <circle cx="981.44" cy="221.1958" r="14.56" fill="#ffffff" />
+      <text x="981.44" y="227.0758" font-size="16.8" fill="#1446a0" text-anchor="middle">3</text>
+    </g>
+  </g>
+  <g class="travel-labels" fill="#ffffff" font-family="Helvetica, Arial, sans-serif">
+    <text class="travel-label" text-anchor="start">
+      <tspan class="travel-name" x="477.2843" y="421.658" font-size="23.52" font-weight="bold">City Hall</tspan>
+      <tspan class="travel-time" x="477.2843" y="444.506" font-size="16.8">Day 1 · 9 am</tspan>
+      <tspan class="travel-description" x="477.2843" y="463.77" font-size="15.68">Meet at Exit B</tspan>
+    </text>
+    <text class="travel-label" text-anchor="end">
+      <tspan class="travel-name" x="219.9232" y="108.774" font-size="23.52" font-weight="bold">Singapore Zoo</tspan>
+      <tspan class="travel-time" x="219.9232" y="131.622" font-size="16.8">Day 1 · 11 am</tspan>
+    </text>
+    <text class="travel-label" text-anchor="end">
+      <tspan class="travel-name" x="963.2249" y="258.2269" font-size="23.52" font-weight="bold">Changi Airport</tspan>
+      <tspan class="travel-description" x="963.2249" y="280.1789" font-size="15.68">Jewel</tspan>
+      <tspan class="travel-description" x="963.2249" y="298.9949" font-size="15.68">Flight home</tspan>
+    </text>
+  </g>
+</svg>

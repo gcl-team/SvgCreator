@@ -164,7 +164,7 @@ public class PostageStampTests
         // Five CJK glyphs are about 50 px at size 10; the estimate allows the widest measured glyph.
         List<PostageStampWriter.Item> row = [Country("日本郵便局")];
 
-        Assert.Equal(5 * 10 * PostageStampWriter.WidestAdvance, PostageStampWriter.RowWidth(row, 40), 9);
+        Assert.Equal(5 * 10 * FontMetrics.Serif.WidestAdvance, PostageStampWriter.RowWidth(row, 40), 9);
         Assert.True(PostageStampWriter.RowWidth(row, 40) >= 50);
     }
 
@@ -182,7 +182,7 @@ public class PostageStampTests
     [InlineData("ÆØß")]    // Latin letters with no base letter to borrow from
     [InlineData("🇸🇬")]     // a flag: two runes (four UTF-16 units)
     public void RowWidth_GivesUnmeasuredCharactersTheWidestAdvance(string text) =>
-        Assert.Equal(text.EnumerateRunes().Count() * 10 * PostageStampWriter.WidestAdvance, PostageStampWriter.RowWidth([Country(text)], 40), 9);
+        Assert.Equal(text.EnumerateRunes().Count() * 10 * FontMetrics.Serif.WidestAdvance, PostageStampWriter.RowWidth([Country(text)], 40), 9);
 
     [Fact]
     public void FitRow_LeavesARowThatFitsUnchanged()

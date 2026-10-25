@@ -1,5 +1,6 @@
 using System.CommandLine;
 using SvgCreator;
+using SvgCreator.Cli;
 
 var inputArgument = new Argument<FileInfo>("input")
 {
@@ -109,6 +110,7 @@ var rootCommand = new RootCommand("Convert an image into a line-art SVG (black i
     StampCommand(),
     EnvelopeCommand(),
     MailCommand(),
+    MapCommand(),
 };
 
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -317,6 +319,62 @@ static Command MailCommand()
             };
 
             var svg = await new MailPieceGenerator().CreateAsync(envelope, stamp, postmark, cancellationToken);
+            await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
+            Console.WriteLine($"Wrote {target.FullName}");
+            return 0;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or ArgumentException or IOException)
+        {
+            await Console.Error.WriteLineAsync($"Error: {ex.Message}");
+            return 1;
+        }
+    });
+
+    return command;
+}
+
+// A travel map from a JSON file of stops.
+static Command MapCommand()
+{
+    var defaults = new TravelMapOptions();
+    var input = new Argument<FileInfo>("stops")
+    {
+        Description = "JSON array of stops: sequence, name, latitude, longitude, and optionally time and description (an array of lines).",
+    }.AcceptExistingOnly();
+    var output = new Option<FileInfo>("--output", "-o") { Description = "Output SVG path.", Required = true };
+    var width = new Option<int>("--width") { Description = "Map width in pixels.", DefaultValueFactory = _ => defaults.Width };
+    var height = new Option<int>("--height") { Description = "Map height in pixels.", DefaultValueFactory = _ => defaults.Height };
+    var background = new Option<string>("--background-color") { Description = "Background colour: hex, a CSS name or rgb()/hsl().", DefaultValueFactory = _ => defaults.BackgroundColor };
+    var foreground = new Option<string>("--foreground-color") { Description = "Colour of the markers, arrows and text.", DefaultValueFactory = _ => defaults.ForegroundColor };
+    var waypointColor = new Option<string>("--waypoint-color") { Description = "Colour of the waypoints' dots and names, setting them apart from the places.", DefaultValueFactory = _ => defaults.WaypointColor };
+    var scale = new Option<double>("--scale") { Description = "Size of the text, markers and arrows, as a multiple of the default. They don't grow with the canvas, so a bigger canvas gives the stops more room.", DefaultValueFactory = _ => defaults.Scale };
+    var route = new Option<TravelMapRoute>("--route") { Description = "Arrows: an arrow for each leg. Lines: a line without a head (the numbers give the direction). None: no route, markers only.", DefaultValueFactory = _ => defaults.Route };
+    var breaks = new Option<TravelMapBreaks>("--breaks") { Description = "Auto: pull a far stop (an airport 40 km out) in towards the rest, with a dotted break labelled with the real distance. None: everything to scale.", DefaultValueFactory = _ => defaults.Breaks };
+    var layout = new Option<TravelMapLayout>("--layout") { Description = "Labels: each stop's text beside its marker. Panel: names on the map, the full itinerary in a side panel. Auto: Labels when they fit, else Panel.", DefaultValueFactory = _ => defaults.Layout };
+
+    var command = new Command("map", "Make a travel map: numbered stops at their real relative positions, joined by arrows in travel order, on a plain background.")
+    {
+        input, output, width, height, background, foreground, waypointColor, scale, route, breaks, layout,
+    };
+
+    command.SetAction(async (parseResult, cancellationToken) =>
+    {
+        var target = parseResult.GetRequiredValue(output);
+        try
+        {
+            var stops = await TravelStopsJson.ReadAsync(parseResult.GetRequiredValue(input), cancellationToken);
+            var svg = new TravelMapGenerator().Create(stops, new TravelMapOptions
+            {
+                Width = parseResult.GetValue(width),
+                Height = parseResult.GetValue(height),
+                BackgroundColor = parseResult.GetRequiredValue(background),
+                ForegroundColor = parseResult.GetRequiredValue(foreground),
+                WaypointColor = parseResult.GetRequiredValue(waypointColor),
+                Scale = parseResult.GetValue(scale),
+                Route = parseResult.GetValue(route),
+                Breaks = parseResult.GetValue(breaks),
+                Layout = parseResult.GetValue(layout),
+            });
             await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
             Console.WriteLine($"Wrote {target.FullName}");
             return 0;
