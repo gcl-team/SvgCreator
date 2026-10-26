@@ -56,6 +56,22 @@ public enum NewsletterBackdrop
     None,
 }
 
+/// <summary>How a newsletter's photos (the hero, cards and image blocks) are coloured.</summary>
+public enum NewsletterPhotoTint
+{
+    /// <summary>In their own colours.</summary>
+    None,
+
+    /// <summary>
+    /// The photo's light and shade, in the colours of a diagonal gradient from the tint's start
+    /// colour (top left) to its end colour (bottom right): a <c>color</c> blend, as in image editors.
+    /// </summary>
+    Gradient,
+
+    /// <summary>Redrawn in the two tint colours alone: the start colour for its darks, the end colour for its lights.</summary>
+    Duotone,
+}
+
 /// <summary>The corners of a newsletter's pictures, boxes, maps and buttons.</summary>
 public enum NewsletterCorners
 {
@@ -125,6 +141,18 @@ public sealed record NewsletterTheme
     /// <summary>Rounded or square corners.</summary>
     public NewsletterCorners? Corners { get; init; }
 
+    /// <summary>How photos are coloured. Every built-in theme leaves them alone (<see cref="NewsletterPhotoTint.None"/>).</summary>
+    public NewsletterPhotoTint? PhotoTint { get; init; }
+
+    /// <summary>The tint's dark colour, as hex (<c>#2b1d6b</c>): a gradient's top left, a duotone's darks.</summary>
+    public string? TintStartColor { get; init; }
+
+    /// <summary>The tint's light colour, as hex: a gradient's bottom right, a duotone's lights.</summary>
+    public string? TintEndColor { get; init; }
+
+    /// <summary>How strongly the tint is laid over the photo, from 0 (not at all) to 1. Built-in themes: 0.8.</summary>
+    public double? TintStrength { get; init; }
+
     /// <summary>
     /// Purple and orange with pixel-art ribbons, a wavy hero and a diamond backdrop, after a game
     /// studio's update email: for games and fun trips. The default.
@@ -145,6 +173,10 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Wave,
         Backdrop = NewsletterBackdrop.Diamonds,
         Corners = NewsletterCorners.Round,
+        PhotoTint = NewsletterPhotoTint.None,
+        TintStartColor = "#2b1d6b",
+        TintEndColor = "#f0764a",
+        TintStrength = 0.8,
     };
 
     /// <summary>
@@ -167,6 +199,10 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Straight,
         Backdrop = NewsletterBackdrop.None,
         Corners = NewsletterCorners.Round,
+        PhotoTint = NewsletterPhotoTint.None,
+        TintStartColor = "#1f2a44",
+        TintEndColor = "#e8c99b",
+        TintStrength = 0.8,
     };
 
     /// <summary>
@@ -189,6 +225,10 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Straight,
         Backdrop = NewsletterBackdrop.None,
         Corners = NewsletterCorners.Square,
+        PhotoTint = NewsletterPhotoTint.None,
+        TintStartColor = "#1a1a1a",
+        TintEndColor = "#6fa3ff",
+        TintStrength = 0.8,
     };
 
     /// <summary>
@@ -211,6 +251,10 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Arc,
         Backdrop = NewsletterBackdrop.Stars,
         Corners = NewsletterCorners.Round,
+        PhotoTint = NewsletterPhotoTint.None,
+        TintStartColor = "#1b1150",
+        TintEndColor = "#7fdbff",
+        TintStrength = 0.8,
     };
 
     private static readonly (string Name, NewsletterTheme Theme)[] BuiltIns =
@@ -255,6 +299,10 @@ public sealed record NewsletterTheme
             HeroEdge = HeroEdge ?? b.HeroEdge,
             Backdrop = Backdrop ?? b.Backdrop,
             Corners = Corners ?? b.Corners,
+            PhotoTint = PhotoTint ?? b.PhotoTint,
+            TintStartColor = TintStartColor ?? b.TintStartColor,
+            TintEndColor = TintEndColor ?? b.TintEndColor,
+            TintStrength = TintStrength ?? b.TintStrength,
         };
 
         CssColor.ThrowIfInvalid(theme.BackdropColor!, nameof(BackdropColor));
@@ -267,12 +315,37 @@ public sealed record NewsletterTheme
         CssColor.ThrowIfInvalid(theme.ButtonColor!, nameof(ButtonColor));
         CssColor.ThrowIfInvalid(theme.PanelColor!, nameof(PanelColor));
         if (!Enum.IsDefined(theme.Font!.Value) || !Enum.IsDefined(theme.Ribbon!.Value) || !Enum.IsDefined(theme.HeroEdge!.Value)
-            || !Enum.IsDefined(theme.Backdrop!.Value) || !Enum.IsDefined(theme.Corners!.Value))
+            || !Enum.IsDefined(theme.Backdrop!.Value) || !Enum.IsDefined(theme.Corners!.Value) || !Enum.IsDefined(theme.PhotoTint!.Value))
         {
-            throw new ArgumentException("The theme has an unknown font, ribbon, hero edge, backdrop or corners setting.", nameof(Font));
+            throw new ArgumentException("The theme has an unknown font, ribbon, hero edge, backdrop, corners or photo tint setting.", nameof(Font));
+        }
+
+        // Hex, because a duotone needs the colours' red, green and blue as numbers.
+        _ = Rgb(theme.TintStartColor!, nameof(TintStartColor));
+        _ = Rgb(theme.TintEndColor!, nameof(TintEndColor));
+        if (theme.TintStrength is not (>= 0 and <= 1))
+        {
+            throw new ArgumentOutOfRangeException(nameof(TintStrength), theme.TintStrength, "TintStrength must be between 0 and 1.");
         }
 
         return theme;
+    }
+
+    /// <summary>A hex colour's red, green and blue, each from 0 to 1.</summary>
+    internal static (double R, double G, double B) Rgb(string hex, string paramName)
+    {
+        var digits = hex.StartsWith('#') ? hex[1..] : "";
+        if (digits.Length == 3)
+        {
+            digits = string.Concat(digits.Select(d => $"{d}{d}"));
+        }
+
+        if (digits.Length != 6 || !int.TryParse(digits, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            throw new ArgumentException($"'{hex}' isn't a hex colour. Tint colours are hex, such as #2b1d6b or #f74.", paramName);
+        }
+
+        return (((value >> 16) & 0xff) / 255.0, ((value >> 8) & 0xff) / 255.0, (value & 0xff) / 255.0);
     }
 }
 

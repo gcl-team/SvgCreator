@@ -457,6 +457,67 @@ public class NewsletterTests
         Assert.Equal(pattern, root.Descendants(Svg + "pattern").Any());
     }
 
+    [Theory]
+    [InlineData("gradient")]
+    [InlineData("duotone")]
+    public void Golden_PhotoTints(string tint) =>
+        SvgGoldenTests.AssertGolden($"newsletter-tint-{tint}.svg", Create(Everything() with { Theme = new NewsletterTheme { Base = "cosmos", PhotoTint = Enum.Parse<NewsletterPhotoTint>(tint, ignoreCase: true) } }, images: EverythingImages()));
+
+    [Fact]
+    public void PhotoTint_Gradient_BlendsAGradientOverEachPhoto_ButNotLogosOrStickers()
+    {
+        var theme = new NewsletterTheme { PhotoTint = NewsletterPhotoTint.Gradient };
+        var root = Root(Everything() with { Theme = theme }, images: EverythingImages());
+
+        // The hero, two cards and the image block; not the logo or the plain sticker.
+        var tints = ByClass(root, "newsletter-tint").ToList();
+        Assert.Equal(4, tints.Count);
+        Assert.All(tints, t => Assert.Equal("mix-blend-mode:color", (string?)t.Attribute("style")));
+        Assert.All(tints, t => Assert.Equal("0.8", (string?)t.Attribute("opacity")));
+        var stops = root.Descendants(Svg + "linearGradient").Single(g => (string?)g.Attribute("id") == "newsletter-tint-gradient").Elements(Svg + "stop");
+        Assert.Equal([NewsletterTheme.Starlight.TintStartColor, NewsletterTheme.Starlight.TintEndColor], stops.Select(s => (string?)s.Attribute("stop-color")));
+    }
+
+    [Fact]
+    public void PhotoTint_Duotone_MapsGreysFromTheStartToTheEndColour()
+    {
+        var theme = new NewsletterTheme { PhotoTint = NewsletterPhotoTint.Duotone, TintStartColor = "#000", TintEndColor = "#ff8000", TintStrength = 1 };
+        var root = Root(Minimal with { Hero = new("hero.png"), Theme = theme });
+
+        var filter = root.Descendants(Svg + "filter").Single(f => (string?)f.Attribute("id") == "newsletter-tint-duotone");
+        Assert.Equal(["0 1", "0 0.502", "0 0"], filter.Descendants().Where(e => e.Name.LocalName.StartsWith("feFunc", StringComparison.Ordinal)).Select(f => (string?)f.Attribute("tableValues")));
+        Assert.Single(root.Descendants(Svg + "use"), u => (string?)u.Attribute("filter") == "url(#newsletter-tint-duotone)");
+    }
+
+    [Fact]
+    public void PhotoTint_APhotoCanOptOut()
+    {
+        var theme = new NewsletterTheme { PhotoTint = NewsletterPhotoTint.Gradient };
+        var root = Root(Minimal with { Hero = new("hero.png") { Tint = false }, Blocks = [new NewsletterImage("a.png")], Theme = theme });
+
+        Assert.Single(ByClass(root, "newsletter-tint"));
+    }
+
+    [Fact]
+    public void PhotoTint_None_WritesNothing()
+    {
+        var root = Root(Everything(), images: EverythingImages());
+
+        Assert.Empty(ByClass(root, "newsletter-tint"));
+        Assert.DoesNotContain(root.Descendants(), e => ((string?)e.Attribute("id"))?.StartsWith("newsletter-tint", StringComparison.Ordinal) == true);
+    }
+
+    [Theory]
+    [InlineData("navy", null)]
+    [InlineData("#12345", null)]
+    [InlineData("#123", 1.5)]
+    public void PhotoTint_ColoursAreHex_AndStrengthIsAFraction(string color, double? strength)
+    {
+        var theme = new NewsletterTheme { PhotoTint = NewsletterPhotoTint.Gradient, TintStartColor = color, TintStrength = strength };
+
+        Assert.ThrowsAny<ArgumentException>(() => Create(Minimal with { Theme = theme }));
+    }
+
     [Fact]
     public void AccentText_Wrap_FindsTheAccentedRunsOnEachLine()
     {

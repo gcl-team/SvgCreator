@@ -179,11 +179,33 @@ A theme file holds the same object, so a shop keeps its colours in one place and
 | `heroEdge` | `wave`, `straight`, `arc` | `arc`: the page rises into the hero like a planet's horizon, with a glow |
 | `backdrop` | `diamonds`, `dots`, `stars`, `none` | |
 | `corners` | `round`, `square` | `square` also makes buttons boxes, not pills |
+| `photoTint` | `none`, `gradient`, `duotone` | How photos are coloured; `none` in every built-in theme (see below) |
+| `tintStartColor`, `tintEndColor` | Hex colour | The tint's dark and light colours; each built-in theme has its own pair |
+| `tintStrength` | 0 to 1 | How strongly the tint is laid over the photo; 0.8 in the built-in themes |
 
 - **Shapes are short lists of choices, not CSS.** Every combination has been drawn and checked, and a theme can't break the layout.
 - **Fonts are the measured stacks only.** Line breaks come from per-character widths measured for each stack (`FontMetrics.Sans` and `Serif`). An unmeasured font would wrap wrongly, and text would overrun or break early. The serif stack is `Georgia, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif CJK SC', serif`. The maps keep their sans text in every theme.
 - **The colour flags went.** `--page-color`, `--accent-color` and the rest were replaced by `--theme`, which keeps the command short. A one-off colour goes in the file's theme instead.
 - **Settings are nullable and filled from the base.** A source-generated JSON reader sets every property the file leaves out to null or 0. With defaults, `{ "accentColor": "#e4572e" }` would have made every other colour null and every shape the first choice. Null means "from the base" instead, and `Resolve()` fills it in.
+
+### Photo tints
+
+`"theme": { "base": "cosmos", "photoTint": "gradient" }` colours every photo (the hero, cards and image blocks, not logos or stickers) to match the theme, as the placeholder photos are coloured:
+
+| `photoTint` | What each photo becomes | SVG |
+|---|---|---|
+| `gradient` | Its own light and shade, in the colours of a diagonal gradient from the start colour (top left) to the end colour (bottom right) | The gradient laid over the photo with `mix-blend-mode: color`, in a group with `isolation: isolate` |
+| `duotone` | The two colours alone: the start colour for its darks, the end colour for its lights | A filter: `feColorMatrix` turns it grey by luminance (0.2126 R + 0.7152 G + 0.0722 B), then `feComponentTransfer` maps grey 0 → start and 1 → end on each channel |
+
+A photo that should keep its own colours, such as food, opts out with `"tint": false` on its hero, card or image block.
+
+Neither tint touches the photo's pixels: the viewer applies both, so the embedded photos are the same, and turning a tint off costs nothing. The maths is a straight line between two colours, `A + (B − A) × t`. For the gradient, `t` is how far across the diagonal a point is; for the duotone, it's the pixel's grey.
+
+- **Why `color` and not a plain overlay.** All four were tried on a real airport photo, mostly blue sky. A see-through overlay washed it out and flattened it. `soft-light` barely changed it, since its sky was already blue. A `color` blend keeps the photo's brightness and takes the gradient's hue and saturation, which is what makes it look like the placeholders. `tintStrength` is the gradient's opacity.
+- **Isolation matters.** Without `isolation: isolate` on the photo's group, the blend would mix the gradient with the page behind the photo too, wherever the photo has rounded corners or transparency.
+- **Duotone filters run in sRGB.** `color-interpolation-filters="sRGB"` keeps the end colours exactly as given; the default, linear RGB, would shift them. Below full strength, the duotone is a second copy of the photo over the first, at `tintStrength` opacity.
+- **Tint colours are hex,** because the duotone needs each colour's red, green and blue as numbers. A CSS name like `navy` is refused with a message saying so.
+- **Viewers.** Every current browser supports both. A viewer that ignores `mix-blend-mode` would show the gradient as a plain see-through layer at `tintStrength`, so a viewer that matters (an editor, say) should be checked before relying on it.
 
 **Lesson: one text colour isn't enough.** The first themes had a single text colour, as `starlight` did. `postcard`'s navy text then vanished on its navy footer band, and white button labels were unreadable on `cosmos`'s cyan. Text sits on three kinds of background, so a theme has three text colours: `textColor` on the page, `bandTextColor` on the bands, and `labelColor` on accent bars and buttons.
 

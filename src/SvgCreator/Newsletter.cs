@@ -59,7 +59,11 @@ public sealed record NewsletterHeader(string Title)
 
 /// <summary>The hero: a picture across the full width under the header, with a wave cut along its bottom.</summary>
 /// <param name="Image">The picture. Its own shape sets the height, kept between wide (5:2) and nearly square (5:4).</param>
-public sealed record NewsletterHero(string Image);
+public sealed record NewsletterHero(string Image)
+{
+    /// <summary>False keeps the picture in its own colours whatever the theme's <see cref="NewsletterTheme.PhotoTint"/>. Default (null): tinted as the theme says.</summary>
+    public bool? Tint { get; init; }
+}
 
 /// <summary>The newsletter's footer band. It needs at least one link or line.</summary>
 public sealed record NewsletterFooter
@@ -133,6 +137,9 @@ public sealed record NewsletterCard(string Image, string Title)
 
     /// <summary>Where the row links to. Default: nowhere.</summary>
     public string? Link { get; init; }
+
+    /// <summary>False keeps the picture in its own colours whatever the theme's <see cref="NewsletterTheme.PhotoTint"/>. Default (null): tinted as the theme says.</summary>
+    public bool? Tint { get; init; }
 }
 
 /// <summary>A picture across the column, with an optional caption under it.</summary>
@@ -144,6 +151,9 @@ public sealed record NewsletterImage(string Image) : NewsletterBlock
 
     /// <summary>Where the picture links to. Default: nowhere.</summary>
     public string? Link { get; init; }
+
+    /// <summary>False keeps the picture in its own colours whatever the theme's <see cref="NewsletterTheme.PhotoTint"/>. Default (null): tinted as the theme says.</summary>
+    public bool? Tint { get; init; }
 }
 
 /// <summary>A pill-shaped button.</summary>

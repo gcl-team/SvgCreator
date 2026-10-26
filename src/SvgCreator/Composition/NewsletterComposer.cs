@@ -161,6 +161,10 @@ internal static class NewsletterComposer
         public string ButtonColor => Theme.ButtonColor!;
 
         public string PanelColor => Theme.PanelColor!;
+
+        /// <summary>How a photo is tinted: as the theme says, unless the photo opts out with <c>"tint": false</c>.</summary>
+        public NewsletterImages.Tint? Tint(bool? photo) =>
+            Theme.PhotoTint is NewsletterPhotoTint.None or null || photo == false ? null : new(Theme.PhotoTint.Value, Theme.TintStrength!.Value);
     }
 
     /// <summary>Text broken into lines: each line's runs and top, and the block's size.</summary>
@@ -214,6 +218,7 @@ internal static class NewsletterComposer
 
             xml.WriteStartElement("defs", Namespace);
             WriteSheen(xml);
+            NewsletterImages.WriteTint(xml, theme);
             var pattern = margin > 0 && WritePattern(xml, c);
 
             c.Images.WriteDefinitions(xml);
@@ -322,7 +327,7 @@ internal static class NewsletterComposer
             xml.WriteAttributeString("class", "newsletter-hero");
             if (c.Theme.HeroEdge == NewsletterHeroEdge.Straight)
             {
-                c.Images.Draw(xml, hero.Image, box, cover: true);
+                c.Images.Draw(xml, hero.Image, box, cover: true, tint: c.Tint(hero.Tint));
                 xml.WriteEndElement();
                 return;
             }
@@ -341,7 +346,7 @@ internal static class NewsletterComposer
 
             xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("clip-path", $"url(#{clip})");
-            c.Images.Draw(xml, hero.Image, box, cover: true);
+            c.Images.Draw(xml, hero.Image, box, cover: true, tint: c.Tint(hero.Tint));
             xml.WriteEndElement();
 
             // An arc's glow is a wide, faint stroke under the line, so it needs no filter.
@@ -551,7 +556,7 @@ internal static class NewsletterComposer
                 OpenLink(xml, card.Link);
                 xml.WriteStartElement("g", Namespace);
                 xml.WriteAttributeString("class", "newsletter-card");
-                c.Images.Draw(xml, card.Image, new RectD(pictureX, top, pictureWidth, pictureHeight), cover: true, c.Radius(CardRadius));
+                c.Images.Draw(xml, card.Image, new RectD(pictureX, top, pictureWidth, pictureHeight), cover: true, c.Radius(CardRadius), c.Tint(card.Tint));
                 var textTop = top + (CardTextTop * c.Unit);
                 WriteText(xml, c, title, textX, textTop, "start", "newsletter-card-title", bold: true);
                 if (body is not null)
@@ -582,7 +587,7 @@ internal static class NewsletterComposer
             xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("class", "newsletter-image");
             OpenLink(xml, image.Link);
-            c.Images.Draw(xml, image.Image, new RectD(c.Padding, top, c.Content, pictureHeight), cover: true, c.Radius(ImageRadius));
+            c.Images.Draw(xml, image.Image, new RectD(c.Padding, top, c.Content, pictureHeight), cover: true, c.Radius(ImageRadius), c.Tint(image.Tint));
             CloseLink(xml, image.Link);
             if (caption is not null)
             {
