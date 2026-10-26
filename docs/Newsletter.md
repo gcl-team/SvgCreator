@@ -122,6 +122,21 @@ All text is native `<text>`: small, selectable and editable. The library can't m
 - **Footer links as one line of text.** The links and the bars between them were first placed one by one from their estimated widths. Because the estimates err wide by different amounts, the bars sat unevenly ("首页 |  Blog   |  Contact"). Each row is now one centred `<text>` of `<a><tspan>` links and en-space bars, so the viewer's font spaces them evenly. The estimates still decide where rows break. En spaces are used because SVG collapses ordinary spaces.
 - **One-line text** (ribbons, buttons, stats values, the title) shrinks to fit rather than wrapping.
 
+## Footer icons
+
+The footer can show a row of round icon links between its text links and its small print:
+
+```jsonc
+"footer": {
+  "social": [ { "icon": "github", "url": "https://github.com/gcl-team/SvgCreator" } ],
+  "lines": ["Made with SvgCreator · github.com/gcl-team/SvgCreator"]
+}
+```
+
+Each icon is a 40 px circle in the band's text colour, with the mark at 70% of it in the band colour, so it reads in every theme. It's an SVG path drawn on a 24 × 24 grid (`Composition/NewsletterIcons.cs`) and scaled. `github` is the only icon so far, and a new one is one more name and path. The marks are from [Simple Icons](https://simpleicons.org), which are CC0, so the library stays MIT (see [Licensing and Dependencies](Licensing-and-Dependencies.md#brand-icons-simple-icons-cc0)).
+
+Print the address as well as linking it, as the sample trip does, because links don't work once a newsletter is exported to PNG or shown as an `<img>`.
+
 ## Links
 
 Cards, image blocks, buttons, stats and footer links can link, as SVG `<a href>`. Only absolute `http`, `https` and `mailto` addresses are accepted. A `javascript:` link would run when the SVG is opened in a browser, and a relative one means nothing once the file is shared. Links work when the SVG is opened directly or inlined in a page. Inside an `<img>` tag a browser shows the picture but ignores its links, and email clients mostly don't show SVG at all, so to send it by email, export a PNG and link the whole picture.

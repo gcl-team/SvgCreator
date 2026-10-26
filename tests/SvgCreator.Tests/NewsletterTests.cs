@@ -519,6 +519,34 @@ public class NewsletterTests
     }
 
     [Fact]
+    public void Footer_IconLinks_AreCirclesWithTheirIconCutOut()
+    {
+        var footer = new NewsletterFooter { Social = [new("GitHub", "https://github.com/gcl-team/SvgCreator")], Lines = ["Bye"] };
+        var root = Root(Minimal with { Footer = footer, Theme = NewsletterTheme.Postcard });
+
+        var link = ByClass(root, "newsletter-footer-social").Single().Element(Svg + "a")!;
+        Assert.Equal("https://github.com/gcl-team/SvgCreator", (string?)link.Attribute("href"));
+        var icon = link.Element(Svg + "g")!;
+        Assert.Equal("newsletter-icon newsletter-icon-github", (string?)icon.Attribute("class"));
+        Assert.NotNull(icon.Element(Svg + "circle"));
+        Assert.Equal(NewsletterTheme.Postcard.BandColor, (string?)icon.Element(Svg + "path")!.Attribute("fill"));
+    }
+
+    [Fact]
+    public void Footer_IconsAlone_AreEnough()
+    {
+        var footer = new NewsletterFooter { Social = [new("github", "https://github.com/gcl-team")] };
+
+        Assert.Single(ByClass(Root(Minimal with { Footer = footer }), "newsletter-icon newsletter-icon-github"));
+    }
+
+    [Theory]
+    [InlineData("bilibili", "https://example.com")]
+    [InlineData("github", "javascript:alert(1)")]
+    public void Footer_IconLinks_AreCheckedIconAndUrl(string icon, string url) =>
+        Assert.Throws<ArgumentException>(() => Create(Minimal with { Footer = new() { Social = [new(icon, url)] } }));
+
+    [Fact]
     public void AccentText_Wrap_FindsTheAccentedRunsOnEachLine()
     {
         var lines = AccentText.Wrap("Try   the [[小笼包 at 南翔]] today", 10, 60);

@@ -24,6 +24,10 @@ The check ships in the package's `build/` folder rather than `buildTransitive/`,
 
 **Decision:** switch to **SkiaSharp**, which is MIT and actively maintained. The trade-off is native binaries per platform, which is handled with the Linux NativeAssets package.
 
+## Brand icons: Simple Icons (CC0)
+
+The newsletter's footer icons (`Composition/NewsletterIcons.cs`, so far only GitHub's mark) are single SVG paths copied from [Simple Icons](https://simpleicons.org). Its drawings are **CC0**, public domain: they can be copied into MIT code without attribution or licence terms passing on. A licence covers the *drawing*, not the *brand*. The marks stay their owners' trademarks, and using one to link to your own page on that service is the use brand guidelines allow. Paths were copied, not a package referenced, so there's no dependency to keep up to date.
+
 ## Supply-chain habit
 
 The version picked for each package is the newest one that's been published for **at least two weeks**, e.g. SkiaSharp 4.152.1 rather than a release a few days old.

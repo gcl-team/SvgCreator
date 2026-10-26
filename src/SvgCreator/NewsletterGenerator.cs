@@ -108,9 +108,9 @@ public sealed class NewsletterGenerator : INewsletterGenerator
             throw new ArgumentException("The newsletter needs a header with a title.", nameof(newsletter));
         }
 
-        if (newsletter.Footer is null || newsletter.Footer is { Links.Count: 0, Lines.Count: 0 })
+        if (newsletter.Footer is null || newsletter.Footer is { Links.Count: 0, Social.Count: 0, Lines.Count: 0 })
         {
-            throw new ArgumentException("The newsletter needs a footer with at least one link or line.", nameof(newsletter));
+            throw new ArgumentException("The newsletter needs a footer with at least one link, icon link or line.", nameof(newsletter));
         }
 
         ImageName(newsletter.Header.Logo, "The header's logo", optional: true);
@@ -128,6 +128,16 @@ public sealed class NewsletterGenerator : INewsletterGenerator
             }
 
             Url(link.Url, $"The footer link '{link.Text}'", optional: false);
+        }
+
+        foreach (var social in newsletter.Footer.Social)
+        {
+            if (social is null || string.IsNullOrWhiteSpace(social.Icon) || NewsletterIcons.Path(social.Icon) is null)
+            {
+                throw new ArgumentException($"The footer's icon '{social?.Icon}' isn't one there is. Use {string.Join(", ", NewsletterIcons.Names)}.", nameof(newsletter));
+            }
+
+            Url(social.Url, $"The footer's {social.Icon} icon", optional: false);
         }
 
         Paragraphs(newsletter.Footer.Lines, "The footer's lines", optional: true);

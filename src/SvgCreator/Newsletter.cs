@@ -65,16 +65,24 @@ public sealed record NewsletterHero(string Image)
     public bool? Tint { get; init; }
 }
 
-/// <summary>The newsletter's footer band. It needs at least one link or line.</summary>
+/// <summary>The newsletter's footer band. It needs at least one link, icon link or line.</summary>
 public sealed record NewsletterFooter
 {
     /// <summary>A row of links, underlined and divided by bars. Default: none.</summary>
     public IReadOnlyList<NewsletterLink> Links { get; init => field = value ?? []; } = [];
 
+    /// <summary>A row of round icon links under the text links, such as to a GitHub page. Default: none.</summary>
+    public IReadOnlyList<NewsletterIconLink> Social { get; init => field = value ?? []; } = [];
+
     /// <summary>Lines of small print under the links. Default: none.</summary>
     [JsonConverter(typeof(NewsletterTextJsonConverter))]
     public IReadOnlyList<string> Lines { get; init => field = value ?? []; } = [];
 }
+
+/// <summary>A round icon in the footer that links somewhere.</summary>
+/// <param name="Icon">Which icon: <c>github</c>.</param>
+/// <param name="Url">Where it goes: an absolute <c>http</c>, <c>https</c> or <c>mailto</c> address.</param>
+public sealed record NewsletterIconLink(string Icon, string Url);
 
 /// <summary>A link.</summary>
 /// <param name="Text">What it says.</param>

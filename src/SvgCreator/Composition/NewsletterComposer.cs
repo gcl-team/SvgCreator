@@ -104,6 +104,10 @@ internal static class NewsletterComposer
     private const double FooterRowGap = 8;
     private const double FooterLinesGap = 18;
     private const double FooterTextSize = 11;
+    private const double SocialSize = 40;        // a footer icon's circle
+    private const double SocialIcon = 0.7;       // the icon, as a share of its circle
+    private const double SocialGap = 14;         // between icons
+    private const double SocialSpace = 18;       // above and below the row of icons, from the text
     private const double FooterLineHeight = 1.6;
 
     private const double PatternTile = 96;
@@ -773,7 +777,14 @@ internal static class NewsletterComposer
         var rowGap = FooterRowGap * c.Unit;
         var linksHeight = rows.Count == 0 ? 0 : (rows.Count * rowHeight) + ((rows.Count - 1) * rowGap);
         var lines = footer.Lines.Count > 0 ? Lay(c, footer.Lines, FooterTextSize * c.Unit, c.Content, 0, FooterLineHeight, balance: true) : null;
-        var between = rows.Count > 0 && lines is not null ? FooterLinesGap * c.Unit : 0;
+
+        // The icons sit between the links and the lines, with room from whichever text is there;
+        // without icons, the lines keep their usual gap under the links.
+        var (socialSize, socialSpace) = (SocialSize * c.Unit, SocialSpace * c.Unit);
+        var social = footer.Social.Count > 0;
+        var between = social
+            ? socialSize + (rows.Count > 0 ? socialSpace : 0) + (lines is not null ? socialSpace : 0)
+            : rows.Count > 0 && lines is not null ? FooterLinesGap * c.Unit : 0;
         var height = (FooterTop * c.Unit) + linksHeight + between + (lines?.Height ?? 0) + (FooterBottom * c.Unit);
 
         return new Section(height, (xml, top) =>
@@ -822,14 +833,55 @@ internal static class NewsletterComposer
                 y += rowHeight + rowGap;
             }
 
+            y -= rows.Count > 0 ? rowGap : 0;
+            if (social)
+            {
+                WriteSocial(xml, c, footer.Social, y + (rows.Count > 0 ? socialSpace : 0), socialSize);
+            }
+
             if (lines is not null)
             {
-                y += between - (rows.Count > 0 ? rowGap : 0);
-                WriteText(xml, c, lines, c.Width / 2, y, "middle", "newsletter-footer-text", muted: true);
+                WriteText(xml, c, lines, c.Width / 2, y + between, "middle", "newsletter-footer-text", muted: true);
             }
 
             xml.WriteEndElement();
         });
+    }
+
+    /// <summary>
+    /// The footer's icon links, centred in a row: each a circle in the band's text colour with
+    /// its icon cut out of it in the band colour, so it reads in every theme.
+    /// </summary>
+    private static void WriteSocial(XmlWriter xml, Context c, IReadOnlyList<NewsletterIconLink> icons, double top, double size)
+    {
+        var gap = SocialGap * c.Unit;
+        var x = (c.Width - (icons.Count * size) - ((icons.Count - 1) * gap)) / 2;
+        var iconSize = size * SocialIcon;
+        var scale = iconSize / NewsletterIcons.Grid;
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "newsletter-footer-social");
+        foreach (var icon in icons)
+        {
+            xml.WriteStartElement("a", Namespace);
+            xml.WriteAttributeString("href", icon.Url);
+            xml.WriteStartElement("g", Namespace);
+            xml.WriteAttributeString("class", $"newsletter-icon newsletter-icon-{icon.Icon.Trim().ToLowerInvariant()}");
+            xml.WriteStartElement("circle", Namespace);
+            xml.WriteAttributeString("cx", Number(x + (size / 2)));
+            xml.WriteAttributeString("cy", Number(top + (size / 2)));
+            xml.WriteAttributeString("r", Number(size / 2));
+            xml.WriteEndElement();
+            xml.WriteStartElement("path", Namespace);
+            xml.WriteAttributeString("d", NewsletterIcons.Path(icon.Icon));
+            xml.WriteAttributeString("transform", $"translate({Number(x + ((size - iconSize) / 2))} {Number(top + ((size - iconSize) / 2))}) scale({Number(scale)})");
+            xml.WriteAttributeString("fill", c.BandColor);
+            xml.WriteEndElement();
+            xml.WriteEndElement();
+            xml.WriteEndElement();
+            x += size + gap;
+        }
+
+        xml.WriteEndElement();
     }
 
     /// <summary>
