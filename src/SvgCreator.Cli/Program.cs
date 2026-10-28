@@ -403,12 +403,23 @@ static Command NewsletterCommand()
     var margin = new Option<int>("--margin") { Description = "Patterned backdrop around the column, in pixels. 0 for none.", DefaultValueFactory = _ => defaults.Margin };
     var density = new Option<double>("--image-density") { Description = "Pixels of each picture per pixel drawn: bigger pictures are scaled down before embedding. 0 embeds them unchanged.", DefaultValueFactory = _ => defaults.ImageDensity };
     var theme = new Option<string?>("--theme") { Description = $"Theme in place of the file's own: {string.Join(", ", NewsletterTheme.Names)}, or a theme JSON file. Default: the file's \"theme\", else starlight." };
+    var png = new Option<bool>("--png") { Description = "Also render each SVG to PNG beside it, with headless Chrome (or Chromium or Edge; CHROME_PATH picks one), so it looks as in a browser. A template's holes stay transparent." };
+    var pngScale = new Option<double>("--png-scale") { Description = "PNG pixels per SVG pixel: 2 is sharp on high-density screens, 1 is smaller.", DefaultValueFactory = _ => 2 };
     var template = new Option<bool>("--template") { Description = "Also write a template next to the output (name-template.svg): the photos left out, with see-through holes in their place, to lay over photos like a frame." };
 
     var command = new Command("newsletter", "Make a newsletter: a header, hero and intro, then ribbons, text, picture cards, buttons, stats, callouts and travel maps in any order, and a footer.")
     {
-        input, output, width, margin, density, theme, template,
+        input, output, width, margin, density, theme, template, png, pngScale,
     };
+
+    // On the option, not the command: a command's validator sees 0 for an option left out, not its default.
+    pngScale.Validators.Add(result =>
+    {
+        if (result.GetValueOrDefault<double>() is not (> 0 and <= 8))
+        {
+            result.AddError("--png-scale must be more than 0 and at most 8.");
+        }
+    });
 
     command.SetAction(async (parseResult, cancellationToken) =>
     {
@@ -431,13 +442,27 @@ static Command NewsletterCommand()
             var svg = await new NewsletterGenerator().CreateAsync(newsletter, options, Open, cancellationToken);
             await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
             Console.WriteLine($"Wrote {target.FullName}");
+            var written = new List<(FileInfo File, bool Transparent)> { (target, false) };
 
             if (parseResult.GetValue(template))
             {
-                var templateFile = Path.Combine(target.DirectoryName!, $"{Path.GetFileNameWithoutExtension(target.Name)}-template{target.Extension}");
+                var templateFile = new FileInfo(Path.Combine(target.DirectoryName!, $"{Path.GetFileNameWithoutExtension(target.Name)}-template{target.Extension}"));
                 var templateSvg = await new NewsletterGenerator().CreateAsync(newsletter, options with { Template = true }, Open, cancellationToken);
-                await File.WriteAllTextAsync(templateFile, templateSvg, cancellationToken);
-                Console.WriteLine($"Wrote {templateFile}");
+                await File.WriteAllTextAsync(templateFile.FullName, templateSvg, cancellationToken);
+                Console.WriteLine($"Wrote {templateFile.FullName}");
+                written.Add((templateFile, true));
+            }
+
+            if (parseResult.GetValue(png))
+            {
+                var scale = parseResult.GetValue(pngScale);
+                foreach (var (svgFile, transparent) in written)
+                {
+                    var (pngFile, used) = await ChromePng.WriteAsync(svgFile, scale, transparent, cancellationToken);
+                    Console.WriteLine(used < scale
+                        ? $"Wrote {pngFile} (at {used:0.##}×, not {scale:0.##}×: Chrome can't make a taller picture)"
+                        : $"Wrote {pngFile}");
+                }
             }
 
             return 0;

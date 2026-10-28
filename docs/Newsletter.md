@@ -136,6 +136,24 @@ A template is the same newsletter with its photos (the hero, cards and image blo
 - **Photos aren't embedded,** so a template is small: 156 KB for the Shanghai trip, against 407 KB with its photos. Their sizes are still read, because they set the layout: the hero's height comes from its photo's shape.
 - **Tints don't apply,** since there's no photo to tint.
 
+## PNG export
+
+```sh
+svgcreator newsletter trip/trip.json -o trip.svg --png                    # trip.svg and trip.png, at 2×
+svgcreator newsletter trip/trip.json -o trip.svg --template --png         # also trip-template.svg and a transparent trip-template.png
+svgcreator newsletter trip/trip.json -o trip.svg --png --png-scale 1      # smaller
+```
+
+`--png` renders each SVG the command writes to a PNG beside it, with headless Chrome. Chromium or Microsoft Edge work too, since they share Chrome's engine. Set `CHROME_PATH` to use a particular one. The PNG looks exactly like the SVG in a browser. The window is set to the canvas's size, so the PNG is the whole newsletter, not one screen of it. A template's PNG is rendered on a transparent background, so its holes stay see-through.
+
+It lives in the CLI (`src/SvgCreator.Cli/ChromePng.cs`), not the library. The library stays free of other programs, as a Lambda needs.
+
+- **Its own Chrome profile.** Each render gets a temporary `--user-data-dir`, so it doesn't clash with a Chrome that's already open, and the folder is deleted afterwards.
+- **A cap on size.** Chrome can't make a picture taller (or wider) than 16384 px, the GPU's largest texture. Past that, the screenshot comes out cut off or blank. A long newsletter at a high `--png-scale` is rendered at the largest scale that fits, and the command says so: the Shanghai trip, 4389 px tall, renders at 3.73× when 8× is asked for.
+- **Arguments without a shell.** Chrome is started with an argument list, not a command line, and the SVG is passed as a proper `file://` address, so paths with spaces or Chinese characters work.
+
+**Lesson: macOS's own renderer can't draw these.** `sips -s format png`, like Quick Look, uses macOS's built-in SVG renderer. It draws shapes, photos, gradients, masks and the stars correctly, but it ignores each `<tspan>`'s own `x` and `y`. Newsletter text is set line by line that way, because SVG can't wrap text by itself, so every block's lines pile up in one spot. Browsers, Figma and Inkscape all position them correctly, so the SVG isn't at fault. PNGs come from a browser engine instead.
+
 ## Footer icons
 
 The footer can show a row of round icon links between its text links and its small print:

@@ -80,6 +80,8 @@ dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --theme cosmos
 # --template also writes trip-template.svg: the photos left out, with see-through holes in their place
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --template
+# --png also renders each SVG to PNG with headless Chrome (sips/Quick Look garble the text)
+dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --png
 
 # clean black-on-white line art
 dotnet run --project src/SvgCreator.Cli -- input.png --mode Threshold --threshold 128
