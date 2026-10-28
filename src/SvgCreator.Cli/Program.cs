@@ -403,10 +403,11 @@ static Command NewsletterCommand()
     var margin = new Option<int>("--margin") { Description = "Patterned backdrop around the column, in pixels. 0 for none.", DefaultValueFactory = _ => defaults.Margin };
     var density = new Option<double>("--image-density") { Description = "Pixels of each picture per pixel drawn: bigger pictures are scaled down before embedding. 0 embeds them unchanged.", DefaultValueFactory = _ => defaults.ImageDensity };
     var theme = new Option<string?>("--theme") { Description = $"Theme in place of the file's own: {string.Join(", ", NewsletterTheme.Names)}, or a theme JSON file. Default: the file's \"theme\", else starlight." };
+    var template = new Option<bool>("--template") { Description = "Also write a template next to the output (name-template.svg): the photos left out, with see-through holes in their place, to lay over photos like a frame." };
 
     var command = new Command("newsletter", "Make a newsletter: a header, hero and intro, then ribbons, text, picture cards, buttons, stats, callouts and travel maps in any order, and a footer.")
     {
-        input, output, width, margin, density, theme,
+        input, output, width, margin, density, theme, template,
     };
 
     command.SetAction(async (parseResult, cancellationToken) =>
@@ -418,19 +419,27 @@ static Command NewsletterCommand()
             var newsletter = await NewsletterJson.ReadAsync(file, cancellationToken);
             var folder = file.DirectoryName!;
             var themeOverride = parseResult.GetValue(theme) is { } name ? await NewsletterJson.ReadThemeAsync(name, cancellationToken) : null;
-            var svg = await new NewsletterGenerator().CreateAsync(
-                newsletter,
-                new NewsletterOptions
-                {
-                    Width = parseResult.GetValue(width),
-                    Margin = parseResult.GetValue(margin),
-                    ImageDensity = parseResult.GetValue(density),
-                    Theme = themeOverride,
-                },
-                (name, ct) => Task.FromResult<Stream>(File.OpenRead(Path.Combine(folder, name))),
-                cancellationToken);
+            var options = new NewsletterOptions
+            {
+                Width = parseResult.GetValue(width),
+                Margin = parseResult.GetValue(margin),
+                ImageDensity = parseResult.GetValue(density),
+                Theme = themeOverride,
+            };
+            Task<Stream> Open(string name, CancellationToken ct) => Task.FromResult<Stream>(File.OpenRead(Path.Combine(folder, name)));
+
+            var svg = await new NewsletterGenerator().CreateAsync(newsletter, options, Open, cancellationToken);
             await File.WriteAllTextAsync(target.FullName, svg, cancellationToken);
             Console.WriteLine($"Wrote {target.FullName}");
+
+            if (parseResult.GetValue(template))
+            {
+                var templateFile = Path.Combine(target.DirectoryName!, $"{Path.GetFileNameWithoutExtension(target.Name)}-template{target.Extension}");
+                var templateSvg = await new NewsletterGenerator().CreateAsync(newsletter, options with { Template = true }, Open, cancellationToken);
+                await File.WriteAllTextAsync(templateFile, templateSvg, cancellationToken);
+                Console.WriteLine($"Wrote {templateFile}");
+            }
+
             return 0;
         }
         catch (Exception ex) when (ex is InvalidDataException or ArgumentException or IOException)

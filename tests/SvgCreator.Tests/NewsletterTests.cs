@@ -547,6 +547,57 @@ public class NewsletterTests
         Assert.Throws<ArgumentException>(() => Create(Minimal with { Footer = new() { Social = [new(icon, url)] } }));
 
     [Fact]
+    public void Template_LeavesThePhotosOut_AndCutsAHoleForEach()
+    {
+        var root = Root(Everything(), new NewsletterOptions { Template = true }, EverythingImages());
+
+        // The hero, two cards and the image block are slots; the logo and the plain sticker stay.
+        var slots = ByClass(root, "newsletter-slot").ToList();
+        Assert.Equal(["hero.png", "hero.png", "card.png", "card.png"], slots.Select(s => (string?)s.Attribute("data-image")));
+        Assert.Equal(2, ByClass(root, "newsletter-picture").Count());
+        Assert.DoesNotContain(root.Descendants(Svg + "use"), u => (string?)u.Parent?.Parent?.Attribute("class") == "newsletter-hero");
+
+        // Everything drawn is under the mask, which is white with a black hole per slot.
+        var masked = ByClass(root, "newsletter-template").Single();
+        Assert.Equal("url(#newsletter-template-holes)", (string?)masked.Attribute("mask"));
+        Assert.Contains(masked.Elements(), e => (string?)e.Attribute("class") == "newsletter-column");
+        var holes = root.Descendants(Svg + "mask").Single().Element(Svg + "g")!;
+        Assert.Equal("#000000", (string?)holes.Attribute("fill"));
+        Assert.Equal("translate(40 40)", (string?)holes.Attribute("transform"));
+        Assert.Equal(4, holes.Elements(Svg + "rect").Count());
+    }
+
+    [Fact]
+    public void Template_TheHerosHoleHasItsEdge_AndRoundedPhotosRoundedHoles()
+    {
+        var newsletter = Minimal with { Hero = new("hero.png"), Blocks = [new NewsletterImage("a.png")] };
+        var holes = Root(newsletter, new NewsletterOptions { Template = true }).Descendants(Svg + "mask").Single().Descendants(Svg + "rect").Skip(1).ToList();
+
+        Assert.Equal("url(#newsletter-hero-edge-clip)", (string?)holes[0].Attribute("clip-path"));
+        Assert.Equal("8", (string?)holes[1].Attribute("rx"));
+    }
+
+    [Fact]
+    public void Template_EmbedsNoPhotos()
+    {
+        var photo = Noise(400, 300);
+        var newsletter = Minimal with { Hero = new("photo.png"), Blocks = [new NewsletterCards([new NewsletterCard("photo.png", "A")])] };
+
+        var root = Root(newsletter, new NewsletterOptions { Template = true }, new Dictionary<string, byte[]> { ["photo.png"] = photo });
+
+        Assert.Empty(root.Descendants(Svg + "image"));
+    }
+
+    [Fact]
+    public void Template_Off_HasNoMaskOrSlots()
+    {
+        var root = Root(Everything(), images: EverythingImages());
+
+        Assert.Empty(root.Descendants(Svg + "mask"));
+        Assert.Empty(ByClass(root, "newsletter-slot"));
+    }
+
+    [Fact]
     public void AccentText_Wrap_FindsTheAccentedRunsOnEachLine()
     {
         var lines = AccentText.Wrap("Try   the [[小笼包 at 南翔]] today", 10, 60);

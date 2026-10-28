@@ -10,12 +10,20 @@ namespace SvgCreator.Composition;
 /// every place a picture goes (<see cref="Need"/>); each picture is then scaled down to what its
 /// largest place needs and written once as an <c>&lt;image&gt;</c> in the definitions, at its
 /// displayed size whatever its pixels, so every <c>&lt;use&gt;</c> of it places it the same way.
+/// In a <paramref name="template"/>, photos are slots instead (<see cref="Slot"/>): not embedded,
+/// and holes in their place (<see cref="WriteHoles"/>).
 /// </summary>
-internal sealed class NewsletterImages(IReadOnlyDictionary<string, EncodedImage> images, double density)
+internal sealed class NewsletterImages(IReadOnlyDictionary<string, EncodedImage> images, double density, bool template = false)
 {
+    internal const string HolesId = "newsletter-template-holes";
+
     private readonly Dictionary<string, double> needed = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> ids = new(StringComparer.Ordinal);
+    private readonly List<(RectD Box, double Radius, string? Clip)> holes = [];
     private int clips;
+
+    /// <summary>Whether photos are slots, not pictures.</summary>
+    public bool Template => template;
 
     /// <summary>The picture's displayed size: its shape, for layout.</summary>
     public (double Width, double Height) Size(string name) => (images[name].Width, images[name].Height);
@@ -25,10 +33,16 @@ internal sealed class NewsletterImages(IReadOnlyDictionary<string, EncodedImage>
 
     /// <summary>
     /// Records that the picture is drawn into a box this size: filling it, cropped
-    /// (<paramref name="cover"/>), or whole inside it.
+    /// (<paramref name="cover"/>), or whole inside it. A <paramref name="photo"/> in a template is
+    /// a slot, so it isn't recorded and isn't embedded.
     /// </summary>
-    public void Need(string name, double width, double height, bool cover)
+    public void Need(string name, double width, double height, bool cover, bool photo = false)
     {
+        if (template && photo)
+        {
+            return;
+        }
+
         var scale = Scale(name, width, height, cover);
         needed[name] = Math.Max(needed.GetValueOrDefault(name), scale);
     }
@@ -143,6 +157,62 @@ internal sealed class NewsletterImages(IReadOnlyDictionary<string, EncodedImage>
 
         xml.WriteEndElement();
         return drawn;
+    }
+
+    /// <summary>
+    /// A photo's slot in a template: an invisible rectangle naming the photo, for finding it in an
+    /// editor, and a hole of its shape recorded for <see cref="WriteHoles"/>, rounded by
+    /// <paramref name="radius"/> and cut by <paramref name="clip"/> (the hero's edge), if given.
+    /// </summary>
+    public void Slot(XmlWriter xml, string name, RectD box, double radius = 0, string? clip = null)
+    {
+        holes.Add((box, radius, clip));
+        Rect(xml, box, radius, close: false);
+        xml.WriteAttributeString("class", "newsletter-slot");
+        xml.WriteAttributeString("id", $"newsletter-slot-{holes.Count}");
+        xml.WriteAttributeString("data-image", name);
+        xml.WriteAttributeString("fill", "none");
+        xml.WriteEndElement();
+    }
+
+    /// <summary>
+    /// The template's mask: white (shown) everywhere, black (cut out) at each slot. The slots were
+    /// recorded in the column's coordinates, so they move by <paramref name="margin"/>, as the
+    /// column does; a hero edge's clip path, also in the column, applies there too.
+    /// </summary>
+    public void WriteHoles(XmlWriter xml, double width, double height, double margin)
+    {
+        xml.WriteStartElement("mask", Namespace);
+        xml.WriteAttributeString("id", HolesId);
+        xml.WriteAttributeString("maskUnits", "userSpaceOnUse");
+        xml.WriteAttributeString("x", "0");
+        xml.WriteAttributeString("y", "0");
+        xml.WriteAttributeString("width", Number(width));
+        xml.WriteAttributeString("height", Number(height));
+        Rect(xml, new RectD(0, 0, width, height), 0, close: false);
+        xml.WriteAttributeString("fill", "#ffffff");
+        xml.WriteEndElement();
+
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("fill", "#000000");
+        if (margin > 0)
+        {
+            xml.WriteAttributeString("transform", $"translate({Number(margin)} {Number(margin)})");
+        }
+
+        foreach (var (box, radius, clip) in holes)
+        {
+            Rect(xml, box, radius, close: false);
+            if (clip is not null)
+            {
+                xml.WriteAttributeString("clip-path", $"url(#{clip})");
+            }
+
+            xml.WriteEndElement();
+        }
+
+        xml.WriteEndElement();
+        xml.WriteEndElement();
     }
 
     /// <summary>How a photo is tinted: <see cref="NewsletterPhotoTint.Gradient"/> or <see cref="NewsletterPhotoTint.Duotone"/>, and how strongly.</summary>

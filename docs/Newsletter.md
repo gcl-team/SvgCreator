@@ -122,6 +122,20 @@ All text is native `<text>`: small, selectable and editable. The library can't m
 - **Footer links as one line of text.** The links and the bars between them were first placed one by one from their estimated widths. Because the estimates err wide by different amounts, the bars sat unevenly ("首页 |  Blog   |  Contact"). Each row is now one centred `<text>` of `<a><tspan>` links and en-space bars, so the viewer's font spaces them evenly. The estimates still decide where rows break. En spaces are used because SVG collapses ordinary spaces.
 - **One-line text** (ribbons, buttons, stats values, the title) shrinks to fit rather than wrapping.
 
+## Templates
+
+```sh
+svgcreator newsletter trip/trip.json -o trip.svg --template   # writes trip.svg and trip-template.svg
+```
+
+A template is the same newsletter with its photos (the hero, cards and image blocks) left out and a **see-through hole** in each one's place, cut through the page, the bands and the backdrop. Lay it over photos, in an editor or as an overlay, and they show through like a photo frame. Logos, stamps, postmarks, maps and text stay, because they're part of the design rather than content. In the library, it's `NewsletterOptions.Template`.
+
+- **One mask cuts every hole.** Everything drawn sits in a `<g class="newsletter-template" mask="url(#newsletter-template-holes)">`. The mask is white over the whole canvas (shown) with a black shape at each slot (cut out). The mask is written last, once every slot is known; SVG references work forwards as well as backwards.
+- **Holes have the photo's exact shape.** A card's hole is its rounded rectangle. The hero's hole is clipped by the same `clipPath` as the photo, so it follows the wave or the planet's arc, and the edge's line and glow are still drawn along it. Slots are recorded in the column's coordinates, so the mask's shapes move by the margin, as the column does.
+- **Each hole is named.** An invisible `<rect class="newsletter-slot" id="newsletter-slot-N" data-image="photos/bund.jpg">` marks each slot, so it can be found in an editor and the right photo put under it.
+- **Photos aren't embedded,** so a template is small: 156 KB for the Shanghai trip, against 407 KB with its photos. Their sizes are still read, because they set the layout: the hero's height comes from its photo's shape.
+- **Tints don't apply,** since there's no photo to tint.
+
 ## Footer icons
 
 The footer can show a row of round icon links between its text links and its small print:

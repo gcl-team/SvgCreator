@@ -32,6 +32,14 @@ public sealed record NewsletterOptions
     /// </summary>
     public NewsletterTheme? Theme { get; init; }
 
+    /// <summary>
+    /// Make a template: every photo (the hero, cards and image blocks) left out, and a see-through
+    /// hole of its shape cut through the page and backdrop in its place, so the newsletter can be
+    /// laid over photos like a frame. Logos and stickers stay. Each hole has an invisible marker,
+    /// <c>&lt;rect class="newsletter-slot" data-image="…"&gt;</c>, naming its photo. Default: false.
+    /// </summary>
+    public bool Template { get; init; }
+
     internal void Validate()
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(Width, 200);

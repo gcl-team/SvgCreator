@@ -179,7 +179,7 @@ internal static class NewsletterComposer
 
     public static string Compose(Newsletter newsletter, NewsletterOptions options, NewsletterTheme theme, IReadOnlyDictionary<string, EncodedImage> images, CancellationToken cancellationToken)
     {
-        var c = new Context(options, theme, options.Width / ReferenceWidth, new NewsletterImages(images, options.ImageDensity), cancellationToken);
+        var c = new Context(options, theme, options.Width / ReferenceWidth, new NewsletterImages(images, options.ImageDensity, options.Template), cancellationToken);
 
         var sections = new List<Section> { Header(c, newsletter.Header) };
         if (newsletter.Hero is { } hero)
@@ -228,6 +228,14 @@ internal static class NewsletterComposer
             c.Images.WriteDefinitions(xml);
             xml.WriteEndElement();
 
+            // A template's holes go through everything: the backdrop, the page and the bands.
+            if (options.Template)
+            {
+                xml.WriteStartElement("g", Namespace);
+                xml.WriteAttributeString("class", "newsletter-template");
+                xml.WriteAttributeString("mask", $"url(#{NewsletterImages.HolesId})");
+            }
+
             if (margin > 0)
             {
                 xml.WriteStartElement("g", Namespace);
@@ -267,6 +275,13 @@ internal static class NewsletterComposer
             }
 
             xml.WriteEndElement();
+
+            // The mask comes last, once every slot is known; references to it work either way.
+            if (options.Template)
+            {
+                xml.WriteEndElement();
+                c.Images.WriteHoles(xml, width, height, margin);
+            }
         });
     }
 
@@ -322,7 +337,7 @@ internal static class NewsletterComposer
     {
         var (w, h) = c.Images.Size(hero.Image);
         var height = c.Width * Math.Clamp(h / w, HeroMinShape, HeroMaxShape);
-        c.Images.Need(hero.Image, c.Width, height, cover: true);
+        c.Images.Need(hero.Image, c.Width, height, cover: true, photo: true);
 
         return new Section(height, (xml, top) =>
         {
@@ -331,7 +346,7 @@ internal static class NewsletterComposer
             xml.WriteAttributeString("class", "newsletter-hero");
             if (c.Theme.HeroEdge == NewsletterHeroEdge.Straight)
             {
-                c.Images.Draw(xml, hero.Image, box, cover: true, tint: c.Tint(hero.Tint));
+                Photo(xml, c, hero.Image, box, 0, hero.Tint);
                 xml.WriteEndElement();
                 return;
             }
@@ -350,7 +365,7 @@ internal static class NewsletterComposer
 
             xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("clip-path", $"url(#{clip})");
-            c.Images.Draw(xml, hero.Image, box, cover: true, tint: c.Tint(hero.Tint));
+            Photo(xml, c, hero.Image, box, 0, hero.Tint, clip);
             xml.WriteEndElement();
 
             // An arc's glow is a wide, faint stroke under the line, so it needs no filter.
@@ -537,7 +552,7 @@ internal static class NewsletterComposer
         var rows = new List<(NewsletterCard Card, Text Title, Text? Body, double Height)>();
         foreach (var card in cards.Items)
         {
-            c.Images.Need(card.Image, pictureWidth, pictureHeight, cover: true);
+            c.Images.Need(card.Image, pictureWidth, pictureHeight, cover: true, photo: true);
             var title = Lay(c, [card.Title], CardTitleSize * c.Unit, textWidth, 0, 1.35);
             var body = card.Text.Count > 0 ? Lay(c, card.Text, CardTextSize * c.Unit, textWidth, ParagraphGap * c.Unit * 0.5) : null;
             var textHeight = (CardTextTop * c.Unit) + title.Height + (body is null ? 0 : (CardTitleGap * c.Unit) + body.Height);
@@ -560,7 +575,7 @@ internal static class NewsletterComposer
                 OpenLink(xml, card.Link);
                 xml.WriteStartElement("g", Namespace);
                 xml.WriteAttributeString("class", "newsletter-card");
-                c.Images.Draw(xml, card.Image, new RectD(pictureX, top, pictureWidth, pictureHeight), cover: true, c.Radius(CardRadius), c.Tint(card.Tint));
+                Photo(xml, c, card.Image, new RectD(pictureX, top, pictureWidth, pictureHeight), c.Radius(CardRadius), card.Tint);
                 var textTop = top + (CardTextTop * c.Unit);
                 WriteText(xml, c, title, textX, textTop, "start", "newsletter-card-title", bold: true);
                 if (body is not null)
@@ -582,7 +597,7 @@ internal static class NewsletterComposer
     {
         var (w, h) = c.Images.Size(image.Image);
         var pictureHeight = c.Content * Math.Clamp(h / w, ImageMinShape, ImageMaxShape);
-        c.Images.Need(image.Image, c.Content, pictureHeight, cover: true);
+        c.Images.Need(image.Image, c.Content, pictureHeight, cover: true, photo: true);
         var caption = image.Caption is { } line ? Lay(c, [line], CaptionSize * c.Unit, c.Content, 0, 1.5, balance: true) : null;
         var height = pictureHeight + (caption is null ? 0 : (CaptionGap * c.Unit) + caption.Height);
 
@@ -591,7 +606,7 @@ internal static class NewsletterComposer
             xml.WriteStartElement("g", Namespace);
             xml.WriteAttributeString("class", "newsletter-image");
             OpenLink(xml, image.Link);
-            c.Images.Draw(xml, image.Image, new RectD(c.Padding, top, c.Content, pictureHeight), cover: true, c.Radius(ImageRadius), c.Tint(image.Tint));
+            Photo(xml, c, image.Image, new RectD(c.Padding, top, c.Content, pictureHeight), c.Radius(ImageRadius), image.Tint);
             CloseLink(xml, image.Link);
             if (caption is not null)
             {
@@ -846,6 +861,22 @@ internal static class NewsletterComposer
 
             xml.WriteEndElement();
         });
+    }
+
+    /// <summary>
+    /// A photo filling its box, cropped and tinted as the theme says; in a template, its slot
+    /// instead: a hole of the box's shape, rounded and cut by <paramref name="edgeClip"/> like the photo.
+    /// </summary>
+    private static void Photo(XmlWriter xml, Context c, string name, RectD box, double radius, bool? tint, string? edgeClip = null)
+    {
+        if (c.Images.Template)
+        {
+            c.Images.Slot(xml, name, box, radius, edgeClip);
+        }
+        else
+        {
+            c.Images.Draw(xml, name, box, cover: true, radius, c.Tint(tint));
+        }
     }
 
     /// <summary>
