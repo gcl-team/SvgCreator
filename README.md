@@ -76,7 +76,7 @@ dotnet run --project src/SvgCreator.Cli -- map stops.json -o trip.svg --route li
 # a map block's "stops" can name the same stops file the map command reads)
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --width 1280 --margin 0
-# themes: starlight (default), postcard, minimal, cosmos, or a theme JSON file; "theme" in the file does the same
+# themes: starlight (default), postcard, minimal, cosmos, greenery, or a theme JSON file; "theme" in the file does the same
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --theme cosmos
 # --template also writes trip-template.svg: the photos left out, with see-through holes in their place
 dotnet run --project src/SvgCreator.Cli -- newsletter trip/trip.json -o trip.svg --template

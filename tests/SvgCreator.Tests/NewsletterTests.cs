@@ -110,6 +110,7 @@ public class NewsletterTests
     [InlineData("postcard")]
     [InlineData("minimal")]
     [InlineData("cosmos")]
+    [InlineData("greenery")]
     public void Golden_Themes(string theme) =>
         SvgGoldenTests.AssertGolden($"newsletter-{theme}.svg", Create(Everything() with { Theme = new NewsletterTheme { Base = theme } }, images: EverythingImages()));
 
@@ -216,6 +217,23 @@ public class NewsletterTests
         Assert.Equal("xiaolongbao", accent.Value);
         Assert.Equal("#ff8800", (string?)accent.Attribute("fill"));
         Assert.Equal("Far too many xiaolongbao!", ByClass(root, "newsletter-intro").Single().Value);
+    }
+
+    [Fact]
+    public void Text_AHighlightColour_TakesTheAccentsPlaceOnMarkedSpans_ButNotOnRibbons()
+    {
+        var theme = new NewsletterTheme { Ribbon = NewsletterRibbonStyle.Plain, AccentColor = "#ff8800", HighlightColor = "#225500" };
+        var root = Root(Minimal with { Intro = ["Far too many [[xiaolongbao]]!"], Blocks = [new NewsletterRibbon("Day 1")], Theme = theme });
+
+        Assert.Equal("#225500", (string?)ByClass(root, "newsletter-accent").Single().Attribute("fill"));
+        Assert.Equal("#ff8800", (string?)ByClass(root, "newsletter-ribbon").Single().Element(Svg + "rect")!.Attribute("fill"));
+    }
+
+    [Fact]
+    public void Theme_HighlightLeftOut_FollowsTheThemesOwnAccent_ElseTheBases()
+    {
+        Assert.Equal("#e4572e", new NewsletterTheme { Base = "greenery", AccentColor = "#e4572e" }.Resolve().HighlightColor);
+        Assert.Equal(NewsletterTheme.Greenery.HighlightColor, new NewsletterTheme { Base = "greenery", PageColor = "#ffffff" }.Resolve().HighlightColor);
     }
 
     [Theory]
@@ -409,7 +427,7 @@ public class NewsletterTests
     {
         var ex = Assert.Throws<ArgumentException>(() => Create(Minimal with { Theme = new NewsletterTheme { Base = "galaxy" } }));
 
-        Assert.Contains("starlight, postcard, minimal or cosmos", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("starlight, postcard, minimal, cosmos or greenery", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -449,12 +467,27 @@ public class NewsletterTests
     [Theory]
     [InlineData("starlight", true)]
     [InlineData("cosmos", true)]
+    [InlineData("greenery", true)]
     [InlineData("minimal", false)]
     public void Theme_BackdropPattern_OnlyWhenTheThemeHasOne(string theme, bool pattern)
     {
         var root = Root(Minimal with { Theme = NewsletterTheme.Named(theme) });
 
         Assert.Equal(pattern, root.Descendants(Svg + "pattern").Any());
+    }
+
+    [Fact]
+    public void Theme_TagRibbon_IsAPillAsWideAsItsHeading_CentredBetweenTwoSparkles()
+    {
+        var theme = new NewsletterTheme { Ribbon = NewsletterRibbonStyle.Tag };
+        var shortPill = ByClass(Root(Minimal with { Theme = theme, Blocks = [new NewsletterRibbon("Go")] }), "newsletter-ribbon").Single();
+        var longPill = ByClass(Root(Minimal with { Theme = theme, Blocks = [new NewsletterRibbon("Ready to join us?")] }), "newsletter-ribbon").Single();
+
+        var pill = shortPill.Descendants(Svg + "rect").Single();
+        Assert.Equal(320, Number(pill, "x") + (Number(pill, "width") / 2), 6);
+        Assert.Equal(Number(pill, "height") / 2, Number(pill, "rx"), 6);
+        Assert.True(Number(pill, "width") < Number(longPill.Descendants(Svg + "rect").Single(), "width"));
+        Assert.Equal(2, shortPill.Descendants(Svg + "path").Count());
     }
 
     [Theory]

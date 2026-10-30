@@ -189,18 +189,18 @@ Every part has a class for restyling: `newsletter-backdrop`, `newsletter-column`
 
 ## Themes
 
-A theme sets how the newsletter looks: nine colours, the typeface and four shapes. The layout (the frame, the blocks and their spacing) is the same in every theme, so every theme fits every newsletter.
+A theme sets how the newsletter looks: ten colours, the typeface and four shapes. The layout (the frame, the blocks and their spacing) is the same in every theme, so every theme fits every newsletter.
 
-| | `starlight` (default) | `postcard` | `minimal` | `cosmos` |
-|---|---|---|---|---|
-| For | Games, fun trips | Trips, with stamps and postmarks | A blog, a small business | A blog on outer space and planets |
-| Page / text | Purple / white | Cream / navy | White / near black | Deep navy / pale blue |
-| Accent / button | Orange / red | Red / navy | Blue / blue | Cyan / violet |
-| `font` | `sans` | `serif` | `sans` | `sans` |
-| `ribbon` | `pixel` | `plain` | `tab` | `tab` |
-| `heroEdge` | `wave` | `straight` | `straight` | `arc` |
-| `backdrop` | `diamonds` | `none` | `none` | `stars` |
-| `corners` | `round` | `round` | `square` | `round` |
+| | `starlight` (default) | `postcard` | `minimal` | `cosmos` | `greenery` |
+|---|---|---|---|---|---|
+| For | Games, fun trips | Trips, with stamps and postmarks | A blog, a small business | A blog on outer space and planets | Cosy games, gardens, growing things |
+| Page / text | Purple / white | Cream / navy | White / near black | Deep navy / pale blue | Cream, under a starry blue sky / brown |
+| Accent / button | Orange / red | Red / navy | Blue / blue | Cyan / violet | Leaf green / soft yellow |
+| `font` | `sans` | `serif` | `sans` | `sans` | `sans` |
+| `ribbon` | `pixel` | `plain` | `tab` | `tab` | `tag` |
+| `heroEdge` | `wave` | `straight` | `straight` | `arc` | `arc` |
+| `backdrop` | `diamonds` | `none` | `none` | `stars` | `sky` |
+| `corners` | `round` | `round` | `square` | `round` | `round` |
 
 The newsletter file picks a theme in one of three ways:
 
@@ -216,15 +216,16 @@ A theme file holds the same object, so a shop keeps its colours in one place and
 |---|---|---|
 | `backdropColor` | CSS colour | Around the column |
 | `pageColor` | | The column, and the backdrop's diamonds and dots |
-| `bandColor`, `bandTextColor` | | The header and footer bands, and their text |
-| `textColor` | | Text on the page, a map's markers and route, a postmark sticker's ink, the stars |
-| `accentColor` | | Ribbons, the hero's edge, `[[accented]]` text, map waypoints |
+| `bandColor`, `bandTextColor` | | The header and footer bands, and their text; `bandTextColor` also colours the backdrop's stars |
+| `textColor` | | Text on the page, a map's markers and route, a postmark sticker's ink |
+| `accentColor` | | Ribbons and the hero's edge |
+| `highlightColor` | | `[[accented]]` text and map waypoints, which sit on the page; left out, it's the theme's own `accentColor` if it sets one, else the base's |
 | `labelColor` | | Text on the accent and button colours: headings on ribbon bars, button labels |
 | `buttonColor`, `panelColor` | | Buttons; stats boxes and map backgrounds |
 | `font` | `sans`, `serif` | |
-| `ribbon` | `pixel`, `plain`, `tab` | Pixel-art bar, plain bar, or a heading underlined in the accent |
+| `ribbon` | `pixel`, `plain`, `tab`, `tag` | Pixel-art bar, plain bar, a heading underlined in the accent, or a pill just wide enough for the heading with a sparkle either side |
 | `heroEdge` | `wave`, `straight`, `arc` | `arc`: the page rises into the hero like a planet's horizon, with a glow |
-| `backdrop` | `diamonds`, `dots`, `stars`, `none` | |
+| `backdrop` | `diamonds`, `dots`, `stars`, `sky`, `none` | `sky`: the stars, with faint ringed planets and plump five-pointed stars |
 | `corners` | `round`, `square` | `square` also makes buttons boxes, not pills |
 | `photoTint` | `none`, `gradient`, `duotone` | How photos are coloured; `none` in every built-in theme (see below) |
 | `tintStartColor`, `tintEndColor` | Hex colour | The tint's dark and light colours; each built-in theme has its own pair |
@@ -257,3 +258,12 @@ Neither tint touches the photo's pixels: the viewer applies both, so the embedde
 **Lesson: one text colour isn't enough.** The first themes had a single text colour, as `starlight` did. `postcard`'s navy text then vanished on its navy footer band, and white button labels were unreadable on `cosmos`'s cyan. Text sits on three kinds of background, so a theme has three text colours: `textColor` on the page, `bandTextColor` on the bands, and `labelColor` on accent bars and buttons.
 
 The stars are placed from a fixed seed, so every render is the same, as the golden files require. They're dots of different sizes and brightness, plus four sparkles (eight-point paths drawn as four narrow kites) in each 200 px tile. The arc's glow is a wide, faint stroke under the line, so it needs no SVG filter.
+
+`greenery` follows a storybook game's sign-up page: brown text on cream cards under a blue starry sky, and labels as pills with brown lettering. Its leaf green comes from the glowing sprout planet in that art, and the brown `labelColor` reads on both the green tags and the yellow buttons.
+
+**Lesson: the stars are drawn in `bandTextColor`, not `textColor`.** The first `greenery` had a blue page with cream text, like `cosmos`. With a cream page and brown text, stars in `textColor` would have been brown on the blue sky. The backdrop is dark like the bands, so the stars now take the bands' light text colour. In `cosmos` the two colours are the same, so its stars didn't change.
+
+**Lesson: the accent on a bar and the accent as text need their own colours.** The pale sprout green is 1.3:1 against the cream page, so `[[accented]]` text and map labels in it all but vanished. A darker green would read as text, but then the brown `labelColor` on the green pills gets harder to read, and that colour also has to work on the yellow buttons. So `highlightColor` was split from `accentColor`: `greenery`'s pills and glow are a mid leaf green (`#86bd4c`, 4.4:1 under brown lettering), and its highlighted words and map waypoints a deep leaf green (`#3f7a1c`, 4.4:1 on the page). Every other built-in theme sets the two the same, so they look as before. A theme file that sets only `accentColor`, written before the split, still gets its highlights in that accent, because a left-out `highlightColor` follows the theme's own accent before the base's.
+
+- **`tag` ribbons** are pills sized to the heading, not bars across the column, so a short heading looks like a sticker label. The pill is centred, with a plump four-pointed sparkle in the accent either side (the same kite-shaped sparkle as the starfield's, with a wider waist). With `square` corners it's a box.
+- **The `sky` backdrop** is the `stars` starfield on a tile twice as wide (four times the area, with four times the stars, so it's as dense), plus two faint ringed planets and three plump five-pointed stars. Those sit at set places in the tile rather than random ones, so they never overlap each other. A plump star is a ten-point path with a round-joined stroke in its own colour, which softens its points; `opacity` is set on the whole path, not on its fill and stroke separately, so where they overlap it isn't twice as bright. `stars` draws from the same seed in the same order, so `cosmos` renders exactly as before.

@@ -25,6 +25,9 @@ public enum NewsletterRibbonStyle
 
     /// <summary>The heading on the left in bold, underlined in the accent colour, like a magazine's section tab.</summary>
     Tab,
+
+    /// <summary>The heading on a pill in the accent colour, just wide enough for it and centred, with a sparkle either side.</summary>
+    Tag,
 }
 
 /// <summary>How the bottom of a newsletter's hero picture is cut.</summary>
@@ -49,8 +52,11 @@ public enum NewsletterBackdrop
     /// <summary>A fine grid of dots in the page colour.</summary>
     Dots,
 
-    /// <summary>A starfield: points of light in the text colour, some with a four-pointed sparkle.</summary>
+    /// <summary>A starfield: points of light in the band text colour, some with a four-pointed sparkle.</summary>
     Stars,
+
+    /// <summary>A night sky: the starfield, with faint ringed planets and plump five-pointed stars among it.</summary>
+    Sky,
 
     /// <summary>The backdrop colour alone.</summary>
     None,
@@ -84,7 +90,8 @@ public enum NewsletterCorners
 
 /// <summary>
 /// How a newsletter looks: its colours, typeface and shapes. Start from a built-in theme
-/// (<see cref="Starlight"/>, <see cref="Postcard"/>, <see cref="Minimal"/>, <see cref="Cosmos"/>)
+/// (<see cref="Starlight"/>, <see cref="Postcard"/>, <see cref="Minimal"/>, <see cref="Cosmos"/>,
+/// <see cref="Greenery"/>)
 /// or name one as <see cref="Base"/> and set only what should differ; anything left null comes
 /// from the base. The layout is the same in every theme, so every theme fits every newsletter.
 /// </summary>
@@ -108,14 +115,21 @@ public sealed record NewsletterTheme
     /// <summary>The header and footer bands.</summary>
     public string? BandColor { get; init; }
 
-    /// <summary>Text on the bands: the title and the footer.</summary>
+    /// <summary>Text on the bands (the title and the footer), and the backdrop's stars: the light colour for dark grounds.</summary>
     public string? BandTextColor { get; init; }
 
-    /// <summary>The text on the page, a map's markers and route, a postmark sticker's ink, and the stars.</summary>
+    /// <summary>The text on the page, a map's markers and route, and a postmark sticker's ink.</summary>
     public string? TextColor { get; init; }
 
-    /// <summary>Ribbons, the hero's edge, <c>[[accented]]</c> text and a map's waypoints.</summary>
+    /// <summary>Ribbons and the hero's edge.</summary>
     public string? AccentColor { get; init; }
+
+    /// <summary>
+    /// <c>[[accented]]</c> text and a map's waypoints: the accent where it sits on the page as
+    /// text, so it can be darker than the accent on a light page. Left null in a theme that sets
+    /// <see cref="AccentColor"/>, it's that accent; otherwise it's the base's.
+    /// </summary>
+    public string? HighlightColor { get; init; }
 
     /// <summary>Text on the accent and button colours: headings on ribbon bars, and button labels.</summary>
     public string? LabelColor { get; init; }
@@ -165,6 +179,7 @@ public sealed record NewsletterTheme
         BandTextColor = "#ffffff",
         TextColor = "#ffffff",
         AccentColor = "#f0764a",
+        HighlightColor = "#f0764a",
         LabelColor = "#ffffff",
         ButtonColor = "#a3292b",
         PanelColor = "#463a66",
@@ -191,6 +206,7 @@ public sealed record NewsletterTheme
         BandTextColor = "#fbf6ea",
         TextColor = "#1f2a44",
         AccentColor = "#c0392b",
+        HighlightColor = "#c0392b",
         LabelColor = "#fbf6ea",
         ButtonColor = "#1f2a44",
         PanelColor = "#f1e7cf",
@@ -217,6 +233,7 @@ public sealed record NewsletterTheme
         BandTextColor = "#ffffff",
         TextColor = "#1a1a1a",
         AccentColor = "#2f6fde",
+        HighlightColor = "#2f6fde",
         LabelColor = "#ffffff",
         ButtonColor = "#2f6fde",
         PanelColor = "#eef2f9",
@@ -243,6 +260,7 @@ public sealed record NewsletterTheme
         BandTextColor = "#e8ecff",
         TextColor = "#e8ecff",
         AccentColor = "#7fdbff",
+        HighlightColor = "#7fdbff",
         LabelColor = "#ffffff",
         ButtonColor = "#7b5cff",
         PanelColor = "#161d45",
@@ -257,10 +275,38 @@ public sealed record NewsletterTheme
         TintStrength = 0.8,
     };
 
-    private static readonly (string Name, NewsletterTheme Theme)[] BuiltIns =
-        [("starlight", Starlight), ("postcard", Postcard), ("minimal", Minimal), ("cosmos", Cosmos)];
+    /// <summary>
+    /// Brown on a cream page under a blue starry sky, with leaf-green tags, soft yellow buttons and a
+    /// planet's glowing horizon, after a storybook game's sign-up page: for cosy games, gardens and
+    /// growing things.
+    /// </summary>
+    public static NewsletterTheme Greenery { get; } = new()
+    {
+        BackdropColor = "#1c2c6e",
+        PageColor = "#f3ecd4",
+        BandColor = "#15215a",
+        BandTextColor = "#f6efd8",
+        TextColor = "#7a4e2b",
+        AccentColor = "#86bd4c",
+        HighlightColor = "#3f7a1c",
+        LabelColor = "#5a3d1c",
+        ButtonColor = "#f0d47a",
+        PanelColor = "#e8dcb8",
+        Font = NewsletterFont.Sans,
+        Ribbon = NewsletterRibbonStyle.Tag,
+        HeroEdge = NewsletterHeroEdge.Arc,
+        Backdrop = NewsletterBackdrop.Sky,
+        Corners = NewsletterCorners.Round,
+        PhotoTint = NewsletterPhotoTint.None,
+        TintStartColor = "#1c2c6e",
+        TintEndColor = "#c8e48a",
+        TintStrength = 0.8,
+    };
 
-    /// <summary>The built-in themes' names: <c>starlight</c>, <c>postcard</c>, <c>minimal</c> and <c>cosmos</c>.</summary>
+    private static readonly (string Name, NewsletterTheme Theme)[] BuiltIns =
+        [("starlight", Starlight), ("postcard", Postcard), ("minimal", Minimal), ("cosmos", Cosmos), ("greenery", Greenery)];
+
+    /// <summary>The built-in themes' names: <c>starlight</c>, <c>postcard</c>, <c>minimal</c>, <c>cosmos</c> and <c>greenery</c>.</summary>
     public static IReadOnlyList<string> Names { get; } = [.. BuiltIns.Select(b => b.Name)];
 
     /// <summary>The built-in theme of this name, in any case.</summary>
@@ -291,6 +337,7 @@ public sealed record NewsletterTheme
             BandTextColor = BandTextColor ?? b.BandTextColor,
             TextColor = TextColor ?? b.TextColor,
             AccentColor = AccentColor ?? b.AccentColor,
+            HighlightColor = HighlightColor ?? AccentColor ?? b.HighlightColor,
             LabelColor = LabelColor ?? b.LabelColor,
             ButtonColor = ButtonColor ?? b.ButtonColor,
             PanelColor = PanelColor ?? b.PanelColor,
@@ -311,6 +358,7 @@ public sealed record NewsletterTheme
         CssColor.ThrowIfInvalid(theme.BandTextColor!, nameof(BandTextColor));
         CssColor.ThrowIfInvalid(theme.TextColor!, nameof(TextColor));
         CssColor.ThrowIfInvalid(theme.AccentColor!, nameof(AccentColor));
+        CssColor.ThrowIfInvalid(theme.HighlightColor!, nameof(HighlightColor));
         CssColor.ThrowIfInvalid(theme.LabelColor!, nameof(LabelColor));
         CssColor.ThrowIfInvalid(theme.ButtonColor!, nameof(ButtonColor));
         CssColor.ThrowIfInvalid(theme.PanelColor!, nameof(PanelColor));

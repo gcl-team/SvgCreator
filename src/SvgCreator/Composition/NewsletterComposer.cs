@@ -61,6 +61,9 @@ internal static class NewsletterComposer
     private const double TabGap = 8;             // between a tab heading and its underline
     private const double TabRule = 1.5;          // the underline across the column
     private const double TabMark = 4;            // the thicker underline under the heading
+    private const double TagPadding = 28;        // each side of a tag's heading, inside its pill
+    private const double TagSparkle = 8;         // the sparkles' radius
+    private const double TagSparkleGap = 12;     // between the pill and each sparkle's nearest point
 
     private const double CardGap = 20;           // between a card's picture and its text
     private const double CardShape = 9.0 / 16;
@@ -119,6 +122,7 @@ internal static class NewsletterComposer
     private const double StarTile = 200;
     private const int StarCount = 46;
     private const int SparkleCount = 4;
+    private const double SparkleWaist = 0.22;    // a sparkle's width at its centre, as a share of its radius
 
     // Between footer links: a bar with an en space each side, which SVG doesn't collapse as it does spaces.
     private const string Separator = "\u2002|\u2002";
@@ -159,6 +163,8 @@ internal static class NewsletterComposer
         public string TextColor => Theme.TextColor!;
 
         public string AccentColor => Theme.AccentColor!;
+
+        public string HighlightColor => Theme.HighlightColor!;
 
         public string LabelColor => Theme.LabelColor!;
 
@@ -448,6 +454,7 @@ internal static class NewsletterComposer
     {
         NewsletterRibbonStyle.Plain => PlainRibbon(c, ribbon),
         NewsletterRibbonStyle.Tab => TabRibbon(c, ribbon),
+        NewsletterRibbonStyle.Tag => TagRibbon(c, ribbon),
         _ => PixelRibbon(c, ribbon),
     };
 
@@ -487,6 +494,35 @@ internal static class NewsletterComposer
             NewsletterImages.Rect(xml, new RectD(c.Padding, line, text.Width, mark), 0, close: false);
             xml.WriteAttributeString("fill", c.AccentColor);
             xml.WriteEndElement();
+            xml.WriteEndElement();
+        });
+    }
+
+    // A heading on a pill in the accent colour, just wide enough for it and centred, with a plump
+    // sparkle either side, like a sticker label.
+    private static Section TagRibbon(Context c, NewsletterRibbon ribbon)
+    {
+        var (height, padding, sparkle, gap) = (RibbonHeight * c.Unit, TagPadding * c.Unit, TagSparkle * c.Unit, TagSparkleGap * c.Unit);
+        var text = OneLine(c, ribbon.Text, RibbonTextSize * c.Unit, c.Content - (2 * (padding + gap + (2 * sparkle))));
+        var width = text.Width + (2 * padding);
+
+        return new Section(height, (xml, top) =>
+        {
+            var pill = new RectD((c.Width - width) / 2, top, width, height);
+            xml.WriteStartElement("g", Namespace);
+            xml.WriteAttributeString("class", "newsletter-ribbon");
+            xml.WriteStartElement("g", Namespace);
+            xml.WriteAttributeString("fill", c.AccentColor);
+            NewsletterImages.Rect(xml, pill, c.Square ? 0 : height / 2);
+            foreach (var x in new[] { pill.X - gap - sparkle, pill.Right + gap + sparkle })
+            {
+                xml.WriteStartElement("path", Namespace);
+                xml.WriteAttributeString("d", Sparkle(x, top + (height / 2), sparkle, 0.35));
+                xml.WriteEndElement();
+            }
+
+            xml.WriteEndElement();
+            WriteText(xml, c, text, c.Width / 2, top + ((height - text.Height) / 2), "middle", "newsletter-ribbon-text", bold: true, fill: c.LabelColor);
             xml.WriteEndElement();
         });
     }
@@ -742,7 +778,7 @@ internal static class NewsletterComposer
             Height = height,
             BackgroundColor = c.PanelColor,
             ForegroundColor = c.TextColor,
-            WaypointColor = c.AccentColor,
+            WaypointColor = c.HighlightColor,
             Scale = MapTextScale,
             Route = map.Route,
             Breaks = map.Breaks,
@@ -1017,7 +1053,7 @@ internal static class NewsletterComposer
                     {
                         xml.WriteStartElement("tspan", Namespace);
                         xml.WriteAttributeString("class", "newsletter-accent");
-                        xml.WriteAttributeString("fill", c.AccentColor);
+                        xml.WriteAttributeString("fill", c.HighlightColor);
                         xml.WriteAttributeString("fill-opacity", "1");
                         xml.WriteString(run.Text);
                         xml.WriteEndElement();
@@ -1088,7 +1124,10 @@ internal static class NewsletterComposer
                 WriteDots(xml, c);
                 return true;
             case NewsletterBackdrop.Stars:
-                WriteStars(xml, c);
+                WriteStars(xml, c, sky: false);
+                return true;
+            case NewsletterBackdrop.Sky:
+                WriteStars(xml, c, sky: true);
                 return true;
             default:
                 return false;
@@ -1111,17 +1150,20 @@ internal static class NewsletterComposer
     }
 
     /// <summary>
-    /// A starfield in the text colour: points of light of different sizes and brightness, and a
-    /// few four-pointed sparkles, at places from a fixed seed so every render is the same.
+    /// A starfield in the band text colour, the light one, as the backdrop is dark: points of light of different sizes and brightness, and a
+    /// few four-pointed sparkles, at places from a fixed seed so every render is the same. A sky
+    /// has a tile twice as wide with as many stars for its area, and faint ringed planets and
+    /// plump five-pointed stars at set places among them, so they don't overlap.
     /// </summary>
-    private static void WriteStars(XmlWriter xml, Context c)
+    private static void WriteStars(XmlWriter xml, Context c, bool sky)
     {
-        var tile = StarTile * c.Unit;
+        var scale = sky ? 2 : 1;
+        var tile = StarTile * scale * c.Unit;
         var random = new Random(7);
         StartPattern(xml, tile);
         xml.WriteStartElement("g", Namespace);
-        xml.WriteAttributeString("fill", c.TextColor);
-        for (var i = 0; i < StarCount; i++)
+        xml.WriteAttributeString("fill", c.BandTextColor);
+        for (var i = 0; i < StarCount * scale * scale; i++)
         {
             xml.WriteStartElement("circle", Namespace);
             xml.WriteAttributeString("cx", Number(random.NextDouble() * tile));
@@ -1131,21 +1173,73 @@ internal static class NewsletterComposer
             xml.WriteEndElement();
         }
 
-        // A sparkle: four points, each a narrow kite out from the centre.
-        for (var i = 0; i < SparkleCount; i++)
+        for (var i = 0; i < SparkleCount * scale * scale; i++)
         {
             var (x, y, r) = (random.NextDouble() * tile, random.NextDouble() * tile, (3 + (random.NextDouble() * 3)) * c.Unit);
-            var w = r * 0.22;
             xml.WriteStartElement("path", Namespace);
-            xml.WriteAttributeString("d",
-                $"M{Number(x)} {Number(y - r)}L{Number(x + w)} {Number(y - w)}L{Number(x + r)} {Number(y)}L{Number(x + w)} {Number(y + w)}" +
-                $"L{Number(x)} {Number(y + r)}L{Number(x - w)} {Number(y + w)}L{Number(x - r)} {Number(y)}L{Number(x - w)} {Number(y - w)}Z");
+            xml.WriteAttributeString("d", Sparkle(x, y, r, SparkleWaist));
             xml.WriteAttributeString("fill-opacity", "0.85");
             xml.WriteEndElement();
         }
 
+        if (sky)
+        {
+            // A planet: a faint disc with a ring tilted across it.
+            foreach (var (x, y, r) in new[] { (0.22, 0.28, 22.0), (0.74, 0.76, 14.0) })
+            {
+                var (cx, cy, radius) = (Number(x * tile), Number(y * tile), r * c.Unit);
+                xml.WriteStartElement("g", Namespace);
+                xml.WriteAttributeString("transform", $"rotate(-20 {cx} {cy})");
+                xml.WriteStartElement("circle", Namespace);
+                xml.WriteAttributeString("cx", cx);
+                xml.WriteAttributeString("cy", cy);
+                xml.WriteAttributeString("r", Number(radius));
+                xml.WriteAttributeString("fill-opacity", "0.1");
+                xml.WriteEndElement();
+                xml.WriteStartElement("ellipse", Namespace);
+                xml.WriteAttributeString("cx", cx);
+                xml.WriteAttributeString("cy", cy);
+                xml.WriteAttributeString("rx", Number(radius * 1.8));
+                xml.WriteAttributeString("ry", Number(radius * 0.45));
+                xml.WriteAttributeString("fill", "none");
+                xml.WriteAttributeString("stroke", c.BandTextColor);
+                xml.WriteAttributeString("stroke-opacity", "0.14");
+                xml.WriteAttributeString("stroke-width", Number(2.5 * c.Unit));
+                xml.WriteEndElement();
+                xml.WriteEndElement();
+            }
+
+            // A plump star: five points, softened by a round-joined stroke of its own colour.
+            foreach (var (x, y, r) in new[] { (0.82, 0.16, 9.0), (0.42, 0.6, 7.0), (0.1, 0.86, 6.0) })
+            {
+                var points = Enumerable.Range(0, 10).Select(k =>
+                {
+                    var (angle, distance) = ((k * Math.PI / 5) - (Math.PI / 2), (k % 2 == 0 ? 1 : 0.5) * r * c.Unit);
+                    return $"{Number((x * tile) + (distance * Math.Cos(angle)))} {Number((y * tile) + (distance * Math.Sin(angle)))}";
+                });
+                xml.WriteStartElement("path", Namespace);
+                xml.WriteAttributeString("d", $"M{string.Join("L", points)}Z");
+                xml.WriteAttributeString("opacity", "0.55");
+                xml.WriteAttributeString("stroke", c.BandTextColor);
+                xml.WriteAttributeString("stroke-width", Number(r * 0.35 * c.Unit));
+                xml.WriteAttributeString("stroke-linejoin", "round");
+                xml.WriteEndElement();
+            }
+        }
+
         xml.WriteEndElement();
         xml.WriteEndElement();
+    }
+
+    /// <summary>
+    /// A four-pointed sparkle of radius <paramref name="r"/> as path data: four narrow kites out
+    /// from the centre, <paramref name="waist"/> of the radius wide where they meet.
+    /// </summary>
+    private static string Sparkle(double x, double y, double r, double waist)
+    {
+        var w = r * waist;
+        return $"M{Number(x)} {Number(y - r)}L{Number(x + w)} {Number(y - w)}L{Number(x + r)} {Number(y)}L{Number(x + w)} {Number(y + w)}" +
+            $"L{Number(x)} {Number(y + r)}L{Number(x - w)} {Number(y + w)}L{Number(x - r)} {Number(y)}L{Number(x - w)} {Number(y - w)}Z";
     }
 
     // Opens the backdrop's pattern element, a square tile in canvas units.
