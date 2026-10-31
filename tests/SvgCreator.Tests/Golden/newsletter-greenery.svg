@@ -241,7 +241,7 @@
     </g>
     <g class="newsletter-hero">
       <clipPath id="newsletter-hero-edge-clip">
-        <path d="M0 110.6H640V537.2667Q320 477.2667 0 537.2667Z" />
+        <path d="M0 110.6H640V503.2667C384 537.2667 192 537.2667 0 521.9667Z" />
       </clipPath>
       <g clip-path="url(#newsletter-hero-edge-clip)">
         <clipPath id="newsletter-clip-1">
@@ -251,8 +251,24 @@
           <use href="#newsletter-image-2" transform="translate(0 110.6) scale(10.6667)" />
         </g>
       </g>
-      <path class="newsletter-hero-edge" d="M0 537.2667Q320 477.2667 640 537.2667" fill="none" stroke="#86bd4c" stroke-width="10" stroke-opacity="0.25" />
-      <path class="newsletter-hero-edge" d="M0 537.2667Q320 477.2667 640 537.2667" fill="none" stroke="#86bd4c" stroke-width="2" />
+      <path class="newsletter-hero-edge" d="M0 521.9667C192 537.2667 384 537.2667 640 503.2667" fill="none" stroke="#86bd4c" stroke-width="10" />
+      <g class="newsletter-hero-garden">
+        <path d="M479.6513 515.969V503.969" stroke="#3f7a1c" stroke-width="2.5" stroke-linecap="round" />
+        <g fill="#86bd4c">
+          <path d="M479.6513 503.969Q478.2901 489.3267 464.9289 495.469Q466.2901 510.1113 479.6513 503.969Z" />
+          <path d="M479.6513 503.969Q493.497 508.9234 493.5769 494.2182Q479.7312 489.2638 479.6513 503.969Z" />
+        </g>
+        <path d="M565.056 507.4654V493.4654" stroke="#3f7a1c" stroke-width="2.5" stroke-linecap="round" />
+        <g fill="#f0d47a">
+          <circle cx="565.056" cy="487.4154" r="5.5" />
+          <circle cx="570.8099" cy="491.5958" r="5.5" />
+          <circle cx="568.6121" cy="498.3599" r="5.5" />
+          <circle cx="561.4999" cy="498.3599" r="5.5" />
+          <circle cx="559.3021" cy="491.5958" r="5.5" />
+        </g>
+        <circle cx="565.056" cy="493.4654" r="3.85" fill="#f3ecd4" />
+        <path d="M411.8036 485.0746L413.9036 489.9746L418.8036 492.0746L413.9036 494.1746L411.8036 499.0746L409.7036 494.1746L404.8036 492.0746L409.7036 489.9746Z" fill="#f3ecd4" />
+      </g>
     </g>
     <text class="newsletter-intro" font-size="15" text-anchor="middle">
       <tspan x="320" y="586.5167">Hi! Three days and far too many <tspan class="newsletter-accent" fill="#3f7a1c" fill-opacity="1">xiaolongbao</tspan>.</tspan>
@@ -274,11 +290,21 @@
     <g class="newsletter-cards">
       <a href="https://example.com/bund">
         <g class="newsletter-card">
+          <g class="newsletter-card-frame">
+            <rect x="32" y="777.7667" width="278" height="156.375" rx="15" fill="#e8dcb8" />
+            <circle cx="171" cy="784.7667" r="3.5" fill="#f3ecd4" />
+            <rect x="39" y="791.7667" width="264" height="135.375" rx="10" fill="#f3ecd4" />
+          </g>
           <clipPath id="newsletter-clip-2">
-            <rect x="32" y="777.7667" width="278" height="156.375" rx="8" />
+            <rect x="41" y="793.7667" width="260" height="131.375" rx="8" />
           </clipPath>
           <g class="newsletter-picture" clip-path="url(#newsletter-clip-2)">
-            <use href="#newsletter-image-2" transform="translate(32 763.2875) scale(4.6333)" />
+            <use href="#newsletter-image-2" transform="translate(41 772.7875) scale(4.3333)" />
+          </g>
+          <g class="newsletter-card-badge">
+            <path d="M305 769.7667L308.8206 777.5081L317.3637 778.7494L311.1819 784.7753L312.6412 793.2839L305 789.2667L297.3588 793.2839L298.8181 784.7753L292.6363 778.7494L301.1794 777.5081Z" fill="#f3ecd4" stroke="#f3ecd4" stroke-width="10.55" stroke-linejoin="round" />
+            <path d="M305 769.7667L308.8206 777.5081L317.3637 778.7494L311.1819 784.7753L312.6412 793.2839L305 789.2667L297.3588 793.2839L298.8181 784.7753L292.6363 778.7494L301.1794 777.5081Z" fill="#3f7a1c" stroke="#3f7a1c" stroke-width="4.55" stroke-linejoin="round" />
+            <path d="M27.3067 779.4373L20.5452 777.6256M29.9778 775.0784L25.2939 769.8763M34.5921 772.8775L33.497 765.9637" stroke="#86bd4c" stroke-width="3.5" stroke-linecap="round" />
           </g>
           <text class="newsletter-card-title" font-size="19" font-weight="bold">
             <tspan x="330" y="810.2917">The Bund</tspan>
@@ -289,11 +315,21 @@
         </g>
       </a>
       <g class="newsletter-card">
+        <g class="newsletter-card-frame">
+          <rect x="330" y="952.1417" width="278" height="156.375" rx="15" fill="#e8dcb8" />
+          <circle cx="469" cy="959.1417" r="3.5" fill="#f3ecd4" />
+          <rect x="337" y="966.1417" width="264" height="135.375" rx="10" fill="#f3ecd4" />
+        </g>
         <clipPath id="newsletter-clip-3">
-          <rect x="330" y="952.1417" width="278" height="156.375" rx="8" />
+          <rect x="339" y="968.1417" width="260" height="131.375" rx="8" />
         </clipPath>
         <g class="newsletter-picture" clip-path="url(#newsletter-clip-3)">
-          <use href="#newsletter-image-3" transform="translate(330 937.6625) scale(4.6333)" />
+          <use href="#newsletter-image-3" transform="translate(339 947.1625) scale(4.3333)" />
+        </g>
+        <g class="newsletter-card-badge">
+          <path d="M603 944.1417L606.8206 951.8831L615.3637 953.1244L609.1819 959.1503L610.6412 967.6589L603 963.6417L595.3588 967.6589L596.8181 959.1503L590.6363 953.1244L599.1794 951.8831Z" fill="#f3ecd4" stroke="#f3ecd4" stroke-width="10.55" stroke-linejoin="round" />
+          <path d="M603 944.1417L606.8206 951.8831L615.3637 953.1244L609.1819 959.1503L610.6412 967.6589L603 963.6417L595.3588 967.6589L596.8181 959.1503L590.6363 953.1244L599.1794 951.8831Z" fill="#3f7a1c" stroke="#3f7a1c" stroke-width="4.55" stroke-linejoin="round" />
+          <path d="M325.3067 953.8123L318.5452 952.0006M327.9778 949.4534L323.2939 944.2513M332.5921 947.2525L331.497 940.3387" stroke="#86bd4c" stroke-width="3.5" stroke-linecap="round" />
         </g>
         <text class="newsletter-card-title" font-size="19" font-weight="bold">
           <tspan x="32" y="984.6667">Yu Garden</tspan>

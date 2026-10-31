@@ -41,6 +41,12 @@ public enum NewsletterHeroEdge
 
     /// <summary>A planet's horizon: the page rises into the picture in a wide arc, with a glow in the accent colour along it.</summary>
     Arc,
+
+    /// <summary>
+    /// A meadow's hill: dipping through the middle and rising to the right, with a band in the
+    /// accent colour along it, and a sprout of two leaves, a round flower and a sparkle growing from it.
+    /// </summary>
+    Meadow,
 }
 
 /// <summary>The pattern on the backdrop around a newsletter's column.</summary>
@@ -60,6 +66,19 @@ public enum NewsletterBackdrop
 
     /// <summary>The backdrop colour alone.</summary>
     None,
+}
+
+/// <summary>What's drawn round the pictures on a newsletter's cards.</summary>
+public enum NewsletterCardFrame
+{
+    /// <summary>Nothing: the picture fills its box.</summary>
+    None,
+
+    /// <summary>
+    /// A thick rim in the panel colour, like a collectible item's card: deeper at the top, with a
+    /// hole punched through it, a star badge on the top right corner and a burst of marks off the top left.
+    /// </summary>
+    Collectible,
 }
 
 /// <summary>How a newsletter's photos (the hero, cards and image blocks) are coloured.</summary>
@@ -155,6 +174,9 @@ public sealed record NewsletterTheme
     /// <summary>Rounded or square corners.</summary>
     public NewsletterCorners? Corners { get; init; }
 
+    /// <summary>What's drawn round the cards' pictures.</summary>
+    public NewsletterCardFrame? CardFrame { get; init; }
+
     /// <summary>How photos are coloured. Every built-in theme leaves them alone (<see cref="NewsletterPhotoTint.None"/>).</summary>
     public NewsletterPhotoTint? PhotoTint { get; init; }
 
@@ -188,6 +210,7 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Wave,
         Backdrop = NewsletterBackdrop.Diamonds,
         Corners = NewsletterCorners.Round,
+        CardFrame = NewsletterCardFrame.None,
         PhotoTint = NewsletterPhotoTint.None,
         TintStartColor = "#2b1d6b",
         TintEndColor = "#f0764a",
@@ -215,6 +238,7 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Straight,
         Backdrop = NewsletterBackdrop.None,
         Corners = NewsletterCorners.Round,
+        CardFrame = NewsletterCardFrame.None,
         PhotoTint = NewsletterPhotoTint.None,
         TintStartColor = "#1f2a44",
         TintEndColor = "#e8c99b",
@@ -242,6 +266,7 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Straight,
         Backdrop = NewsletterBackdrop.None,
         Corners = NewsletterCorners.Square,
+        CardFrame = NewsletterCardFrame.None,
         PhotoTint = NewsletterPhotoTint.None,
         TintStartColor = "#1a1a1a",
         TintEndColor = "#6fa3ff",
@@ -269,6 +294,7 @@ public sealed record NewsletterTheme
         HeroEdge = NewsletterHeroEdge.Arc,
         Backdrop = NewsletterBackdrop.Stars,
         Corners = NewsletterCorners.Round,
+        CardFrame = NewsletterCardFrame.None,
         PhotoTint = NewsletterPhotoTint.None,
         TintStartColor = "#1b1150",
         TintEndColor = "#7fdbff",
@@ -276,8 +302,8 @@ public sealed record NewsletterTheme
     };
 
     /// <summary>
-    /// Brown on a cream page under a blue starry sky, with leaf-green tags, soft yellow buttons and a
-    /// planet's glowing horizon, after a storybook game's sign-up page: for cosy games, gardens and
+    /// Brown on a cream page under a blue starry sky, with leaf-green tags, soft yellow buttons, a
+    /// meadow's edge under the hero and collectible frames on the cards, after a storybook game's sign-up page: for cosy games, gardens and
     /// growing things.
     /// </summary>
     public static NewsletterTheme Greenery { get; } = new()
@@ -294,9 +320,10 @@ public sealed record NewsletterTheme
         PanelColor = "#e8dcb8",
         Font = NewsletterFont.Sans,
         Ribbon = NewsletterRibbonStyle.Tag,
-        HeroEdge = NewsletterHeroEdge.Arc,
+        HeroEdge = NewsletterHeroEdge.Meadow,
         Backdrop = NewsletterBackdrop.Sky,
         Corners = NewsletterCorners.Round,
+        CardFrame = NewsletterCardFrame.Collectible,
         PhotoTint = NewsletterPhotoTint.None,
         TintStartColor = "#1c2c6e",
         TintEndColor = "#c8e48a",
@@ -346,6 +373,7 @@ public sealed record NewsletterTheme
             HeroEdge = HeroEdge ?? b.HeroEdge,
             Backdrop = Backdrop ?? b.Backdrop,
             Corners = Corners ?? b.Corners,
+            CardFrame = CardFrame ?? b.CardFrame,
             PhotoTint = PhotoTint ?? b.PhotoTint,
             TintStartColor = TintStartColor ?? b.TintStartColor,
             TintEndColor = TintEndColor ?? b.TintEndColor,
@@ -363,9 +391,9 @@ public sealed record NewsletterTheme
         CssColor.ThrowIfInvalid(theme.ButtonColor!, nameof(ButtonColor));
         CssColor.ThrowIfInvalid(theme.PanelColor!, nameof(PanelColor));
         if (!Enum.IsDefined(theme.Font!.Value) || !Enum.IsDefined(theme.Ribbon!.Value) || !Enum.IsDefined(theme.HeroEdge!.Value)
-            || !Enum.IsDefined(theme.Backdrop!.Value) || !Enum.IsDefined(theme.Corners!.Value) || !Enum.IsDefined(theme.PhotoTint!.Value))
+            || !Enum.IsDefined(theme.Backdrop!.Value) || !Enum.IsDefined(theme.Corners!.Value) || !Enum.IsDefined(theme.CardFrame!.Value) || !Enum.IsDefined(theme.PhotoTint!.Value))
         {
-            throw new ArgumentException("The theme has an unknown font, ribbon, hero edge, backdrop, corners or photo tint setting.", nameof(Font));
+            throw new ArgumentException("The theme has an unknown font, ribbon, hero edge, backdrop, corners, card frame or photo tint setting.", nameof(Font));
         }
 
         // Hex, because a duotone needs the colours' red, green and blue as numbers.

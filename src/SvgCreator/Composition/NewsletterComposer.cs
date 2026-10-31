@@ -44,6 +44,13 @@ internal static class NewsletterComposer
     private const double ArcRise = 30;           // how far a planet's horizon rises into the hero at its middle
     private const double ArcGlow = 10;           // the glow's width along it
     private const double ArcLine = 2;
+    private const double MeadowRise = 34;        // how far a meadow's edge rises into the hero at its right end
+    private const double MeadowBand = 10;        // the band along it
+    private const double LeafLength = 17;
+    private const double LeafWidth = 6;          // each side of a leaf's midrib, at its middle
+    private const double StemLength = 12;
+    private const double PetalRadius = 5.5;
+    private const double FlowerHeight = 14;      // a flower's centre above the edge
 
     private const double BodyTop = 32;
     private const double BlockGap = 28;
@@ -73,6 +80,12 @@ internal static class NewsletterComposer
     private const double CardTitleGap = 8;
     private const double CardTextSize = 14;
     private const double CardRowGap = 18;
+    private const double FrameRim = 7;           // a collectible frame's rim at the sides and bottom
+    private const double FrameTop = 14;          // and at the top, deep enough for its hole
+    private const double FrameLine = 2;          // the light line between the rim and the picture
+    private const double FrameHole = 3.5;
+    private const double BadgeRadius = 13;
+    private const double BadgeInset = 5;         // the badge's centre in from the frame's corner
 
     private const double ImageMinShape = 0.3;    // 10:3
     private const double ImageMaxShape = 1.25;   // 4:5
@@ -338,7 +351,8 @@ internal static class NewsletterComposer
     }
 
     // The hero: the picture across the column, its bottom edge cut as the theme says: in a wave
-    // lined in the accent, straight, or in a planet's arc with a glow along it.
+    // lined in the accent, straight, in a planet's arc with a glow along it, or in a meadow's hill
+    // with a band along it and a sprout and a flower growing from it.
     private static Section Hero(Context c, NewsletterHero hero)
     {
         var (w, h) = c.Images.Size(hero.Image);
@@ -358,9 +372,12 @@ internal static class NewsletterComposer
             }
 
             var bottom = top + height;
-            var (edge, outline) = c.Theme.HeroEdge == NewsletterHeroEdge.Arc
-                ? Arc(c.Width, bottom, ArcRise * c.Unit)
-                : Wave(c.Width, bottom, WaveDepth * c.Unit);
+            var (edge, outline) = c.Theme.HeroEdge switch
+            {
+                NewsletterHeroEdge.Arc => Arc(c.Width, bottom, ArcRise * c.Unit),
+                NewsletterHeroEdge.Meadow => Meadow(c.Width, bottom, MeadowRise * c.Unit),
+                _ => Wave(c.Width, bottom, WaveDepth * c.Unit),
+            };
             var clip = "newsletter-hero-edge-clip";
             xml.WriteStartElement("clipPath", Namespace);
             xml.WriteAttributeString("id", clip);
@@ -375,9 +392,12 @@ internal static class NewsletterComposer
             xml.WriteEndElement();
 
             // An arc's glow is a wide, faint stroke under the line, so it needs no filter.
-            var strokes = c.Theme.HeroEdge == NewsletterHeroEdge.Arc
-                ? new[] { (ArcGlow, 0.25), (ArcLine, 1.0) }
-                : [(WaveStroke, 1.0)];
+            var strokes = c.Theme.HeroEdge switch
+            {
+                NewsletterHeroEdge.Arc => new[] { (ArcGlow, 0.25), (ArcLine, 1.0) },
+                NewsletterHeroEdge.Meadow => [(MeadowBand, 1.0)],
+                _ => [(WaveStroke, 1.0)],
+            };
             foreach (var (stroke, opacity) in strokes)
             {
                 xml.WriteStartElement("path", Namespace);
@@ -394,8 +414,128 @@ internal static class NewsletterComposer
                 xml.WriteEndElement();
             }
 
+            if (c.Theme.HeroEdge == NewsletterHeroEdge.Meadow)
+            {
+                WriteGarden(xml, c, bottom);
+            }
+
             xml.WriteEndElement();
         });
+    }
+
+    /// <summary>
+    /// A point on a meadow's edge, <paramref name="t"/> of the way along its one cubic: from
+    /// partway up on the left, dipping almost to the bottom through the middle, and rising
+    /// <paramref name="rise"/> to the right side, like a hill's shoulder.
+    /// </summary>
+    private static (double X, double Y) MeadowPoint(double t, double width, double bottom, double rise)
+    {
+        // The controls' x and height up, as shares of the width and the rise.
+        (double X, double Up)[] p = [(0, 0.45), (0.3, 0), (0.6, 0), (1, 1)];
+        var (a, b, d, e) = (Math.Pow(1 - t, 3), 3 * Math.Pow(1 - t, 2) * t, 3 * (1 - t) * t * t, Math.Pow(t, 3));
+        return (((a * p[0].X) + (b * p[1].X) + (d * p[2].X) + (e * p[3].X)) * width,
+            bottom - (((a * p[0].Up) + (b * p[1].Up) + (d * p[2].Up) + (e * p[3].Up)) * rise));
+    }
+
+    /// <summary>A meadow's edge, as a path from left to right and as the clip path's way back from the right side.</summary>
+    private static (string Edge, string Outline) Meadow(double width, double bottom, double rise)
+    {
+        string P(double x, double up) => $"{Number(x * width)} {Number(bottom - (up * rise))}";
+        return ($"M{P(0, 0.45)}C{P(0.3, 0)} {P(0.6, 0)} {P(1, 1)}", $"V{Number(bottom - rise)}C{P(0.6, 0)} {P(0.3, 0)} {P(0, 0.45)}");
+    }
+
+    /// <summary>
+    /// What grows from a meadow's edge, towards the right where the hill rises: a sprout of two
+    /// leaves in the accent on a stem in the highlight, a round flower in the button colour with a
+    /// centre in the page colour, and a sparkle in the page colour above them.
+    /// </summary>
+    private static void WriteGarden(XmlWriter xml, Context c, double bottom)
+    {
+        var rise = MeadowRise * c.Unit;
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "newsletter-hero-garden");
+
+        // The sprout: a stem up from the band's top, and a leaf off its tip to each side.
+        var (sx, sy) = MeadowPoint(0.78, c.Width, bottom, rise);
+        var band = MeadowBand * c.Unit / 2;
+        var tip = sy - band - (StemLength * c.Unit);
+        Stem(xml, c, sx, sy - band, tip);
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("fill", c.AccentColor);
+        foreach (var angle in new[] { -150.0, -35.0 })
+        {
+            xml.WriteStartElement("path", Namespace);
+            xml.WriteAttributeString("d", Leaf(sx, tip, LeafLength * c.Unit, LeafWidth * c.Unit, angle));
+            xml.WriteEndElement();
+        }
+
+        xml.WriteEndElement();
+
+        // The flower: five petals round a centre, on its own short stem.
+        var (fx, fy) = MeadowPoint(0.9, c.Width, bottom, rise);
+        var centre = fy - band - (FlowerHeight * c.Unit);
+        Stem(xml, c, fx, fy - band, centre);
+        var petal = PetalRadius * c.Unit;
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("fill", c.ButtonColor);
+        for (var i = 0; i < 5; i++)
+        {
+            var angle = (i * 2 * Math.PI / 5) - (Math.PI / 2);
+            Circle(xml, fx + (petal * 1.1 * Math.Cos(angle)), centre + (petal * 1.1 * Math.Sin(angle)), petal);
+        }
+
+        xml.WriteEndElement();
+        Circle(xml, fx, centre, petal * 0.7, c.PageColor);
+
+        // A sparkle over the hill, between the sprout and the flower.
+        var (kx, ky) = MeadowPoint(0.68, c.Width, bottom, rise);
+        xml.WriteStartElement("path", Namespace);
+        xml.WriteAttributeString("d", Sparkle(kx, ky - (34 * c.Unit), 7 * c.Unit, 0.3));
+        xml.WriteAttributeString("fill", c.PageColor);
+        xml.WriteEndElement();
+
+        xml.WriteEndElement();
+    }
+
+    // A stem in the highlight colour from the band up to a sprout's or a flower's base.
+    private static void Stem(XmlWriter xml, Context c, double x, double from, double to)
+    {
+        xml.WriteStartElement("path", Namespace);
+        xml.WriteAttributeString("d", $"M{Number(x)} {Number(from)}V{Number(to)}");
+        xml.WriteAttributeString("stroke", c.HighlightColor);
+        xml.WriteAttributeString("stroke-width", Number(2.5 * c.Unit));
+        xml.WriteAttributeString("stroke-linecap", "round");
+        xml.WriteEndElement();
+    }
+
+    private static void Circle(XmlWriter xml, double x, double y, double r, string? fill = null)
+    {
+        xml.WriteStartElement("circle", Namespace);
+        xml.WriteAttributeString("cx", Number(x));
+        xml.WriteAttributeString("cy", Number(y));
+        xml.WriteAttributeString("r", Number(r));
+        if (fill is not null)
+        {
+            xml.WriteAttributeString("fill", fill);
+        }
+
+        xml.WriteEndElement();
+    }
+
+    /// <summary>
+    /// A leaf as path data: two quadratics from its base out to its tip, <paramref name="length"/>
+    /// away at <paramref name="degrees"/> (0 is right, negative is up), bulging
+    /// <paramref name="width"/> each side of the midrib.
+    /// </summary>
+    private static string Leaf(double x, double y, double length, double width, double degrees)
+    {
+        var (cos, sin) = (Math.Cos(degrees * Math.PI / 180), Math.Sin(degrees * Math.PI / 180));
+        var (tx, ty) = (x + (length * cos), y + (length * sin));
+        var (mx, my) = (x + (length * cos / 2), y + (length * sin / 2));
+
+        // A quadratic's control is twice as far out as the curve reaches.
+        var (px, py) = (-sin * width * 2, cos * width * 2);
+        return $"M{Number(x)} {Number(y)}Q{Number(mx + px)} {Number(my + py)} {Number(tx)} {Number(ty)}Q{Number(mx - px)} {Number(my - py)} {Number(x)} {Number(y)}Z";
     }
 
     /// <summary>
@@ -611,7 +751,16 @@ internal static class NewsletterComposer
                 OpenLink(xml, card.Link);
                 xml.WriteStartElement("g", Namespace);
                 xml.WriteAttributeString("class", "newsletter-card");
-                Photo(xml, c, card.Image, new RectD(pictureX, top, pictureWidth, pictureHeight), c.Radius(CardRadius), card.Tint);
+                var picture = new RectD(pictureX, top, pictureWidth, pictureHeight);
+                if (c.Theme.CardFrame == NewsletterCardFrame.Collectible)
+                {
+                    CollectibleFrame(xml, c, card, picture);
+                }
+                else
+                {
+                    Photo(xml, c, card.Image, picture, c.Radius(CardRadius), card.Tint);
+                }
+
                 var textTop = top + (CardTextTop * c.Unit);
                 WriteText(xml, c, title, textX, textTop, "start", "newsletter-card-title", bold: true);
                 if (body is not null)
@@ -626,6 +775,63 @@ internal static class NewsletterComposer
 
             xml.WriteEndElement();
         });
+    }
+
+    /// <summary>
+    /// A card's picture in a collectible frame, all inside the picture's box so the cards keep
+    /// their layout: a rim in the panel colour (deeper at the top, with a hole punched through it
+    /// to the page), a light line in the page colour round the picture, then the picture. A star
+    /// badge sits on the top right corner and a burst of marks in the accent off the top left,
+    /// both over the gap round the card, as a sticker stands off its page.
+    /// </summary>
+    private static void CollectibleFrame(XmlWriter xml, Context c, NewsletterCard card, RectD box)
+    {
+        var (rim, rimTop, line) = (FrameRim * c.Unit, FrameTop * c.Unit, FrameLine * c.Unit);
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "newsletter-card-frame");
+        NewsletterImages.Rect(xml, box, c.Radius(CardRadius + rim / c.Unit), close: false);
+        xml.WriteAttributeString("fill", c.PanelColor);
+        xml.WriteEndElement();
+        Circle(xml, box.X + (box.Width / 2), box.Y + (rimTop / 2), FrameHole * c.Unit, c.PageColor);
+        var inner = new RectD(box.X + rim, box.Y + rimTop, box.Width - (2 * rim), box.Height - rim - rimTop);
+        NewsletterImages.Rect(xml, inner, c.Radius(CardRadius + line / c.Unit), close: false);
+        xml.WriteAttributeString("fill", c.PageColor);
+        xml.WriteEndElement();
+        xml.WriteEndElement();
+
+        Photo(xml, c, card.Image, new RectD(inner.X + line, inner.Y + line, inner.Width - (2 * line), inner.Height - (2 * line)), c.Radius(CardRadius), card.Tint);
+
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "newsletter-card-badge");
+
+        // The star badge: a plump star in the highlight, outlined in the page colour by a wider
+        // stroke drawn under it.
+        var (bx, by, r) = (box.Right - (BadgeInset * c.Unit), box.Y + (BadgeInset * c.Unit), BadgeRadius * c.Unit);
+        var star = Star(bx, by, r);
+        foreach (var (colour, width) in new[] { (c.PageColor, (r * 0.35) + (6 * c.Unit)), (c.HighlightColor, r * 0.35) })
+        {
+            xml.WriteStartElement("path", Namespace);
+            xml.WriteAttributeString("d", star);
+            xml.WriteAttributeString("fill", colour);
+            xml.WriteAttributeString("stroke", colour);
+            xml.WriteAttributeString("stroke-width", Number(width));
+            xml.WriteAttributeString("stroke-linejoin", "round");
+            xml.WriteEndElement();
+        }
+
+        // The burst: three short strokes out from just inside the top left corner.
+        var (ox, oy) = (box.X + (4 * c.Unit), box.Y + (4 * c.Unit));
+        xml.WriteStartElement("path", Namespace);
+        xml.WriteAttributeString("d", string.Concat(new[] { 195.0, 228, 261 }.Select(degrees =>
+        {
+            var (cos, sin) = (Math.Cos(degrees * Math.PI / 180), Math.Sin(degrees * Math.PI / 180));
+            return $"M{Number(ox + (9 * c.Unit * cos))} {Number(oy + (9 * c.Unit * sin))}L{Number(ox + (16 * c.Unit * cos))} {Number(oy + (16 * c.Unit * sin))}";
+        })));
+        xml.WriteAttributeString("stroke", c.AccentColor);
+        xml.WriteAttributeString("stroke-width", Number(3.5 * c.Unit));
+        xml.WriteAttributeString("stroke-linecap", "round");
+        xml.WriteEndElement();
+        xml.WriteEndElement();
     }
 
     // A picture across the content, rounded, with its caption under it.
@@ -1212,13 +1418,8 @@ internal static class NewsletterComposer
             // A plump star: five points, softened by a round-joined stroke of its own colour.
             foreach (var (x, y, r) in new[] { (0.82, 0.16, 9.0), (0.42, 0.6, 7.0), (0.1, 0.86, 6.0) })
             {
-                var points = Enumerable.Range(0, 10).Select(k =>
-                {
-                    var (angle, distance) = ((k * Math.PI / 5) - (Math.PI / 2), (k % 2 == 0 ? 1 : 0.5) * r * c.Unit);
-                    return $"{Number((x * tile) + (distance * Math.Cos(angle)))} {Number((y * tile) + (distance * Math.Sin(angle)))}";
-                });
                 xml.WriteStartElement("path", Namespace);
-                xml.WriteAttributeString("d", $"M{string.Join("L", points)}Z");
+                xml.WriteAttributeString("d", Star(x * tile, y * tile, r * c.Unit));
                 xml.WriteAttributeString("opacity", "0.55");
                 xml.WriteAttributeString("stroke", c.BandTextColor);
                 xml.WriteAttributeString("stroke-width", Number(r * 0.35 * c.Unit));
@@ -1229,6 +1430,20 @@ internal static class NewsletterComposer
 
         xml.WriteEndElement();
         xml.WriteEndElement();
+    }
+
+    /// <summary>
+    /// A five-pointed star of radius <paramref name="r"/> as path data, its inner corners half as
+    /// far out; a round-joined stroke over it makes it plump.
+    /// </summary>
+    private static string Star(double x, double y, double r)
+    {
+        var points = Enumerable.Range(0, 10).Select(k =>
+        {
+            var (angle, distance) = ((k * Math.PI / 5) - (Math.PI / 2), (k % 2 == 0 ? 1 : 0.5) * r);
+            return $"{Number(x + (distance * Math.Cos(angle)))} {Number(y + (distance * Math.Sin(angle)))}";
+        });
+        return $"M{string.Join("L", points)}Z";
     }
 
     /// <summary>

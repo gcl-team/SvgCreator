@@ -476,6 +476,40 @@ public class NewsletterTests
         Assert.Equal(pattern, root.Descendants(Svg + "pattern").Any());
     }
 
+    [Theory]
+    [InlineData(NewsletterHeroEdge.Meadow, true)]
+    [InlineData(NewsletterHeroEdge.Arc, false)]
+    [InlineData(NewsletterHeroEdge.Straight, false)]
+    public void Theme_MeadowHero_GrowsAGardenFromItsEdge_AndKeepsItsHeight(NewsletterHeroEdge edge, bool garden)
+    {
+        var newsletter = Everything() with { Theme = new NewsletterTheme { HeroEdge = edge } };
+        var root = Root(newsletter, images: EverythingImages());
+        var plain = Root(Everything(), images: EverythingImages());
+
+        Assert.Equal(garden, ByClass(root, "newsletter-hero-garden").Any());
+        Assert.Equal(Number(plain, "height"), Number(root, "height"));
+    }
+
+    [Fact]
+    public void Theme_CollectibleFrame_InsetsEachCardsPictureInsideItsBox_AndKeepsTheLayout()
+    {
+        var framed = Root(Everything() with { Theme = new NewsletterTheme { CardFrame = NewsletterCardFrame.Collectible } }, images: EverythingImages());
+        var plain = Root(Everything(), images: EverythingImages());
+
+        var frames = ByClass(framed, "newsletter-card-frame").ToList();
+        Assert.Equal(ByClass(plain, "newsletter-card").Count(), frames.Count);
+        Assert.Equal(frames.Count, ByClass(framed, "newsletter-card-badge").Count());
+        Assert.Empty(ByClass(plain, "newsletter-card-frame"));
+        Assert.Equal(Number(plain, "height"), Number(framed, "height"));
+
+        // The frame takes the plain picture's place; the picture is inside it.
+        var box = frames[0].Element(Svg + "rect")!;
+        var plainPicture = ByClass(plain, "newsletter-card").First().Descendants(Svg + "clipPath").First().Element(Svg + "rect")!;
+        var picture = ByClass(framed, "newsletter-card").First().Descendants(Svg + "clipPath").First().Element(Svg + "rect")!;
+        Assert.Equal(Number(plainPicture, "width"), Number(box, "width"), 6);
+        Assert.True(Number(picture, "width") < Number(box, "width"));
+    }
+
     [Fact]
     public void Theme_TagRibbon_IsAPillAsWideAsItsHeading_CentredBetweenTwoSparkles()
     {
