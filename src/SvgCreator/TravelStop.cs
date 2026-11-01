@@ -27,4 +27,12 @@ public sealed record TravelStop(int Sequence, string Name, double Latitude, doub
     /// are numbered, consecutively. Default: false, a place.
     /// </summary>
     public bool Waypoint { get; init; }
+
+    /// <summary>
+    /// The train, bus or ferry line ridden from this stop to the next (e.g. <c>13</c>, <c>Maglev</c>);
+    /// none means that leg is walked. Only a metro map (<see cref="TravelMapLayout.Metro"/>) uses
+    /// it: each ride is drawn as a thick line badged with its line, and a station where lines meet
+    /// as an interchange. Default: none.
+    /// </summary>
+    public string? Line { get; init; }
 }

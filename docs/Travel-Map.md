@@ -7,6 +7,8 @@ svgcreator map stops.json -o trip.svg                     # 1024 × 560, white o
 svgcreator map stops.json -o trip.svg --width 1600 --height 1000   # more room, same text size
 svgcreator map stops.json -o trip.svg --layout panel      # names on the map, details in a side panel
 svgcreator map stops.json -o trip.svg --layout names      # names on the map and nothing more: an overview
+svgcreator map stops.json -o trip.svg --layout metro      # a metro map: 45° angles, rides badged with their lines
+svgcreator map stops.json -o trip.svg --layout metro-panel   # a metro map, the itinerary always in the panel
 svgcreator map stops.json -o trip.svg --route lines       # route lines without arrowheads; --route none for markers only
 svgcreator map stops.json -o trip.svg --breaks none       # strictly to scale: don't pull far stops in
 svgcreator map stops.json -o trip.svg --waypoint-color '#7fdbca'   # waypoints in another colour
@@ -14,14 +16,14 @@ svgcreator map stops.json -o print.svg --width 4096 --height 2240 --scale 4   # 
 svgcreator map stops.json -o trip.svg --background-color '#0b3d2e' --foreground-color '#f5f0e1'
 ```
 
-The stops file is a JSON array. `time`, `description` (an array of lines) and `waypoint` are optional:
+The stops file is a JSON array. `time`, `description` (an array of lines), `waypoint` and `line` are optional:
 
 ```json
 [
   { "sequence": 1, "name": "City Hall", "time": "Day 1 · 9 am",
     "description": ["Meet at Exit B", "Walk the Padang"],
     "latitude": 1.2931, "longitude": 103.8520 },
-  { "sequence": 2, "name": "City Hall MRT", "waypoint": true, "time": "Day 1 · 10 am",
+  { "sequence": 2, "name": "City Hall MRT", "waypoint": true, "line": "NS", "time": "Day 1 · 10 am",
     "description": ["North–South Line to Khatib"], "latitude": 1.2932, "longitude": 103.8521 },
   { "sequence": 3, "name": "Singapore Zoo", "time": "Day 1 · 11 am",
     "latitude": 1.4043, "longitude": 103.7930 }
@@ -56,12 +58,14 @@ Text, markers, arrows and margins are fractions of a fixed unit, 560 px times `-
 | `panel` | Each marker's place names | A numbered itinerary beside the map |
 | `names` | Each marker's place names | Left out |
 | `auto` (default) | `labels` when every label fits without covering an arrow, a marker or another label; otherwise `panel` | |
+| `metro` | A [metro map](#metro-map) instead of one to scale | As `auto` |
+| `metro-panel` | A metro map | In the panel, as `panel` |
 
 `names` is for small maps, such as a map in a [newsletter](Newsletter.md), where it's the default. A Shanghai day of 23 stops with metro directions, drawn 576 px wide, put its panel text at about 6 px. Nobody can read that, and the newsletter's cards tell the story anyway.
 
 The panel (`Svg/ItineraryPanel.cs`) takes the right 40% of a landscape canvas or the bottom 45% of a portrait one, behind a faint divider. It lists every stop in travel order, revisits included, each with a number badge like its marker. Its text is 80% of the map's, since it's a reference list. Entries flow down in up to three columns. For each column count, the largest text that fits is found by bisection, which works because smaller text never wraps later. Among the counts within 10% of the largest text, the one that wraps the fewest lines wins, with fewer columns on a tie. Otherwise two narrow columns can beat one at slightly smaller text and break even "Day 1 · 8 am" in two. All the panel's text shrinks evenly, to no less than 30%, when even three columns don't fit.
 
-The map keeps true scale (positions are never bent to make room). A real trip showed why the panel is needed: a day in Shanghai with ten stops within about 15 km of each other and the airport 40 km out. At true scale those ten get a small patch of the map, and paragraphs of metro directions can't fit there at any readable size.
+The map keeps true scale (positions are never bent to make room; [`metro`](#metro-map) is the exception). A real trip showed why the panel is needed: a day in Shanghai with ten stops within about 15 km of each other and the airport 40 km out. At true scale those ten get a small patch of the map, and paragraphs of metro directions can't fit there at any readable size.
 
 ## Pipeline
 
@@ -179,6 +183,54 @@ Text that fits the canvas can still collide when a trip is dense. The text then 
 ### Wrapping Chinese and Japanese
 
 Lines can also break between any two CJK characters, which Chinese and Japanese break without spaces (see [wrapping names](#wrapping-names) for which break comes first). Without this, a name like `汉庭酒店(上海金沙江路地铁站店)` is one unbreakable word that runs into the next column. Brackets and punctuation stay with the character they belong to, so no line starts with `)`, `：` or `·`, or ends with `(`.
+
+## Metro map
+
+`--layout metro` keeps the trip's **directions** and drops its **distances**. Every segment runs at a multiple of 45°, every ride is one length, and each line's rides are drawn once. Code: `Mapping/Schematic.cs` (the layout), drawn by `TravelMapWriter.MetroMarkers`.
+
+**Lesson: a map to scale fails a transit day.** The Monday in Shanghai was three walking clusters, each a few hundred metres across, joined by Line 13 over 5–17 km. At true scale each cluster got a few pixels, nudging pushed its markers into each other's arrows, and the ride home crossed the whole map in one straight arrow, through both other clusters. Nothing in label placement could fix that, because the problem was the scale.
+
+### Which leg is a ride
+
+`line` on a stop names the line ridden **from** it to the next stop (`"13"`, `"Maglev"`); a leg with no `line` is walked. Reading "Take Line 13" out of the description would be fragile, so it's explicit. Only `metro` uses it; the other layouts ignore it.
+
+Every station where you board, change or get off has to be its own waypoint. The Saturday file first had the ride from Daduhe Road end at the hotel: Jinshajiang Road, where you get off, wasn't a stop, so the map drew a walk from Daduhe Road to the hotel.
+
+### The graph
+
+Places are the [same places](#one-marker-per-place) as on the map to scale. Each pair of places joined by a leg gets one segment: a walk, or a ride on its line.
+
+- **A ride along stretches already drawn is drawn by them.** Rides are added shortest first, and one whose ends the line already joins is skipped. The ride home from Xuelin Road to Jinshajiang Road on Line 13 passes the morning's stations, so it adds nothing.
+- **A ride past a station already on its line is split there.** On the Sunday, Line 10 from Wujiaochang to Hailun Road passes Siping Road, where an earlier ride on Line 10 began. It becomes Wujiaochang–Siping (already drawn) and Siping–Hailun. A station counts as on the way when it lies within the middle 80% of the ride and within 30% of its length of the line.
+- **A station on two lines or more is an interchange**, drawn as a ring.
+
+### Network and branches
+
+The **network** is the stations and the rides between them, plus any walk that links two stations. The places walked to from **one** station (a museum cluster, the hotel) are a **branch** of it.
+
+1. **Directions.** Each network segment takes the nearest of the eight compass directions to its real one, worked out from both latitude and longitude. When two segments leave a place the same way, the one closer to its real direction keeps it, and the others move to the nearest direction free at both their ends. On the Sunday, Qufu Road and Hailun Road both lie south-west of Siping Road; Qufu Road moves to south.
+2. **Positions.** Least squares, over the positions and every segment's length: each segment runs along its direction, rides about 1 long and walks 0.6. A tree solves exactly. A loop (the Sunday's ride round the city and back) closes by stretching some segments and shrinking others. A segment the loop would shrink below half its length keeps its length and gives up its angle instead.
+3. **Branches**, largest first. A branch's places sit 0.55 apart in a straight line from the station, in visit order. It takes the direction its places really lie in, among those the station has free, unless that runs into a place or crosses a segment already drawn. Only the walk out is drawn; the walk back to the station is implied, as on a metro map, where a branch is ridden both ways.
+
+With no `line` anywhere, the whole trip is the network, all walks. That works, but a trip like the busy Singapore one has loops that can't close at 45°, so legs bend and can cross. `metro` is meant for trips with lines.
+
+### Drawing
+
+| Part | Looks | Class |
+|---|---|---|
+| Ride | A thick line (0.014 units) in the foreground colour | `travel-ride` |
+| Walk | A thin dotted line | `travel-walk` |
+| Line badge | A pill on the middle of every ride, the line's name cut out of it | `travel-line-badge` |
+| Station | The waypoint dot, as on the map to scale | `travel-waypoint` |
+| Interchange | A ring in the waypoint colour, hollow, so lines stop at its edge | `travel-interchange` |
+
+A line named by a bare number gets "Line" before it on its badge: `13` reads `Line 13`, as the directions say it. A badge and a place marker are both white with a blue number, so on the Saturday the badge `2` and the hotel's `2 · 4` looked like the same kind of thing. A name (`Maglev`, or a letter code like `NS`) is printed as given, and one already written `Line 13` isn't prefixed twice.
+
+Every line is white by default, as routes are on the map to scale. Without colour, the badges tell the lines apart, so **every** ride is badged, not one per line: at an interchange where one line runs straight through, a single badge would leave the other half unnamed.
+
+`metro-panel` always puts the itinerary in the panel. Without the distances, the Saturday's badges got narrow enough for every label to fit beside its marker, so `metro` put the text on the map, shrunk to near the 60% floor, while the Sunday and Monday went to the panel. For days meant to be seen together, the same layout every day matters more than the text being beside the markers. The Shanghai maps use `metro-panel`. On the command line, hyphens in `--layout` are ignored, so `metro-panel` is `MetroPanel`.
+
+Badges carry no distances. The first version put the real length on rides to a far stop (see [scale breaks](#far-stops-scale-breaks)): `Maglev · ≈ 25 km`, and on the Saturday also `4 · ≈ 12 km` and `15 · ≈ 9.5 km`. They didn't help plan anything: what a reader needs is which line to take and where to get off. On the map to scale a distance explains a visible break; here no ride is to scale, so there's nothing for it to explain. Nothing is nudged: the schematic already spaces the places. Labels, the panel, text shrinking and fitting to the canvas are the same as on the map to scale; badges count as obstacles for labels.
 
 ## Text widths, sans-serif
 

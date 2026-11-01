@@ -25,6 +25,21 @@ public enum TravelMapLayout
     /// a glance, for a small map (such as in a newsletter) where the details wouldn't be readable.
     /// </summary>
     Names,
+
+    /// <summary>
+    /// A metro map: true distances are dropped, directions kept. Every segment runs at a multiple
+    /// of 45° and rides are all one length; each line's rides are drawn once, badged with its
+    /// <see cref="TravelStop.Line"/>, and the places walked to from a station hang off it on a
+    /// dotted branch. Text goes beside the markers when it fits, as with <see cref="Auto"/>, and
+    /// to the panel when it doesn't. <see cref="TravelMapOptions.Route"/> doesn't apply.
+    /// </summary>
+    Metro,
+
+    /// <summary>
+    /// A metro map, as <see cref="Metro"/>, with the itinerary always in the panel, as
+    /// <see cref="Panel"/>: so that the maps of several days look alike, whichever would fit.
+    /// </summary>
+    MetroPanel,
 }
 
 /// <summary>How a travel map shows the route from one place to the next.</summary>

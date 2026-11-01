@@ -38,6 +38,16 @@ internal static class TravelMapWriter
     private const double ArrowMarkerGap = 0.09;    // the least space between two markers' outlines, with arrows (see MapStyle)
     private const double MinLineLength = 0.02;     // the shortest headless line worth drawing
 
+    // A metro map (see Schematic): its rides, walks, interchanges and line badges.
+    private const double RideWidth = 0.014;
+    private const double WalkWidth = 0.006;
+    private const double WalkDotSpacing = 2.2;     // in walk widths
+    internal const double InterchangeRadius = 0.017;
+    private const double InterchangeStroke = 0.006;
+    private const double BadgeTextSize = 0.024;
+    private const double BadgePadding = 0.012;     // either side of a badge's text
+    private const double BadgeHeight = 0.038;
+
     // A broken leg (see ScaleBreaks): where along it the dots start and end, their spacing in
     // stroke widths, and the halo behind its distance label.
     private const double BreakStart = 0.3;
@@ -99,7 +109,8 @@ internal static class TravelMapWriter
     /// <param name="Block">Its place's text.</param>
     /// <param name="Radius">Half its height: a numbered marker's radius, or a waypoint's small dot.</param>
     /// <param name="Waypoint">A waypoint's dot rather than a numbered place.</param>
-    internal sealed record Marker(IReadOnlyList<int> Stops, PointD Center, string Label, double HalfWidth, Block Block, double Radius, bool Waypoint = false)
+    /// <param name="Interchange">On a metro map, a waypoint where lines meet: a ring rather than a dot.</param>
+    internal sealed record Marker(IReadOnlyList<int> Stops, PointD Center, string Label, double HalfWidth, Block Block, double Radius, bool Waypoint = false, bool Interchange = false)
     {
         public RectD Bounds => new(Center.X - HalfWidth, Center.Y - Radius, 2 * HalfWidth, 2 * Radius);
     }
@@ -112,23 +123,26 @@ internal static class TravelMapWriter
         var foreground = options.ForegroundColor;
 
         // Auto keeps the text beside the markers when it fits there without colliding, and moves
-        // it to the itinerary panel when it doesn't. Names leaves it out.
+        // it to the itinerary panel when it doesn't; so does Metro. Panel and MetroPanel always use
+        // the panel; Names leaves the text out.
         var whole = new RectD(0, 0, width, height);
+        var metro = options.Layout is TravelMapLayout.Metro or TravelMapLayout.MetroPanel;
+        var breaks = options.Breaks == TravelMapBreaks.Auto;
         MapLayout? layout = null;
         ItineraryPanel.PanelLayout? panel = null;
         if (options.Layout == TravelMapLayout.Names)
         {
-            layout = Layout(ordered, whole, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: options.Breaks == TravelMapBreaks.Auto));
+            layout = Layout(ordered, whole, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: breaks));
         }
-        else if (options.Layout != TravelMapLayout.Panel)
+        else if (options.Layout is not (TravelMapLayout.Panel or TravelMapLayout.MetroPanel))
         {
-            layout = Layout(ordered, whole, unit, new MapStyle(Route: options.Route, Breaks: options.Breaks == TravelMapBreaks.Auto));
+            layout = Layout(ordered, whole, unit, new MapStyle(Route: options.Route, Breaks: breaks, Schematic: metro));
         }
 
-        if (options.Layout == TravelMapLayout.Panel || (options.Layout == TravelMapLayout.Auto && Collides(layout!, unit)))
+        if (options.Layout is TravelMapLayout.Panel or TravelMapLayout.MetroPanel || (options.Layout is TravelMapLayout.Auto or TravelMapLayout.Metro && Collides(layout!, unit)))
         {
             var (mapFrame, panelFrame) = ItineraryPanel.Split(width, height);
-            layout = Layout(ordered, mapFrame, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: options.Breaks == TravelMapBreaks.Auto));
+            layout = Layout(ordered, mapFrame, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: breaks, Schematic: metro));
             panel = ItineraryPanel.Layout(ordered, panelFrame, unit);
         }
 
@@ -150,10 +164,34 @@ internal static class TravelMapWriter
             xml.WriteAttributeString("stroke-linejoin", "round");
             foreach (var arrow in layout!.Arrows)
             {
-                WriteArrow(xml, arrow, unit, withHead: arrow.Head);
+                if (arrow.Kind == LegKind.Route)
+                {
+                    WriteArrow(xml, arrow, unit, withHead: arrow.Head);
+                }
+                else
+                {
+                    WriteSegment(xml, arrow, unit);
+                }
             }
 
             xml.WriteEndElement();
+
+            // A metro map's line badges: the line's name on the middle of each ride.
+            if (layout.Arrows.Any(a => a.Badge is not null))
+            {
+                xml.WriteStartElement("g", Namespace);
+                xml.WriteAttributeString("class", "travel-line-badges");
+                xml.WriteAttributeString("font-family", FontMetrics.Sans.Family);
+                xml.WriteAttributeString("font-size", Number(BadgeTextSize * unit));
+                xml.WriteAttributeString("font-weight", "bold");
+                xml.WriteAttributeString("text-anchor", "middle");
+                foreach (var arrow in layout.Arrows.Where(a => a.Badge is not null))
+                {
+                    WriteBadge(xml, arrow, unit, foreground, options.BackgroundColor);
+                }
+
+                xml.WriteEndElement();
+            }
 
             // Each break's real distance, on the middle of its dots, with a halo of the background
             // so the dots don't run through the text.
@@ -236,7 +274,9 @@ internal static class TravelMapWriter
     /// <param name="Control">The curve's control point; null for a straight arrow.</param>
     /// <param name="Distance">For a leg to a far stop pulled in (see <see cref="ScaleBreaks"/>): its real length, labelled on its dotted middle.</param>
     /// <param name="Head">Whether it ends in an arrowhead: on arrival at a place, with arrows drawn.</param>
-    internal sealed record Leg(PointD From, PointD To, PointD? Control = null, string? Distance = null, bool Head = true)
+    /// <param name="Kind">An arrow or line of the route, or on a metro map a ride or a walk.</param>
+    /// <param name="Badge">On a metro map, a ride's line, printed on a badge at its middle.</param>
+    internal sealed record Leg(PointD From, PointD To, PointD? Control = null, string? Distance = null, bool Head = true, LegKind Kind = LegKind.Route, string? Badge = null)
     {
         private const int CurveSegments = 12;
 
@@ -285,11 +325,20 @@ internal static class TravelMapWriter
         }
     }
 
+    /// <summary>What a leg is: part of the route between places, or on a metro map a ride or a walk.</summary>
+    internal enum LegKind
+    {
+        Route,
+        Ride,
+        Walk,
+    }
+
     /// <summary>How the map is drawn: what its labels say, and how the route between places is shown.</summary>
     /// <param name="NamesOnly">Label markers with their places' names only (the panel has the rest).</param>
     /// <param name="Route">Arrows, lines without heads, or no route at all.</param>
     /// <param name="Breaks">Pull far stops in, breaking the legs to them (see <see cref="ScaleBreaks"/>).</param>
-    internal sealed record MapStyle(bool NamesOnly = false, TravelMapRoute Route = TravelMapRoute.Arrows, bool Breaks = true)
+    /// <param name="Schematic">A metro map (see <see cref="Mapping.Schematic"/>) rather than one to scale; the route style doesn't apply.</param>
+    internal sealed record MapStyle(bool NamesOnly = false, TravelMapRoute Route = TravelMapRoute.Arrows, bool Breaks = true, bool Schematic = false)
     {
         /// <summary>
         /// The least space between markers' outlines, as a fraction of the unit: room for a visible
@@ -386,7 +435,7 @@ internal static class TravelMapWriter
             total += layout.Markers.Sum(m => bounds.OverlapArea(m.Bounds));
             var padded = bounds.Inflate(stroke / 2);
             total += layout.Arrows.SelectMany(a => a.Segments()).Sum(a => LabelPlacer.ClippedLength(a.From, a.To, padded) * stroke);
-            total += layout.Arrows.Where(a => a.Distance is not null).Sum(a => bounds.OverlapArea(DistanceBounds(a, unit)));
+            total += Obstacles(layout.Arrows, unit).Sum(bounds.OverlapArea);
         }
 
         return total;
@@ -417,11 +466,15 @@ internal static class TravelMapWriter
         var full = canvas.Inset(MarkerRadius * unit);
         var raw = ordered.Select(s => WebMercator.Project(s.Latitude, s.Longitude)).ToList();
         var (projected, groups) = style.Breaks ? ScaleBreaks.Apply(raw) : ([.. raw], new int[raw.Count]);
+        var metro = style.Schematic ? MetroPlan.For(ordered, raw) : null;
+        (List<Marker> Markers, List<Leg> Arrows) Build(RectD area) => metro is null
+            ? Markers(ordered, projected, groups, area, unit, text, style)
+            : MetroMarkers(ordered, metro, area, unit, text, style);
 
         var area = full;
         for (var round = 0; round < FitRounds; round++)
         {
-            var (markers, arrows) = Markers(ordered, projected, groups, area, unit, text, style);
+            var (markers, arrows) = Build(area);
             var placements = PlaceLabels(markers, arrows, canvas, unit, text, offCanvasWeight);
             // Labels, and markers too: a pill for several stops is wider than the circle the area
             // was inset for.
@@ -451,7 +504,7 @@ internal static class TravelMapWriter
         // The map can shrink no further for its labels, but markers must stay on the canvas: a
         // wide pill pulls the map in past the floor if it has to. Labels that would still overrun
         // are moved onto the canvas, each spot judged where its label would end up.
-        var (lastMarkers, lastArrows) = Markers(ordered, projected, groups, area, unit, text, style);
+        var (lastMarkers, lastArrows) = Build(area);
         for (var round = 0; round < FitRounds; round++)
         {
             var left = lastMarkers.Max(m => canvas.X - m.Bounds.X);
@@ -462,7 +515,7 @@ internal static class TravelMapWriter
             }
 
             area = new RectD(area.X + Math.Max(0, left), area.Y, Math.Max(0, area.Width - Math.Max(0, left) - Math.Max(0, right)), area.Height);
-            (lastMarkers, lastArrows) = Markers(ordered, projected, groups, area, unit, text, style);
+            (lastMarkers, lastArrows) = Build(area);
         }
 
         var last = PlaceLabels(lastMarkers, lastArrows, canvas, unit, text, offCanvasWeight, keepOnCanvas: true);
@@ -598,6 +651,68 @@ internal static class TravelMapWriter
         return (markers, arrows);
     }
 
+    /// <summary>A metro map's plan, worked out once: the trip's places and their schematic layout.</summary>
+    internal sealed record MetroPlan(IReadOnlyList<Place> Places, Schematic.Map Map)
+    {
+        public static MetroPlan For(IReadOnlyList<TravelStop> ordered, IReadOnlyList<PointD> projected)
+        {
+            var places = TravelMapWriter.Places(ordered, projected);
+            var placeOf = new int[ordered.Count];
+            for (var p = 0; p < places.Count; p++)
+            {
+                foreach (var stop in places[p].Members)
+                {
+                    placeOf[stop] = p;
+                }
+            }
+
+            return new MetroPlan(places, Schematic.Build(ordered, placeOf, [.. places.Select(p => p.Center)]));
+        }
+    }
+
+    /// <summary>
+    /// A metro map's markers and segments, fitted to <paramref name="area"/>. Nothing is nudged:
+    /// the schematic already spaces the places. Walks are drawn first, under the rides; every
+    /// ride is badged with its line. No distances: which line to take and where to get off is
+    /// what a reader plans with, and no ride here is to scale anyway.
+    /// </summary>
+    private static (List<Marker> Markers, List<Leg> Arrows) MetroMarkers(
+        IReadOnlyList<TravelStop> ordered, MetroPlan plan, RectD area, double unit, double text, MapStyle style)
+    {
+        var positions = MapFit.Fit(plan.Map.Positions, area);
+        var numbers = Numbers(ordered);
+        var markers = plan.Places
+            .Select((p, i) => MarkerFor(p with { Center = positions[i] }, ordered, numbers, unit, text, style.NamesOnly))
+            .Select((m, i) => m.Waypoint && plan.Map.Interchanges[i]
+                ? m with { Interchange = true, Radius = InterchangeRadius * unit, HalfWidth = InterchangeRadius * unit }
+                : m)
+            .ToList();
+
+        var legs = new List<Leg>();
+        foreach (var edge in plan.Map.Edges.OrderBy(e => e.Line is null ? 0 : 1))
+        {
+            if (Arrow(markers[edge.From], markers[edge.To], unit, 0, MinLineLength) is not { } leg)
+            {
+                continue;
+            }
+
+            legs.Add(edge.Line is null
+                ? leg with { Head = false, Kind = LegKind.Walk }
+                : leg with { Head = false, Kind = LegKind.Ride, Badge = BadgeText(edge.Line) });
+        }
+
+        return (markers, legs);
+    }
+
+    // A line's badge: a bare number gets "Line" before it, or it reads as a place's number;
+    // a name (Maglev, NS) is printed as given.
+    internal static string BadgeText(string line) => line.All(char.IsAsciiDigit) ? $"Line {line}" : line;
+
+    // What labels must keep clear of besides markers, arrows and each other: break distances and line badges.
+    private static IEnumerable<RectD> Obstacles(IEnumerable<Leg> arrows, double unit) =>
+        arrows.Where(a => a.Distance is not null).Select(a => DistanceBounds(a, unit))
+            .Concat(arrows.Where(a => a.Badge is not null).Select(a => BadgeBounds(a, unit)));
+
     private static LabelPlacement[] PlaceLabels(
         IReadOnlyList<Marker> markers, IReadOnlyList<Leg> arrows,
         RectD canvas, double unit, double text, double offCanvasWeight, bool keepOnCanvas = false)
@@ -607,7 +722,7 @@ internal static class TravelMapWriter
             m.Block.Width, m.Block.Height, m.Block.Lines[0].Height)).ToList();
         return LabelPlacer.Place(
             requests, [.. arrows.SelectMany(a => a.Segments())], ArrowWidth * unit, LabelGap * unit, canvas, offCanvasWeight, keepOnCanvas,
-            [.. arrows.Where(a => a.Distance is not null).Select(a => DistanceBounds(a, unit))]);
+            [.. Obstacles(arrows, unit)]);
     }
 
     // Each marker's block in its placed bounds, its text aligned toward the marker: right-aligned
@@ -784,6 +899,58 @@ internal static class TravelMapWriter
         xml.WriteEndElement();
     }
 
+    // A metro map's segment: a ride is a thick line; a walk a thin dotted one, its round caps on
+    // zero-length dashes drawing the dots. Both run under the stations' dots, which join them up.
+    private static void WriteSegment(XmlWriter xml, Leg leg, double unit)
+    {
+        var walk = leg.Kind == LegKind.Walk;
+        xml.WriteStartElement("path", Namespace);
+        xml.WriteAttributeString("class", walk ? "travel-walk" : "travel-ride");
+        xml.WriteAttributeString("d", leg.PathData(0, 1));
+        xml.WriteAttributeString("fill", "none");
+        xml.WriteAttributeString("stroke-width", Number((walk ? WalkWidth : RideWidth) * unit));
+        if (walk)
+        {
+            xml.WriteAttributeString("stroke-dasharray", $"0 {Number(WalkDotSpacing * WalkWidth * unit)}");
+        }
+
+        xml.WriteEndElement();
+    }
+
+    // A ride's line badge: a pill in the foreground colour, centred on the ride, the line's name
+    // cut out of it in the background colour.
+    private static RectD BadgeBounds(Leg leg, double unit)
+    {
+        var width = FontMetrics.Sans.Width(leg.Badge!, BadgeTextSize * unit) + (2 * BadgePadding * unit);
+        var height = BadgeHeight * unit;
+        var middle = leg.At(0.5);
+        return new RectD(middle.X - (width / 2), middle.Y - (height / 2), Math.Max(width, height), height);
+    }
+
+    private static void WriteBadge(XmlWriter xml, Leg leg, double unit, string fill, string textColor)
+    {
+        var bounds = BadgeBounds(leg, unit);
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "travel-line-badge");
+        xml.WriteStartElement("rect", Namespace);
+        xml.WriteAttributeString("x", Number(bounds.X));
+        xml.WriteAttributeString("y", Number(bounds.Y));
+        xml.WriteAttributeString("width", Number(bounds.Width));
+        xml.WriteAttributeString("height", Number(bounds.Height));
+        xml.WriteAttributeString("rx", Number(bounds.Height / 2));
+        xml.WriteAttributeString("fill", fill);
+        xml.WriteEndElement();
+
+        // 0.35 em below the centre puts the text's middle on it, as in a marker.
+        xml.WriteStartElement("text", Namespace);
+        xml.WriteAttributeString("x", Number(bounds.Center.X));
+        xml.WriteAttributeString("y", Number(bounds.Center.Y + (0.35 * BadgeTextSize * unit)));
+        xml.WriteAttributeString("fill", textColor);
+        xml.WriteString(leg.Badge);
+        xml.WriteEndElement();
+        xml.WriteEndElement();
+    }
+
     private static string Point(PointD p) => $"{Number(p.X)} {Number(p.Y)}";
 
     // Where a broken leg's distance label sits: centred on the middle of its dots, its halo
@@ -812,6 +979,23 @@ internal static class TravelMapWriter
 
     private static void WriteMarker(XmlWriter xml, Marker marker, double unit, string fill, string textColor)
     {
+        // An interchange is a ring in the waypoint colour, hollowed out in the background's, so
+        // the lines meeting there stop at its edge.
+        if (marker.Interchange)
+        {
+            var stroke = InterchangeStroke * unit;
+            xml.WriteStartElement("circle", Namespace);
+            xml.WriteAttributeString("class", "travel-interchange");
+            xml.WriteAttributeString("cx", Number(marker.Center.X));
+            xml.WriteAttributeString("cy", Number(marker.Center.Y));
+            xml.WriteAttributeString("r", Number(marker.Radius - (stroke / 2)));
+            xml.WriteAttributeString("fill", textColor);
+            xml.WriteAttributeString("stroke", fill);
+            xml.WriteAttributeString("stroke-width", Number(stroke));
+            xml.WriteEndElement();
+            return;
+        }
+
         if (marker.Waypoint)
         {
             xml.WriteStartElement("circle", Namespace);
