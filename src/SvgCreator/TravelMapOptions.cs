@@ -40,6 +40,12 @@ public enum TravelMapLayout
     /// <see cref="Panel"/>: so that the maps of several days look alike, whichever would fit.
     /// </summary>
     MetroPanel,
+
+    /// <summary>
+    /// A metro map, as <see cref="Metro"/>, with its markers named and nothing more, as
+    /// <see cref="Names"/>: an overview for a small map, such as in a newsletter.
+    /// </summary>
+    MetroNames,
 }
 
 /// <summary>How a travel map shows the route from one place to the next.</summary>

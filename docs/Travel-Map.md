@@ -9,6 +9,7 @@ svgcreator map stops.json -o trip.svg --layout panel      # names on the map, de
 svgcreator map stops.json -o trip.svg --layout names      # names on the map and nothing more: an overview
 svgcreator map stops.json -o trip.svg --layout metro      # a metro map: 45° angles, rides badged with their lines
 svgcreator map stops.json -o trip.svg --layout metro-panel   # a metro map, the itinerary always in the panel
+svgcreator map stops.json -o trip.svg --layout metro-names   # a metro map with names only: for a newsletter
 svgcreator map stops.json -o trip.svg --route lines       # route lines without arrowheads; --route none for markers only
 svgcreator map stops.json -o trip.svg --breaks none       # strictly to scale: don't pull far stops in
 svgcreator map stops.json -o trip.svg --waypoint-color '#7fdbca'   # waypoints in another colour
@@ -60,6 +61,7 @@ Text, markers, arrows and margins are fractions of a fixed unit, 560 px times `-
 | `auto` (default) | `labels` when every label fits without covering an arrow, a marker or another label; otherwise `panel` | |
 | `metro` | A [metro map](#metro-map) instead of one to scale | As `auto` |
 | `metro-panel` | A metro map | In the panel, as `panel` |
+| `metro-names` | A metro map | Left out, as `names` |
 
 `names` is for small maps, such as a map in a [newsletter](Newsletter.md), where it's the default. A Shanghai day of 23 stops with metro directions, drawn 576 px wide, put its panel text at about 6 px. Nobody can read that, and the newsletter's cards tell the story anyway.
 
@@ -229,6 +231,8 @@ A line named by a bare number gets "Line" before it on its badge: `13` reads `Li
 Every line is white by default, as routes are on the map to scale. Without colour, the badges tell the lines apart, so **every** ride is badged, not one per line: at an interchange where one line runs straight through, a single badge would leave the other half unnamed.
 
 `metro-panel` always puts the itinerary in the panel. Without the distances, the Saturday's badges got narrow enough for every label to fit beside its marker, so `metro` put the text on the map, shrunk to near the 60% floor, while the Sunday and Monday went to the panel. For days meant to be seen together, the same layout every day matters more than the text being beside the markers. The Shanghai maps use `metro-panel`. On the command line, hyphens in `--layout` are ignored, so `metro-panel` is `MetroPanel`.
+
+`metro-names` is the metro counterpart of `names`, for a [newsletter](Newsletter.md): its map is a column wide, too small for a day's details. In a newsletter file it's `"layout": "metroNames"`, since the JSON reads enum names, not hyphens. Without it, the newsletter drew the Shanghai days with its default `names`, the map to scale, and the metro maps made with `map` didn't appear in it.
 
 Badges carry no distances. The first version put the real length on rides to a far stop (see [scale breaks](#far-stops-scale-breaks)): `Maglev · ≈ 25 km`, and on the Saturday also `4 · ≈ 12 km` and `15 · ≈ 9.5 km`. They didn't help plan anything: what a reader needs is which line to take and where to get off. On the map to scale a distance explains a visible break; here no ride is to scale, so there's nothing for it to explain. Nothing is nudged: the schematic already spaces the places. Labels, the panel, text shrinking and fitting to the canvas are the same as on the map to scale; badges count as obstacles for labels.
 

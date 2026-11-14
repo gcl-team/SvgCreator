@@ -270,10 +270,25 @@ public sealed record NewsletterMap : NewsletterBlock
     /// <summary>
     /// Where each stop's time and description go. Default (null): <see cref="TravelMapLayout.Names"/>,
     /// the places' names alone, since a map the column's width is too small for a day's details;
-    /// the cards around it tell the story.
+    /// the cards around it tell the story. <see cref="TravelMapLayout.MetroNames"/> is its metro-map
+    /// counterpart, for a day on trains.
     /// </summary>
     /// <remarks>Nullable, not defaulting to Names, because a JSON reader sets a missing enum to 0 (<see cref="TravelMapLayout.Auto"/>).</remarks>
     public TravelMapLayout? Layout { get; init; }
+
+    /// <summary>
+    /// The map's own canvas width in pixels, as the <c>map</c> command's <c>--width</c>. Set, the
+    /// map is drawn exactly as that command draws it at this size, with its own text sizes, and
+    /// the whole drawing is scaled to the column: it looks the same as the standalone map, only
+    /// smaller. Default (null): the column's width, with text at body size.
+    /// </summary>
+    public int? Width { get; init; }
+
+    /// <summary>
+    /// The map's own canvas height in pixels, as the <c>map</c> command's <c>--height</c>; used with
+    /// <see cref="Width"/>. Default (null): from the width, by the trip's shape as without one.
+    /// </summary>
+    public int? Height { get; init; }
 }
 
 /// <summary>

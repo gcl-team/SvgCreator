@@ -205,7 +205,11 @@ public sealed class NewsletterGenerator : INewsletterGenerator
                     break;
                 case NewsletterMap map:
                     TravelMapOptions.Validate(map.Stops);
-                    new TravelMapOptions { Route = map.Route, Breaks = map.Breaks, Layout = map.Layout ?? TravelMapLayout.Names }.Validate();
+                    new TravelMapOptions { Route = map.Route, Breaks = map.Breaks, Layout = map.Layout ?? TravelMapLayout.Names, Width = map.Width ?? 1, Height = map.Height ?? 1 }.Validate();
+                    if (map.Height is not null && map.Width is null)
+                    {
+                        throw new ArgumentException($"{where}: a map's height needs its width too.", nameof(newsletter));
+                    }
                     break;
                 default:
                     throw new ArgumentException($"{where}: unknown block type {newsletter.Blocks[i].GetType().Name}.", nameof(newsletter));

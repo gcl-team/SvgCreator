@@ -124,15 +124,15 @@ internal static class TravelMapWriter
 
         // Auto keeps the text beside the markers when it fits there without colliding, and moves
         // it to the itinerary panel when it doesn't; so does Metro. Panel and MetroPanel always use
-        // the panel; Names leaves the text out.
+        // the panel; Names and MetroNames leave the text out.
         var whole = new RectD(0, 0, width, height);
-        var metro = options.Layout is TravelMapLayout.Metro or TravelMapLayout.MetroPanel;
+        var metro = options.Layout is TravelMapLayout.Metro or TravelMapLayout.MetroPanel or TravelMapLayout.MetroNames;
         var breaks = options.Breaks == TravelMapBreaks.Auto;
         MapLayout? layout = null;
         ItineraryPanel.PanelLayout? panel = null;
-        if (options.Layout == TravelMapLayout.Names)
+        if (options.Layout is TravelMapLayout.Names or TravelMapLayout.MetroNames)
         {
-            layout = Layout(ordered, whole, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: breaks));
+            layout = Layout(ordered, whole, unit, new MapStyle(NamesOnly: true, Route: options.Route, Breaks: breaks, Schematic: metro));
         }
         else if (options.Layout is not (TravelMapLayout.Panel or TravelMapLayout.MetroPanel))
         {
@@ -520,6 +520,24 @@ internal static class TravelMapWriter
 
         var last = PlaceLabels(lastMarkers, lastArrows, canvas, unit, text, offCanvasWeight, keepOnCanvas: true);
         return (Labelled(lastMarkers, lastArrows, last), area.Width * area.Height);
+    }
+
+    /// <summary>
+    /// The shape the stops are laid out in, height over width: on a metro map the schematic's,
+    /// otherwise the projection's, with far stops pulled in when breaks are on. 0 for stops in a
+    /// row or at one spot, infinity for stops in a column. For a caller choosing a canvas that
+    /// suits the trip, such as a newsletter, whose height is its own to choose.
+    /// </summary>
+    internal static double Shape(IReadOnlyList<TravelStop> stops, TravelMapOptions options)
+    {
+        var ordered = stops.OrderBy(s => s.Sequence).ToList();
+        var raw = ordered.Select(s => WebMercator.Project(s.Latitude, s.Longitude)).ToList();
+        IReadOnlyList<PointD> points = options.Layout is TravelMapLayout.Metro or TravelMapLayout.MetroPanel or TravelMapLayout.MetroNames
+            ? MetroPlan.For(ordered, raw).Map.Positions
+            : options.Breaks == TravelMapBreaks.Auto ? ScaleBreaks.Apply(raw).Positions : raw;
+        var spanX = points.Max(p => p.X) - points.Min(p => p.X);
+        var spanY = points.Max(p => p.Y) - points.Min(p => p.Y);
+        return spanY <= 0 ? 0 : spanX <= 0 ? double.PositiveInfinity : spanY / spanX;
     }
 
     /// <summary>

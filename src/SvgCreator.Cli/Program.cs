@@ -351,7 +351,7 @@ static Command MapCommand()
     var scale = new Option<double>("--scale") { Description = "Size of the text, markers and arrows, as a multiple of the default. They don't grow with the canvas, so a bigger canvas gives the stops more room.", DefaultValueFactory = _ => defaults.Scale };
     var route = new Option<TravelMapRoute>("--route") { Description = "Arrows: an arrow for each leg. Lines: a line without a head (the numbers give the direction). None: no route, markers only.", DefaultValueFactory = _ => defaults.Route };
     var breaks = new Option<TravelMapBreaks>("--breaks") { Description = "Auto: pull a far stop (an airport 40 km out) in towards the rest, with a dotted break labelled with the real distance. None: everything to scale.", DefaultValueFactory = _ => defaults.Breaks };
-    var layout = new Option<TravelMapLayout>("--layout") { Description = "Labels: each stop's text beside its marker. Panel: names on the map, the full itinerary in a side panel. Names: names on the map and nothing more. Auto: Labels when they fit, else Panel. Metro: a metro map at 45° angles, rides badged with each stop's \"line\", walks dotted; text as Auto. Metro-panel: a metro map with the itinerary always in the panel.",
+    var layout = new Option<TravelMapLayout>("--layout") { Description = "Labels: each stop's text beside its marker. Panel: names on the map, the full itinerary in a side panel. Names: names on the map and nothing more. Auto: Labels when they fit, else Panel. Metro: a metro map at 45° angles, rides badged with each stop's \"line\", walks dotted; text as Auto. Metro-panel: a metro map with the itinerary always in the panel. Metro-names: a metro map with names only.",
         DefaultValueFactory = _ => defaults.Layout,
         // Hyphens are allowed, so metro-panel reads as MetroPanel.
         CustomParser = result =>
@@ -362,7 +362,7 @@ static Command MapCommand()
                 return value;
             }
 
-            result.AddError($"Unknown layout '{token}'. Use auto, labels, panel, names, metro or metro-panel.");
+            result.AddError($"Unknown layout '{token}'. Use auto, labels, panel, names, metro, metro-panel or metro-names.");
             return default;
         },
     };

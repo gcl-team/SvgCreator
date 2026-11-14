@@ -110,7 +110,8 @@ internal static class NewsletterComposer
     private const double StickerGap = 22;
     private const double StickerTilt = -6;       // degrees: a stamp or postmark is stuck on at a slant
 
-    private const double MapShape = 0.62;
+    private const double MapShape = 0.62;        // a map's height for its width, at least: a wide trip's
+    private const double MaxMapShape = 1.2;      // and at most: a tall trip's metro map grows taller, to here
     private const double MapRadius = 8;
     private const double MapTextScale = 0.6;     // TravelMapOptions.Scale for a map the content's width at 640 px
 
@@ -976,8 +977,17 @@ internal static class NewsletterComposer
     private static Section Map(Context c, NewsletterMap map)
     {
         // Drawn at its size in a 640 px column and scaled with the column, like everything else.
-        var width = (int)Math.Round(c.Content / c.Unit);
-        var height = (int)Math.Round(width * MapShape);
+        // A metro map's height follows its schematic's shape: a tall trip in a short box is fitted
+        // by its height and crowds, so the box grows with it, from MapShape up to MaxMapShape. A
+        // map to scale keeps MapShape, as it always has.
+        // A map given its own canvas (Width, as the map command's) is drawn as that command draws
+        // it, text and all at their own size, and the drawing scaled to the column.
+        var width = map.Width ?? (int)Math.Round(c.Content / c.Unit);
+        var layout = map.Layout ?? TravelMapLayout.Names;
+        var shape = layout is TravelMapLayout.Metro or TravelMapLayout.MetroPanel or TravelMapLayout.MetroNames
+            ? Math.Clamp(TravelMapWriter.Shape(map.Stops, new TravelMapOptions { Layout = layout, Breaks = map.Breaks }), MapShape, MaxMapShape)
+            : MapShape;
+        var height = map.Height ?? (int)Math.Round(width * shape);
         var svg = TravelMapWriter.Write(map.Stops, new TravelMapOptions
         {
             Width = width,
@@ -985,12 +995,12 @@ internal static class NewsletterComposer
             BackgroundColor = c.PanelColor,
             ForegroundColor = c.TextColor,
             WaypointColor = c.HighlightColor,
-            Scale = MapTextScale,
+            Scale = map.Width is null ? MapTextScale : 1,
             Route = map.Route,
             Breaks = map.Breaks,
-            Layout = map.Layout ?? TravelMapLayout.Names,
+            Layout = layout,
         });
-        var drawnHeight = height * c.Unit;
+        var drawnHeight = map.Width is null ? height * c.Unit : height * (c.Content / width);
 
         return new Section(drawnHeight, (xml, top) =>
         {

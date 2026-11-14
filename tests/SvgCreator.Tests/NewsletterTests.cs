@@ -403,6 +403,40 @@ public class NewsletterTests
     }
 
     [Fact]
+    public void Map_MetroGrowsTallerForATallTrip()
+    {
+        // Three stations a ride apart, running north to south or west to east.
+        TravelStop[] Trip(double dLat, double dLon) =>
+            [.. Enumerable.Range(0, 3).Select(i => new TravelStop(i + 1, $"Station {i}", 31.2 + (i * dLat), 121.4 + (i * dLon)) { Waypoint = i > 0, Line = i < 2 ? "1" : null })];
+        double Height(TravelStop[] stops)
+        {
+            var root = Root(Minimal with { Blocks = [new NewsletterMap { Stops = stops, Layout = TravelMapLayout.MetroNames }] });
+            var map = root.Descendants(Svg + "svg").Single(e => (string?)e.Attribute("class") == "newsletter-map-drawing");
+            return double.Parse((string)map.Attribute("height")!, System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        Assert.True(Height(Trip(-0.02, 0)) > Height(Trip(0, 0.02)) * 1.5);
+    }
+
+    [Fact]
+    public void Map_WithItsOwnCanvasIsTheStandaloneMapScaledToTheColumn()
+    {
+        var block = new NewsletterMap { Stops = Stops, Layout = TravelMapLayout.Panel, Width = 1600, Height = 1000 };
+        var root = Root(Minimal with { Blocks = [block] });
+        var nested = root.Descendants(Svg + "svg").Single(e => (string?)e.Attribute("class") == "newsletter-map-drawing");
+        var standalone = XDocument.Parse(new TravelMapGenerator().Create(Stops, new TravelMapOptions { Layout = TravelMapLayout.Panel, Width = 1600, Height = 1000 })).Root!;
+
+        // The same drawing: every label and its size, at the standalone map's coordinates.
+        Assert.Equal("0 0 1600 1000", (string?)nested.Attribute("viewBox"));
+        Assert.Equal(
+            standalone.Descendants(Svg + "tspan").Select(t => (t.Value, (string?)t.Attribute("font-size"))),
+            nested.Descendants(Svg + "tspan").Select(t => (t.Value, (string?)t.Attribute("font-size"))));
+        var width = double.Parse((string)nested.Attribute("width")!, System.Globalization.CultureInfo.InvariantCulture);
+        var height = double.Parse((string)nested.Attribute("height")!, System.Globalization.CultureInfo.InvariantCulture);
+        Assert.Equal(1000.0 / 1600, height / width, 3);
+    }
+
+    [Fact]
     public void Options_AreValidated()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => Create(Minimal, new NewsletterOptions { Width = 100 }));

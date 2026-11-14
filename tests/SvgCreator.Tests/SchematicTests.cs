@@ -168,4 +168,17 @@ public class SchematicTests
     [InlineData("Line 13", "Line 13")]
     public void BadgeText_PrefixesOnlyBareNumbers(string line, string expected) =>
         Assert.Equal(expected, global::SvgCreator.Svg.TravelMapWriter.BadgeText(line));
+
+    [Fact]
+    public void Create_MetroNamesDrawsAMetroMapWithNamesOnly()
+    {
+        var trip = Trip((Hotel, null), (West, "13"), (Middle, null), (Museum, null)).Select(s => s with { Time = "Day 1 · 9 am" }).ToList();
+
+        var root = XDocument.Parse(new TravelMapGenerator().Create(trip, new TravelMapOptions { Layout = TravelMapLayout.MetroNames })).Root!;
+        IEnumerable<XElement> ByClass(string name) => root.Descendants().Where(e => (string?)e.Attribute("class") == name);
+
+        Assert.Single(ByClass("travel-ride"));
+        Assert.Empty(ByClass("travel-time"));
+        Assert.Empty(ByClass("travel-panel"));
+    }
 }
