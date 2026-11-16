@@ -17,7 +17,7 @@ namespace SvgCreator.Composition;
 /// </summary>
 internal static class NewsletterComposer
 {
-    private const double ReferenceWidth = 640;
+    internal const double ReferenceWidth = 640;
 
     // The font stacks: Latin in the faces FontMetrics measured, CJK from whichever of the rest the
     // viewer has. Every CJK face sets its characters 1 em wide, as FontMetrics assumes.
@@ -25,8 +25,8 @@ internal static class NewsletterComposer
     internal const string SerifFamily = "Georgia, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif CJK SC', serif";
 
     private const double Padding = 32;           // the column's edge to the body's content
-    private const double Ascent = 0.8;           // a line's baseline below the top of its glyphs, in em
-    private const double MutedOpacity = 0.75;    // captions, labels and small print
+    internal const double Ascent = 0.8;          // a line's baseline below the top of its glyphs, in em
+    internal const double MutedOpacity = 0.75;   // captions, labels and small print
 
     private const double HeaderHeight = 84;
     private const double LogoWidth = 300;
@@ -55,9 +55,9 @@ internal static class NewsletterComposer
     private const double BodyTop = 32;
     private const double BlockGap = 28;
     private const double BodyBottom = 44;
-    private const double BodySize = 15;
-    private const double BodyLineHeight = 1.7;   // in em
-    private const double ParagraphGap = 6;
+    internal const double BodySize = 15;
+    internal const double BodyLineHeight = 1.7;  // in em
+    internal const double ParagraphGap = 6;
 
     private const double RibbonHeight = 42;
     private const double RibbonInset = 44;       // between the content's edge and the bar, for its pixel ends
@@ -146,10 +146,10 @@ internal static class NewsletterComposer
     private const string PatternId = "newsletter-backdrop-pattern";
 
     /// <summary>A part of the column: its height, and how to write it with its top at a given y.</summary>
-    private sealed record Section(double Height, Action<XmlWriter, double> Write);
+    internal sealed record Section(double Height, Action<XmlWriter, double> Write);
 
     /// <summary>What every section is laid out with.</summary>
-    private sealed record Context(NewsletterOptions Options, NewsletterTheme Theme, double Unit, NewsletterImages Images, CancellationToken CancellationToken)
+    internal sealed record Context(NewsletterOptions Options, NewsletterTheme Theme, double Unit, NewsletterImages Images, CancellationToken CancellationToken)
     {
         public double Width => Options.Width;
 
@@ -192,7 +192,7 @@ internal static class NewsletterComposer
     }
 
     /// <summary>Text broken into lines: each line's runs and top, and the block's size.</summary>
-    private sealed record Text(IReadOnlyList<(IReadOnlyList<Run> Runs, double Top)> Lines, double Size, double Width, double Height)
+    internal sealed record Text(IReadOnlyList<(IReadOnlyList<Run> Runs, double Top)> Lines, double Size, double Width, double Height)
     {
         public double LineHeight { get; init; } = Size * BodyLineHeight;
     }
@@ -509,7 +509,7 @@ internal static class NewsletterComposer
         xml.WriteEndElement();
     }
 
-    private static void Circle(XmlWriter xml, double x, double y, double r, string? fill = null)
+    internal static void Circle(XmlWriter xml, double x, double y, double r, string? fill = null)
     {
         xml.WriteStartElement("circle", Namespace);
         xml.WriteAttributeString("cx", Number(x));
@@ -861,7 +861,7 @@ internal static class NewsletterComposer
     }
 
     // A pill (or with square corners, a box), wide enough for its text and at least half the content.
-    private static Section Button(Context c, NewsletterButton button)
+    internal static Section Button(Context c, NewsletterButton button)
     {
         var height = ButtonHeight * c.Unit;
         var padding = ButtonTextPadding * c.Unit;
@@ -883,7 +883,7 @@ internal static class NewsletterComposer
     }
 
     // A small label over a box with the value set large in it.
-    private static Section Stats(Context c, NewsletterStats stats)
+    internal static Section Stats(Context c, NewsletterStats stats)
     {
         var label = stats.Label is { } line ? OneLine(c, line, StatsLabelSize * c.Unit, c.Content) : null;
         var labelHeight = label is null ? 0 : label.Height + (StatsLabelGap * c.Unit);
@@ -913,7 +913,7 @@ internal static class NewsletterComposer
     }
 
     // Text beside a sticker on the left: the picture, a postage stamp of it, or a postmark traced from it.
-    private static Section Callout(Context c, NewsletterCallout callout)
+    internal static Section Callout(Context c, NewsletterCallout callout)
     {
         var size = StickerSize * c.Unit;
         var gap = StickerGap * c.Unit;
@@ -974,7 +974,7 @@ internal static class NewsletterComposer
     }
 
     // A travel map across the content, drawn by the map's own writer and nested, rounded.
-    private static Section Map(Context c, NewsletterMap map)
+    internal static Section Map(Context c, NewsletterMap map)
     {
         // Drawn at its size in a 640 px column and scaled with the column, like everything else.
         // A metro map's height follows its schematic's shape: a tall trip in a short box is fitted
@@ -1119,7 +1119,7 @@ internal static class NewsletterComposer
     /// A photo filling its box, cropped and tinted as the theme says; in a template, its slot
     /// instead: a hole of the box's shape, rounded and cut by <paramref name="edgeClip"/> like the photo.
     /// </summary>
-    private static void Photo(XmlWriter xml, Context c, string name, RectD box, double radius, bool? tint, string? edgeClip = null)
+    internal static void Photo(XmlWriter xml, Context c, string name, RectD box, double radius, bool? tint, string? edgeClip = null)
     {
         if (c.Images.Template)
         {
@@ -1135,7 +1135,7 @@ internal static class NewsletterComposer
     /// The footer's icon links, centred in a row: each a circle in the band's text colour with
     /// its icon cut out of it in the band colour, so it reads in every theme.
     /// </summary>
-    private static void WriteSocial(XmlWriter xml, Context c, IReadOnlyList<NewsletterIconLink> icons, double top, double size)
+    internal static void WriteSocial(XmlWriter xml, Context c, IReadOnlyList<NewsletterIconLink> icons, double top, double size)
     {
         var gap = SocialGap * c.Unit;
         var x = (c.Width - (icons.Count * size) - ((icons.Count - 1) * gap)) / 2;
@@ -1172,7 +1172,7 @@ internal static class NewsletterComposer
     /// paragraph is wrapped to the narrowest width that takes no more lines, so centred text
     /// doesn't leave one word alone on its last line.
     /// </summary>
-    private static Text Lay(Context c, IEnumerable<string> paragraphs, double size, double width, double paragraphGap, double lineHeight = BodyLineHeight, bool balance = false)
+    internal static Text Lay(Context c, IEnumerable<string> paragraphs, double size, double width, double paragraphGap, double lineHeight = BodyLineHeight, bool balance = false)
     {
         var lines = new List<(IReadOnlyList<Run> Runs, double Top)>();
         var (top, widest) = (0.0, 0.0);
@@ -1213,14 +1213,14 @@ internal static class NewsletterComposer
     }
 
     /// <summary>One line, made smaller until it fits <paramref name="width"/>.</summary>
-    private static Text OneLine(Context c, string text, double size, double width)
+    internal static Text OneLine(Context c, string text, double size, double width)
     {
         var natural = c.Metrics.Width(AccentText.Plain(text), size);
         var fitted = natural > width ? size * width / natural : size;
         return Lay(c, [text], fitted, double.PositiveInfinity, 0, 1.3);
     }
 
-    private static void WriteText(XmlWriter xml, Context c, Text text, double x, double top, string anchor, string className, bool bold = false, bool muted = false, bool underline = false, string? fill = null)
+    internal static void WriteText(XmlWriter xml, Context c, Text text, double x, double top, string anchor, string className, bool bold = false, bool muted = false, bool underline = false, string? fill = null)
     {
         xml.WriteStartElement("text", Namespace);
         xml.WriteAttributeString("class", className);
@@ -1287,7 +1287,7 @@ internal static class NewsletterComposer
         xml.WriteEndElement();
     }
 
-    private static void OpenLink(XmlWriter xml, string? url)
+    internal static void OpenLink(XmlWriter xml, string? url)
     {
         if (url is not null)
         {
@@ -1296,7 +1296,7 @@ internal static class NewsletterComposer
         }
     }
 
-    private static void CloseLink(XmlWriter xml, string? url)
+    internal static void CloseLink(XmlWriter xml, string? url)
     {
         if (url is not null)
         {
@@ -1446,7 +1446,7 @@ internal static class NewsletterComposer
     /// A five-pointed star of radius <paramref name="r"/> as path data, its inner corners half as
     /// far out; a round-joined stroke over it makes it plump.
     /// </summary>
-    private static string Star(double x, double y, double r)
+    internal static string Star(double x, double y, double r)
     {
         var points = Enumerable.Range(0, 10).Select(k =>
         {
@@ -1460,7 +1460,7 @@ internal static class NewsletterComposer
     /// A four-pointed sparkle of radius <paramref name="r"/> as path data: four narrow kites out
     /// from the centre, <paramref name="waist"/> of the radius wide where they meet.
     /// </summary>
-    private static string Sparkle(double x, double y, double r, double waist)
+    internal static string Sparkle(double x, double y, double r, double waist)
     {
         var w = r * waist;
         return $"M{Number(x)} {Number(y - r)}L{Number(x + w)} {Number(y - w)}L{Number(x + r)} {Number(y)}L{Number(x + w)} {Number(y + w)}" +

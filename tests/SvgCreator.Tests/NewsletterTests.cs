@@ -115,6 +115,38 @@ public class NewsletterTests
         SvgGoldenTests.AssertGolden($"newsletter-{theme}.svg", Create(Everything() with { Theme = new NewsletterTheme { Base = theme } }, images: EverythingImages()));
 
     [Fact]
+    public void Golden_Scrapbook() =>
+        SvgGoldenTests.AssertGolden("newsletter-scrapbook.svg", Create(Everything() with { Layout = NewsletterLayout.Scrapbook }, images: EverythingImages()));
+
+    [Fact]
+    public void Scrapbook_TheOptionsLayoutTakesTheNewslettersPlace()
+    {
+        Assert.Single(ByClass(Root(Minimal, new NewsletterOptions { Layout = NewsletterLayout.Scrapbook }), "scrapbook-page"));
+        Assert.Single(ByClass(Root(Minimal with { Layout = NewsletterLayout.Scrapbook }, new NewsletterOptions { Layout = NewsletterLayout.Column }), "newsletter-column"));
+    }
+
+    [Fact]
+    public void Scrapbook_EachBlockIsAPiece_AndTheTiltsDependOnTheTitle()
+    {
+        var root = Root(Everything() with { Layout = NewsletterLayout.Scrapbook }, images: EverythingImages());
+        var cards = Everything().Blocks.OfType<NewsletterCards>().Sum(b => b.Items.Count);
+        Assert.Equal(cards, ByClass(root, "scrapbook-polaroid").Count());
+        Assert.NotEmpty(ByClass(root, "scrapbook-doodle"));
+
+        static string Tilts(XElement root) => string.Join(";", root.Descendants().Select(e => (string?)e.Attribute("transform")).OfType<string>());
+        var renamed = Root(Everything() with { Layout = NewsletterLayout.Scrapbook, Header = new("Another title") }, images: EverythingImages());
+        Assert.NotEqual(Tilts(root), Tilts(renamed));
+    }
+
+    [Fact]
+    public void Scrapbook_AsATemplate_IsRejected() =>
+        Assert.Throws<ArgumentException>(() => Create(Minimal with { Layout = NewsletterLayout.Scrapbook }, new NewsletterOptions { Template = true }));
+
+    [Fact]
+    public void Json_LayoutIsAName() =>
+        Assert.Equal(NewsletterLayout.Scrapbook, JsonSerializer.Deserialize<Newsletter>("""{ "header": { "title": "T" }, "footer": { "lines": "x" }, "layout": "scrapbook" }""", JsonOptions)!.Layout);
+
+    [Fact]
     public async Task CreateAsync_MakesTheSameDocument()
     {
         var images = EverythingImages();

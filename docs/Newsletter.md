@@ -122,6 +122,26 @@ All text is native `<text>`: small, selectable and editable. The library can't m
 - **Footer links as one line of text.** The links and the bars between them were first placed one by one from their estimated widths. Because the estimates err wide by different amounts, the bars sat unevenly ("首页 |  Blog   |  Contact"). Each row is now one centred `<text>` of `<a><tspan>` links and en-space bars, so the viewer's font spaces them evenly. The estimates still decide where rows break. En spaces are used because SVG collapses ordinary spaces.
 - **One-line text** (ribbons, buttons, stats values, the title) shrinks to fit rather than wrapping.
 
+## Scrapbook layout
+
+```sh
+svgcreator newsletter trip/trip.json -o scrap.svg --layout scrapbook   # or "layout": "scrapbook" in the file
+```
+
+The same content, laid out as a scrapbook page instead of a column: a spiral-bound sheet on a striped backdrop, with every block a piece stuck on at a slant. The hero is a taped print, cards are polaroids (the title handwritten in the strip, the text on a torn note lying over the polaroid's side), text is on lined notes with a paperclip, ribbons are cut out word by word like a ransom note, and the footer is a torn strip. Buttons, stats, callouts and maps are drawn as in the column and stuck on, the last two on a taped card. Doodles fill the gaps: stars, hearts, sparkles, notes, paws, flowers, swirls and dots. Everything is drawn by the library, so there's nothing to license.
+
+**One content model, two composers.** `ScrapbookComposer` sits beside `NewsletterComposer` and reuses its text, picture and block code; the generator picks one by `Newsletter.Layout`, or `NewsletterOptions.Layout` when that's set. A separate scrapbook feature, with its own JSON, was considered and rejected: the same trip would need writing twice, and every new block would need adding twice. A scrapbook holds less than a column, so the Honkai: Star Rail sample's `scrapbook.json` keeps only one section of `dairy.json`.
+
+- **Pieces, not sections.** Each piece has a height, a writer and the boxes doodles must keep out of. Its height is the bounding box of its turned shapes (a 290 px polaroid turned 4.5° is 23 px taller), plus room above for its tape or pin. Pieces stack top to bottom like the column's sections, so the page is still exactly as tall as its content. Card rows are separate pieces, so they can sit closer together than other pieces.
+- **Tilts are seeded by the title.** A hash of the title gives every tilt, nudge, torn edge and doodle spot, so the same file makes the same page every time. That's FNV-1a rather than `string.GetHashCode`, which changes from run to run. Rename the newsletter and you get a different shuffle.
+- **Doodles go where the pieces aren't.** Spots are tried across the page and kept when they clear every piece's box and every other doodle, up to one per 55 px of height.
+- **Handwriting is a font stack, not a font.** The stack is Bradley Hand, Segoe Print, Chalkboard SE or Comic Sans, then HanziPen, Hannotate or KaiTi for Chinese, so it's handwritten on macOS and Windows alike. None of these faces is measured, so handwriting is wrapped as if it were 12% wider than the sans widths. Embedding an OFL face, measured by SkiaSharp, would make it exact; that's the next step if the estimates fall short.
+- **The logo sits on a label in the band colour.** A logo made for the column's dark band vanished on the white sheet (the Star Rail logo is white and pale blue). It now sits on a label in that same colour, so a theme that suits the column suits the scrapbook too.
+
+**Lesson: paper that holds text uses the theme's colours.** Polaroid strips, notes and scraps were white at first, which looked right on the pink sample. On Starlight, though, the light text vanished on white. Anything with text on it is now in the page or panel colour; only highlights (tape stripes, a pin's shine) are fixed white.
+
+A scrapbook can't be made into a template yet, because its photos are turned and a template's holes are cut upright. Asking for one is an error.
+
 ## Templates
 
 ```sh

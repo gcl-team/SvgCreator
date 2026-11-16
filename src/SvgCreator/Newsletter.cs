@@ -38,6 +38,26 @@ public sealed record Newsletter
     /// </summary>
     [JsonConverter(typeof(NewsletterThemeJsonConverter))]
     public NewsletterTheme? Theme { get; init; }
+
+    /// <summary>
+    /// How the content is laid out. Default: <see cref="NewsletterLayout.Column"/>.
+    /// <see cref="NewsletterOptions.Layout"/> takes its place when set.
+    /// </summary>
+    public NewsletterLayout Layout { get; init; }
+}
+
+/// <summary>How a <see cref="Newsletter"/>'s content is laid out. The same content works in either.</summary>
+public enum NewsletterLayout
+{
+    /// <summary>One straight column, in bands, like an email.</summary>
+    Column,
+
+    /// <summary>
+    /// A scrapbook page: the blocks tilted and overlapping on a notebook sheet, held on with tape,
+    /// clips and pins, the pictures as polaroids, the headings cut out like a ransom note, and
+    /// doodles in the gaps.
+    /// </summary>
+    Scrapbook,
 }
 
 /// <summary>The newsletter's header band.</summary>

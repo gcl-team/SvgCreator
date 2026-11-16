@@ -22,7 +22,7 @@ public sealed class NewsletterGenerator : INewsletterGenerator
             images[name] = Load(name, () => ImageLoader.LoadEncoded(stream));
         }
 
-        return NewsletterComposer.Compose(newsletter, options, Theme(newsletter, options), images, CancellationToken.None);
+        return Compose(newsletter, options, images, CancellationToken.None);
     }
 
     /// <inheritdoc/>
@@ -44,8 +44,16 @@ public sealed class NewsletterGenerator : INewsletterGenerator
             }
         }
 
-        return NewsletterComposer.Compose(newsletter, options, Theme(newsletter, options), images, cancellationToken);
+        return Compose(newsletter, options, images, cancellationToken);
     }
+
+    // The column or the scrapbook, from the same content.
+    private static string Compose(Newsletter newsletter, NewsletterOptions options, Dictionary<string, EncodedImage> images, CancellationToken cancellationToken) =>
+        Layout(newsletter, options) == NewsletterLayout.Scrapbook
+            ? ScrapbookComposer.Compose(newsletter, options, Theme(newsletter, options), images, cancellationToken)
+            : NewsletterComposer.Compose(newsletter, options, Theme(newsletter, options), images, cancellationToken);
+
+    private static NewsletterLayout Layout(Newsletter newsletter, NewsletterOptions options) => options.Layout ?? newsletter.Layout;
 
     // The options' theme, else the newsletter's, else Starlight, with every setting filled.
     private static NewsletterTheme Theme(Newsletter newsletter, NewsletterOptions options) =>
@@ -102,6 +110,17 @@ public sealed class NewsletterGenerator : INewsletterGenerator
         ArgumentNullException.ThrowIfNull(options);
         options.Validate();
         _ = Theme(newsletter, options);
+        var layout = Layout(newsletter, options);
+        if (!Enum.IsDefined(layout))
+        {
+            throw new ArgumentException($"Unknown layout {layout}. Use column or scrapbook.", nameof(newsletter));
+        }
+
+        // A scrapbook tilts its photos, and a template's holes are cut upright.
+        if (layout == NewsletterLayout.Scrapbook && options.Template)
+        {
+            throw new ArgumentException("A scrapbook can't be made into a template yet.", nameof(options));
+        }
 
         if (newsletter.Header is null || string.IsNullOrWhiteSpace(newsletter.Header.Title))
         {

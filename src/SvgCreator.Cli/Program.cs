@@ -417,13 +417,14 @@ static Command NewsletterCommand()
     var margin = new Option<int>("--margin") { Description = "Patterned backdrop around the column, in pixels. 0 for none.", DefaultValueFactory = _ => defaults.Margin };
     var density = new Option<double>("--image-density") { Description = "Pixels of each picture per pixel drawn: bigger pictures are scaled down before embedding. 0 embeds them unchanged.", DefaultValueFactory = _ => defaults.ImageDensity };
     var theme = new Option<string?>("--theme") { Description = $"Theme in place of the file's own: {string.Join(", ", NewsletterTheme.Names)}, or a theme JSON file. Default: the file's \"theme\", else starlight." };
+    var layout = new Option<NewsletterLayout?>("--layout") { Description = "Layout in place of the file's own: column (one straight column, like an email) or scrapbook (tilted pieces taped onto a notebook page, with doodles). Default: the file's \"layout\", else column." };
     var png = new Option<bool>("--png") { Description = "Also render each SVG to PNG beside it, with headless Chrome (or Chromium or Edge; CHROME_PATH picks one), so it looks as in a browser. A template's holes stay transparent." };
     var pngScale = new Option<double>("--png-scale") { Description = "PNG pixels per SVG pixel: 2 is sharp on high-density screens, 1 is smaller.", DefaultValueFactory = _ => 2 };
     var template = new Option<bool>("--template") { Description = "Also write a template next to the output (name-template.svg): the photos left out, with see-through holes in their place, to lay over photos like a frame." };
 
     var command = new Command("newsletter", "Make a newsletter: a header, hero and intro, then ribbons, text, picture cards, buttons, stats, callouts and travel maps in any order, and a footer.")
     {
-        input, output, width, margin, density, theme, template, png, pngScale,
+        input, output, width, margin, density, theme, layout, template, png, pngScale,
     };
 
     // On the option, not the command: a command's validator sees 0 for an option left out, not its default.
@@ -450,6 +451,7 @@ static Command NewsletterCommand()
                 Margin = parseResult.GetValue(margin),
                 ImageDensity = parseResult.GetValue(density),
                 Theme = themeOverride,
+                Layout = parseResult.GetValue(layout),
             };
             Task<Stream> Open(string name, CancellationToken ct) => Task.FromResult<Stream>(File.OpenRead(Path.Combine(folder, name)));
 

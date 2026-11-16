@@ -33,6 +33,12 @@ public sealed record NewsletterOptions
     public NewsletterTheme? Theme { get; init; }
 
     /// <summary>
+    /// A layout to use in place of the newsletter's own <see cref="Newsletter.Layout"/>, such as
+    /// one picked on the command line. Default: none, so the newsletter's layout is used.
+    /// </summary>
+    public NewsletterLayout? Layout { get; init; }
+
+    /// <summary>
     /// Make a template: every photo (the hero, cards and image blocks) left out, and a see-through
     /// hole of its shape cut through the page and backdrop in its place, so the newsletter can be
     /// laid over photos like a frame. Logos and stickers stay. Each hole has an invisible marker,
