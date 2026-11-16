@@ -28,7 +28,8 @@ internal static class ScrapbookComposer
     internal const string HandFamily = "'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive";
 
     private const double HandWide = 1.12;        // handwriting's width for the sans width it's measured as
-    private const string Shine = "#ffffff";      // light catching tape, pins and clips, and the backdrop's pale stripes
+    private const string Shine = "#ffffff";      // light catching tape, pins and clips, and a light backdrop's pale stripes
+    private const string Shade = "#000000";      // a dark page's shadows and holes, and a dark backdrop's stripes
 
     private const double TopSpace = 40;
     private const double BottomSpace = 48;
@@ -41,6 +42,11 @@ internal static class ScrapbookComposer
     private const double RingX = 15;
     private const double RingHole = 4;
     private const double RingReach = 12;         // how far the wire loops past the sheet's edge
+    private const double SpineGap = 20;          // between a book's pages, for the wire across
+    private const double SpineShade = 46;        // how far the shadow into the spine reaches over each page
+    private const double CoverRim = 14;          // a book's cover round its pages
+    private const double PageEdge = 3;           // each page under a book's open pages, out from the last
+    private const double MaxStretch = 80;        // extra space between two pieces, at most, to end a book's pages level
 
     private const double LogoWidth = 300;
     private const double LogoHeight = 76;
@@ -110,12 +116,18 @@ internal static class ScrapbookComposer
     private const string StripesId = "scrapbook-stripes";
     private const string GridId = "scrapbook-grid";
     private const string TapeId = "scrapbook-tape";
+    private const string SpineLeftId = "scrapbook-spine-left";
+    private const string SpineRightId = "scrapbook-spine-right";
 
     /// <summary>
     /// A piece stuck on the page: the gap above it, its height, how to write it with its top at a
-    /// given y, and the boxes doodles keep out of, measured from its top.
+    /// given y, and the boxes doodles keep out of, measured from its top. A piece that keeps with
+    /// the next, such as a heading, never ends a book's page.
     /// </summary>
-    private sealed record Piece(double Before, double Height, Action<XmlWriter, double> Write, IReadOnlyList<RectD> Keep);
+    private sealed record Piece(double Before, double Height, Action<XmlWriter, double> Write, IReadOnlyList<RectD> Keep, bool KeepWithNext = false);
+
+    /// <summary>A page's pieces, where each one's top is, and its doodles.</summary>
+    private sealed record Page(List<Piece> Pieces, double[] Tops, List<(int Kind, double X, double Y, double R, string Color, double Tilt)> Doodles);
 
     /// <summary>
     /// The page's tilts and nudges: each one from -1 to 1, from a hash of the title and a count,
@@ -156,7 +168,8 @@ internal static class ScrapbookComposer
         }
     }
 
-    public static string Compose(Newsletter newsletter, NewsletterOptions options, NewsletterTheme theme, IReadOnlyDictionary<string, EncodedImage> images, CancellationToken cancellationToken)
+    // With book, the pieces are laid over the two pages of an open book, not down one page.
+    public static string Compose(Newsletter newsletter, NewsletterOptions options, NewsletterTheme theme, IReadOnlyDictionary<string, EncodedImage> images, bool book, CancellationToken cancellationToken)
     {
         var c = new Context(options, theme, options.Width / ReferenceWidth, new NewsletterImages(images, options.ImageDensity), cancellationToken);
         var w = new Wobble(newsletter.Header.Title);
@@ -191,24 +204,23 @@ internal static class ScrapbookComposer
 
         pieces.Add(Footer(c, w, newsletter.Footer));
 
-        // Stacked top to bottom, as the column's sections are; the doodles go where they aren't.
+        // Stacked top to bottom, as the column's sections are, on one page or split over two; the
+        // doodles go where the pieces aren't. A book's pages are as tall as the taller one.
         var u = c.Unit;
-        var tops = new double[pieces.Count];
-        var keep = new List<RectD>();
-        var y = TopSpace * u;
-        for (var i = 0; i < pieces.Count; i++)
+        var split = book ? Split(pieces, u) : [pieces];
+        var pageHeight = (int)Math.Ceiling(split.Max(p => Measure(p, u)));
+        var inner = (RingX + RingHole + 8) * u;
+        var pages = split.Select((p, i) =>
         {
-            y += i == 0 ? 0 : pieces[i].Before * u;
-            tops[i] = y;
-            keep.AddRange(pieces[i].Keep.Select(k => k with { Y = k.Y + tops[i] }));
-            y += pieces[i].Height;
-        }
-
-        var pageHeight = (int)Math.Ceiling(y + (BottomSpace * u));
-        var doodles = Doodles(c, w, keep, pageHeight);
+            var (tops, keep) = Stack(p, u, book ? pageHeight : 0);
+            var (left, right) = !book ? (inner, c.Width - (8 * u)) : i == 0 ? (8 * u, c.Width - inner) : (inner, c.Width - (8 * u));
+            return new Page(p, tops, Doodles(c, w, keep, pageHeight, left, right));
+        }).ToList();
 
         var margin = options.Margin;
-        var (width, height) = (options.Width + (2 * margin), pageHeight + (2 * margin));
+        var spine = book ? SpineGap * u : 0;
+        var spread = (pages.Count * options.Width) + spine;
+        var (width, height) = ((int)Math.Ceiling(spread) + (2 * margin), pageHeight + (2 * margin));
         return SvgWriter.WriteDocument(width, height, c.TextColor, SvgStyle.Clean, (xml, _) =>
         {
             xml.WriteElementString("title", Namespace, AccentText.Plain(newsletter.Header.Title));
@@ -216,6 +228,11 @@ internal static class ScrapbookComposer
             xml.WriteStartElement("defs", Namespace);
             NewsletterImages.WriteTint(xml, theme);
             WritePatterns(xml, c);
+            if (book)
+            {
+                WriteSpineShades(xml, c);
+            }
+
             c.Images.WriteDefinitions(xml);
             xml.WriteEndElement();
 
@@ -233,7 +250,7 @@ internal static class ScrapbookComposer
             }
 
             xml.WriteStartElement("g", Namespace);
-            xml.WriteAttributeString("class", "scrapbook-page");
+            xml.WriteAttributeString("class", book ? "scrapbook-book" : "scrapbook-page");
             if (margin > 0)
             {
                 xml.WriteAttributeString("transform", $"translate({Integer(margin)} {Integer(margin)})");
@@ -241,15 +258,101 @@ internal static class ScrapbookComposer
 
             xml.WriteAttributeString("font-family", c.FontFamily);
             xml.WriteAttributeString("fill", c.TextColor);
-            WriteSheets(xml, c, pageHeight);
-            WriteDoodles(xml, c, doodles);
-            for (var i = 0; i < pieces.Count; i++)
+            if (book)
             {
-                pieces[i].Write(xml, tops[i]);
+                WriteBook(xml, c, pageHeight, spine);
+            }
+            else
+            {
+                WriteSheets(xml, c, pageHeight);
+            }
+
+            for (var i = 0; i < pages.Count; i++)
+            {
+                // A book's pages each in their own place, so their pieces are drawn as on a page of their own.
+                if (book)
+                {
+                    xml.WriteStartElement("g", Namespace);
+                    xml.WriteAttributeString("class", i == 0 ? "scrapbook-left" : "scrapbook-right");
+                    if (i > 0)
+                    {
+                        xml.WriteAttributeString("transform", $"translate({Number(c.Width + spine)} 0)");
+                    }
+                }
+
+                WriteDoodles(xml, c, pages[i].Doodles);
+                for (var j = 0; j < pages[i].Pieces.Count; j++)
+                {
+                    pages[i].Pieces[j].Write(xml, pages[i].Tops[j]);
+                }
+
+                if (book)
+                {
+                    xml.WriteEndElement();
+                }
             }
 
             xml.WriteEndElement();
         });
+    }
+
+    /// <summary>A page's height: the space at the top and bottom, its pieces and the gaps between them.</summary>
+    private static double Measure(List<Piece> pieces, double u)
+    {
+        var y = TopSpace * u;
+        for (var i = 0; i < pieces.Count; i++)
+        {
+            y += i == 0 ? 0 : pieces[i].Before * u;
+            y += pieces[i].Height;
+        }
+
+        return y + (BottomSpace * u);
+    }
+
+    /// <summary>
+    /// Where each piece's top goes, and the boxes doodles keep out of. A page shorter than
+    /// <paramref name="level"/>, a book's shorter page, has its gaps widened to end level with the
+    /// other, each by up to <see cref="MaxStretch"/>.
+    /// </summary>
+    private static (double[] Tops, List<RectD> Keep) Stack(List<Piece> pieces, double u, double level)
+    {
+        var stretch = pieces.Count > 1 ? Math.Clamp((level - Measure(pieces, u)) / (pieces.Count - 1), 0, MaxStretch * u) : 0;
+        var tops = new double[pieces.Count];
+        var keep = new List<RectD>();
+        var y = TopSpace * u;
+        for (var i = 0; i < pieces.Count; i++)
+        {
+            y += i == 0 ? 0 : (pieces[i].Before * u) + stretch;
+            tops[i] = y;
+            keep.AddRange(pieces[i].Keep.Select(k => k with { Y = k.Y + tops[i] }));
+            y += pieces[i].Height;
+        }
+
+        return (tops, keep);
+    }
+
+    /// <summary>
+    /// The pieces cut into a book's left and right pages, in order: at the cut that makes the
+    /// taller page shortest, never straight after a piece that keeps with the next.
+    /// </summary>
+    private static List<List<Piece>> Split(List<Piece> pieces, double u)
+    {
+        var (best, tallest) = (pieces.Count, double.PositiveInfinity);
+        for (var cut = 1; cut < pieces.Count; cut++)
+        {
+            if (pieces[cut - 1].KeepWithNext)
+            {
+                continue;
+            }
+
+            var height = Math.Max(Measure(pieces.GetRange(0, cut), u), Measure(pieces.GetRange(cut, pieces.Count - cut), u));
+            if (height < tallest)
+            {
+                (best, tallest) = (cut, height);
+            }
+        }
+
+        return [pieces.GetRange(0, best), pieces.GetRange(best, pieces.Count - best)];
     }
 
     // The logo with the title handwritten under it and a wavy line under that, tilted together.
@@ -306,7 +409,7 @@ internal static class ScrapbookComposer
             }
 
             xml.WriteEndElement();
-        }, Down(boxes, shift));
+        }, Down(boxes, shift), KeepWithNext: true);
     }
 
     // The hero as a print, its border in the page colour, tilted, taped at its top corners.
@@ -451,7 +554,7 @@ internal static class ScrapbookComposer
                 var b = boxes[j] with { Y = boxes[j].Y + top + shift };
                 StartTilt(xml, "scrapbook-word", s.Tilt, b.Center.X, b.Center.Y);
                 var outline = $"M{P(b.X + s.Cut[0], b.Y + s.Cut[1])}L{P(b.Right + s.Cut[2], b.Y + s.Cut[3])}L{P(b.Right + s.Cut[4], b.Bottom + s.Cut[5])}L{P(b.X + s.Cut[6], b.Bottom + s.Cut[7])}Z";
-                Fill(xml, outline, c.TextColor, 0.18, $"translate({Number(1.5 * u)} {Number(2.5 * u)})");
+                Fill(xml, outline, ShadowColor(c), Shadowy(c, 0.18), $"translate({Number(1.5 * u)} {Number(2.5 * u)})");
                 Fill(xml, outline, s.Paper.Item1);
 
                 xml.WriteStartElement("text", Namespace);
@@ -468,7 +571,7 @@ internal static class ScrapbookComposer
             }
 
             xml.WriteEndElement();
-        }, Down(turned, shift));
+        }, Down(turned, shift), KeepWithNext: true);
     }
 
     // A polaroid per card, its title handwritten in the strip under the picture, and its text on
@@ -540,7 +643,7 @@ internal static class ScrapbookComposer
                     var n = note with { Y = note.Y + top + shift };
                     StartTilt(xml, "scrapbook-card-note", noteTilt, n.Center.X, n.Center.Y);
                     var outline = Torn(n, torn, TornTooth * u);
-                    Fill(xml, outline, c.TextColor, 0.12, $"translate({Number(2 * u)} {Number(3 * u)})");
+                    Fill(xml, outline, ShadowColor(c), Shadowy(c, 0.12), $"translate({Number(2 * u)} {Number(3 * u)})");
                     Fill(xml, outline, i % 2 == 0 ? c.PageColor : c.PanelColor);
                     HandText(xml, c, body, n.X + (CardNotePadding * u), n.Y + (CardNotePadding * u), "start", "scrapbook-card-text");
                     Tape(xml, c, n.Center.X, n.Y, TapeLength * u * 0.6, -sign * 3, c.AccentColor);
@@ -651,7 +754,7 @@ internal static class ScrapbookComposer
             var s = strip with { Y = top + shift };
             StartTilt(xml, "scrapbook-footer", tilt, s.Center.X, s.Center.Y);
             var outline = Torn(s, torn, TornTooth * u, both: true);
-            Fill(xml, outline, c.TextColor, 0.12, $"translate({Number(2 * u)} {Number(3 * u)})");
+            Fill(xml, outline, ShadowColor(c), Shadowy(c, 0.12), $"translate({Number(2 * u)} {Number(3 * u)})");
             Fill(xml, outline, c.PanelColor);
             Tape(xml, c, s.X + (8 * u), s.Y + (6 * u), TapeLength * u * 0.7, -35, c.ButtonColor);
             Tape(xml, c, s.Right - (8 * u), s.Y + (6 * u), TapeLength * u * 0.7, 35, c.AccentColor);
@@ -730,8 +833,8 @@ internal static class ScrapbookComposer
         var wire = new StringBuilder();
         xml.WriteStartElement("g", Namespace);
         xml.WriteAttributeString("class", "scrapbook-holes");
-        xml.WriteAttributeString("fill", c.TextColor);
-        xml.WriteAttributeString("fill-opacity", "0.2");
+        xml.WriteAttributeString("fill", ShadowColor(c));
+        xml.WriteAttributeString("fill-opacity", Number(Shadowy(c, 0.2)));
         for (var y = pitch * 0.75; y < height - (pitch / 2); y += pitch)
         {
             Circle(xml, x, y, RingHole * u);
@@ -743,6 +846,93 @@ internal static class ScrapbookComposer
         xml.WriteEndElement();
     }
 
+    // An open book: its cover behind, the edges of the pages under each open one, the two pages
+    // with a shadow into the spine on each, and the spiral's wire looping across the spine
+    // between holes punched along each page's inner edge.
+    private static void WriteBook(XmlWriter xml, Context c, double height, double spine)
+    {
+        var u = c.Unit;
+        var (w, rim) = (c.Width, CoverRim * u);
+        var right = w + spine;
+        var cover = new RectD(-rim, -rim * 0.8, right + w + (2 * rim), height + (rim * 1.8));
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "scrapbook-cover");
+        Shadow(xml, c, cover);
+        NewsletterImages.Rect(xml, cover, 10 * u, close: false);
+        xml.WriteAttributeString("fill", c.BandColor);
+        xml.WriteEndElement();
+        xml.WriteEndElement();
+
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "scrapbook-page-edges");
+        xml.WriteAttributeString("fill", c.PanelColor);
+        xml.WriteAttributeString("stroke", ShadowColor(c));
+        xml.WriteAttributeString("stroke-opacity", Number(Shadowy(c, 0.12)));
+        xml.WriteAttributeString("stroke-width", Number(u));
+        for (var k = 2; k >= 1; k--)
+        {
+            var (dx, dy) = (k * PageEdge * u, k * 0.7 * PageEdge * u);
+            NewsletterImages.Rect(xml, new RectD(-dx, dy, w, height), 0);
+            NewsletterImages.Rect(xml, new RectD(right + dx, dy, w, height), 0);
+        }
+
+        xml.WriteEndElement();
+
+        foreach (var (x, shade) in new[] { (0.0, SpineLeftId), (right, SpineRightId) })
+        {
+            var page = new RectD(x, 0, w, height);
+            xml.WriteStartElement("g", Namespace);
+            xml.WriteAttributeString("class", "scrapbook-sheet");
+            NewsletterImages.Rect(xml, page, 0, close: false);
+            xml.WriteAttributeString("fill", c.PageColor);
+            xml.WriteEndElement();
+            NewsletterImages.Rect(xml, page, 0, close: false);
+            xml.WriteAttributeString("fill", $"url(#{GridId})");
+            xml.WriteEndElement();
+            var reach = SpineShade * u;
+            NewsletterImages.Rect(xml, new RectD(x == 0 ? w - reach : right, 0, reach, height), 0, close: false);
+            xml.WriteAttributeString("fill", $"url(#{shade})");
+            xml.WriteEndElement();
+            xml.WriteEndElement();
+        }
+
+        var (from, to, pitch) = (w - (RingX * u), right + (RingX * u), RingPitch * u);
+        var wire = new StringBuilder();
+        xml.WriteStartElement("g", Namespace);
+        xml.WriteAttributeString("class", "scrapbook-holes");
+        xml.WriteAttributeString("fill", ShadowColor(c));
+        xml.WriteAttributeString("fill-opacity", Number(Shadowy(c, 0.2)));
+        for (var y = pitch * 0.75; y < height - (pitch / 2); y += pitch)
+        {
+            Circle(xml, from, y, RingHole * u);
+            Circle(xml, to, y, RingHole * u);
+            wire.Append(CultureInfo.InvariantCulture, $"M{P(from, y)}C{P(from, y - (12 * u))} {P(to, y - (12 * u))} {P(to, y)}");
+        }
+
+        xml.WriteEndElement();
+        Stroke(xml, wire.ToString(), c.TextColor, 2.6 * u, 0.55);
+    }
+
+    // The shadow into a book's spine: clear at a page's middle side, darkening to its inner edge.
+    private static void WriteSpineShades(XmlWriter xml, Context c)
+    {
+        foreach (var (id, inner) in new[] { (SpineLeftId, 1), (SpineRightId, 0) })
+        {
+            xml.WriteStartElement("linearGradient", Namespace);
+            xml.WriteAttributeString("id", id);
+            foreach (var (offset, opacity) in new[] { (0, inner == 0 ? 1 : 0), (1, inner == 1 ? 1 : 0) })
+            {
+                xml.WriteStartElement("stop", Namespace);
+                xml.WriteAttributeString("offset", Integer(offset));
+                xml.WriteAttributeString("stop-color", ShadowColor(c));
+                xml.WriteAttributeString("stop-opacity", Number(opacity * Shadowy(c, 0.16)));
+                xml.WriteEndElement();
+            }
+
+            xml.WriteEndElement();
+        }
+    }
+
     // Stripes on the backdrop, the sheet's grid, and the stripes over washi tape.
     private static void WritePatterns(XmlWriter xml, Context c)
     {
@@ -750,8 +940,8 @@ internal static class ScrapbookComposer
         var stripe = StripeWidth * u;
         StartPattern(xml, StripesId, 2 * stripe);
         NewsletterImages.Rect(xml, new RectD(0, 0, stripe, 2 * stripe), 0, close: false);
-        xml.WriteAttributeString("fill", Shine);
-        xml.WriteAttributeString("fill-opacity", "0.45");
+        xml.WriteAttributeString("fill", IsDark(c.BackdropColor) ? Shade : Shine);
+        xml.WriteAttributeString("fill-opacity", IsDark(c.BackdropColor) ? "0.3" : "0.45");
         xml.WriteEndElement();
         xml.WriteEndElement();
 
@@ -776,16 +966,16 @@ internal static class ScrapbookComposer
     }
 
     /// <summary>
-    /// Doodles in the gaps: tries spots across the page, keeping those clear of every piece and
+    /// Doodles in the gaps: tries spots across the page between <paramref name="left"/> and
+    /// <paramref name="right"/> (clear of the binding), keeping those clear of every piece and
     /// of the other doodles, up to one per <see cref="DoodleSpacing"/> of the page's height.
     /// </summary>
-    private static List<(int Kind, double X, double Y, double R, string Color, double Tilt)> Doodles(Context c, Wobble w, List<RectD> keep, double height)
+    private static List<(int Kind, double X, double Y, double R, string Color, double Tilt)> Doodles(Context c, Wobble w, List<RectD> keep, double height, double left, double right)
     {
         var u = c.Unit;
         var doodles = new List<(int Kind, double X, double Y, double R, string Color, double Tilt)>();
         var target = (int)(height / (DoodleSpacing * u));
         string[] colors = [c.AccentColor, c.ButtonColor, c.HighlightColor];
-        var (left, right) = ((RingX + RingHole + 8) * u, c.Width - (8 * u));
         for (var i = 0; i < DoodleTries && doodles.Count < target; i++)
         {
             var r = (DoodleMin + ((DoodleMax - DoodleMin) * (w.Next() + 1) / 2)) * u;
@@ -920,8 +1110,8 @@ internal static class ScrapbookComposer
     private static void Shadow(XmlWriter xml, Context c, RectD box)
     {
         NewsletterImages.Rect(xml, new RectD(box.X + (2 * c.Unit), box.Y + (4 * c.Unit), box.Width, box.Height), 2 * c.Unit, close: false);
-        xml.WriteAttributeString("fill", c.TextColor);
-        xml.WriteAttributeString("fill-opacity", "0.12");
+        xml.WriteAttributeString("fill", ShadowColor(c));
+        xml.WriteAttributeString("fill-opacity", Number(Shadowy(c, 0.12)));
         xml.WriteEndElement();
     }
 
@@ -965,8 +1155,8 @@ internal static class ScrapbookComposer
         xml.WriteAttributeString("cy", Number(y + (5 * u)));
         xml.WriteAttributeString("rx", Number(r * 0.8));
         xml.WriteAttributeString("ry", Number(r * 0.45));
-        xml.WriteAttributeString("fill", c.TextColor);
-        xml.WriteAttributeString("fill-opacity", "0.2");
+        xml.WriteAttributeString("fill", ShadowColor(c));
+        xml.WriteAttributeString("fill-opacity", Number(Shadowy(c, 0.2)));
         xml.WriteEndElement();
         Circle(xml, x, y, r, color);
         xml.WriteStartElement("circle", Namespace);
@@ -1086,6 +1276,33 @@ internal static class ScrapbookComposer
         }
 
         xml.WriteEndElement();
+    }
+
+    // On a light page, shadows and holes are a faint wash of the text colour, so they take its hue.
+    // On a dark page the text is light, and that would glow, so they're black and stronger.
+    private static string ShadowColor(Context c) => IsDark(c.PageColor) ? Shade : c.TextColor;
+
+    private static double Shadowy(Context c, double light) => IsDark(c.PageColor) ? Math.Min(1, light * 3) : light;
+
+    /// <summary>
+    /// Whether a colour is dark: a hex colour (<c>#1f1c24</c> or <c>#222</c>) whose relative
+    /// luminance is under 0.18, about mid-grey to the eye. Any other colour, such as a name, counts as light.
+    /// </summary>
+    private static bool IsDark(string color)
+    {
+        var digits = color.StartsWith('#') ? color[1..] : "";
+        if (digits.Length == 3)
+        {
+            digits = string.Concat(digits.Select(d => $"{d}{d}"));
+        }
+
+        if (digits.Length != 6 || !int.TryParse(digits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var value))
+        {
+            return false;
+        }
+
+        static double Linear(int channel) => channel / 255.0 is var v && v <= 0.04045 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
+        return (0.2126 * Linear((value >> 16) & 0xff)) + (0.7152 * Linear((value >> 8) & 0xff)) + (0.0722 * Linear(value & 0xff)) < 0.18;
     }
 
     /// <summary>Paragraphs to be handwritten, wrapped narrower than <paramref name="width"/> by <see cref="HandWide"/>.</summary>

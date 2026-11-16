@@ -138,13 +138,52 @@ public class NewsletterTests
         Assert.NotEqual(Tilts(root), Tilts(renamed));
     }
 
+    [Theory]
+    [InlineData("#1f1c24", "#000000")]
+    [InlineData("#fffafc", "#5b3a64")]
+    public void Scrapbook_OnADarkPage_ShadowsAreBlack_ElseTheTextColour(string page, string expected)
+    {
+        var theme = new NewsletterTheme { PageColor = page, TextColor = "#5b3a64" };
+
+        var holes = ByClass(Root(Minimal with { Layout = NewsletterLayout.Scrapbook, Theme = theme }), "scrapbook-holes").Single();
+
+        Assert.Equal(expected, (string?)holes.Attribute("fill"));
+    }
+
+    [Fact]
+    public void Golden_Book() =>
+        SvgGoldenTests.AssertGolden("newsletter-book.svg", Create(Everything() with { Layout = NewsletterLayout.Book }, images: EverythingImages()));
+
+    [Fact]
+    public void Book_SplitsThePiecesOverTwoPages_TitleFirst_FooterLast_NoHeadingEndingAPage()
+    {
+        var root = Root(Everything() with { Layout = NewsletterLayout.Book }, images: EverythingImages());
+
+        // Two 640 px pages, the spine between them, and the margin round both.
+        Assert.Equal((2 * 640) + 20 + (2 * 40), Number(root, "width"));
+        static List<string?> Pieces(XElement page) =>
+            [.. page.Elements().Select(e => e.Name.LocalName == "a" ? e.Elements().First() : e).Select(e => (string?)e.Attribute("class")).Where(n => n != "scrapbook-doodles")];
+        var left = Pieces(ByClass(root, "scrapbook-left").Single());
+        var right = Pieces(ByClass(root, "scrapbook-right").Single());
+        Assert.Equal("scrapbook-header", left[0]);
+        Assert.Equal("scrapbook-footer", right[^1]);
+        Assert.NotEqual("scrapbook-ribbon", left[^1]);
+        Assert.True(left.Count > 1 && right.Count > 1);
+    }
+
+    [Fact]
+    public void Book_AsATemplate_IsRejected() =>
+        Assert.Throws<ArgumentException>(() => Create(Minimal with { Layout = NewsletterLayout.Book }, new NewsletterOptions { Template = true }));
+
     [Fact]
     public void Scrapbook_AsATemplate_IsRejected() =>
         Assert.Throws<ArgumentException>(() => Create(Minimal with { Layout = NewsletterLayout.Scrapbook }, new NewsletterOptions { Template = true }));
 
-    [Fact]
-    public void Json_LayoutIsAName() =>
-        Assert.Equal(NewsletterLayout.Scrapbook, JsonSerializer.Deserialize<Newsletter>("""{ "header": { "title": "T" }, "footer": { "lines": "x" }, "layout": "scrapbook" }""", JsonOptions)!.Layout);
+    [Theory]
+    [InlineData("scrapbook", NewsletterLayout.Scrapbook)]
+    [InlineData("book", NewsletterLayout.Book)]
+    public void Json_LayoutIsAName(string name, NewsletterLayout expected) =>
+        Assert.Equal(expected, JsonSerializer.Deserialize<Newsletter>($$"""{ "header": { "title": "T" }, "footer": { "lines": "x" }, "layout": "{{name}}" }""", JsonOptions)!.Layout);
 
     [Fact]
     public async Task CreateAsync_MakesTheSameDocument()

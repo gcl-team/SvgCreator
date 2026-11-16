@@ -1,0 +1,740 @@
+<svg width="1380" height="1852" viewBox="0 0 1380 1852" xmlns="http://www.w3.org/2000/svg">
+  <title>Shanghai</title>
+  <defs>
+    <pattern id="scrapbook-stripes" patternUnits="userSpaceOnUse" width="52" height="52">
+      <rect x="0" y="0" width="26" height="52" fill="#000000" fill-opacity="0.3" />
+    </pattern>
+    <pattern id="scrapbook-grid" patternUnits="userSpaceOnUse" width="22" height="22">
+      <path d="M22 0V22M0 22H22" fill="none" stroke="#f0764a" stroke-width="1" stroke-linecap="round" stroke-opacity="0.16" />
+    </pattern>
+    <pattern id="scrapbook-tape" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0 8L8 0M-2 2L2 -2M6 10L10 6" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity="0.4" />
+    </pattern>
+    <linearGradient id="scrapbook-spine-left">
+      <stop offset="0" stop-color="#000000" stop-opacity="0" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0.48" />
+    </linearGradient>
+    <linearGradient id="scrapbook-spine-right">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.48" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0" />
+    </linearGradient>
+    <image id="newsletter-image-1" width="60" height="40" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAAAO0lEQVR42u3OQQkAAAgEsItjHGMbyxQ+hMECLNXzTqSlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpS8t1h+4pujAzIsAAAAASUVORK5CYII=" />
+    <image id="newsletter-image-2" width="60" height="40" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAAAO0lEQVR42u3OQQkAAAgEsItjHGMbyxQ+hMECLNXzTqSlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpS8t1h+4pujAzIsAAAAASUVORK5CYII=" />
+    <image id="newsletter-image-3" width="60" height="40" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAAAO0lEQVR42u3OQQkAAAgEsItjHGMbyxQ+hMECLNXzTqSlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpS8t1h+4pujAzIsAAAAASUVORK5CYII=" />
+  </defs>
+  <g class="scrapbook-backdrop">
+    <rect x="0" y="0" width="1380" height="1852" fill="#231a45" />
+    <rect x="0" y="0" width="1380" height="1852" fill="url(#scrapbook-stripes)" />
+  </g>
+  <g class="scrapbook-book" transform="translate(40 40)" font-family="Helvetica, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif" fill="#ffffff">
+    <g class="scrapbook-cover">
+      <rect x="-12" y="-7.2" width="1328" height="1797.2" rx="2" fill="#000000" fill-opacity="0.36" />
+      <rect x="-14" y="-11.2" width="1328" height="1797.2" rx="10" fill="#0b0b0f" />
+    </g>
+    <g class="scrapbook-page-edges" fill="#463a66" stroke="#000000" stroke-opacity="0.36" stroke-width="1">
+      <rect x="-6" y="4.2" width="640" height="1772" />
+      <rect x="666" y="4.2" width="640" height="1772" />
+      <rect x="-3" y="2.1" width="640" height="1772" />
+      <rect x="663" y="2.1" width="640" height="1772" />
+    </g>
+    <g class="scrapbook-sheet">
+      <rect x="0" y="0" width="640" height="1772" fill="#5a4d7b" />
+      <rect x="0" y="0" width="640" height="1772" fill="url(#scrapbook-grid)" />
+      <rect x="594" y="0" width="46" height="1772" fill="url(#scrapbook-spine-left)" />
+    </g>
+    <g class="scrapbook-sheet">
+      <rect x="660" y="0" width="640" height="1772" fill="#5a4d7b" />
+      <rect x="660" y="0" width="640" height="1772" fill="url(#scrapbook-grid)" />
+      <rect x="660" y="0" width="46" height="1772" fill="url(#scrapbook-spine-right)" />
+    </g>
+    <g class="scrapbook-holes" fill="#000000" fill-opacity="0.6">
+      <circle cx="625" cy="22.5" r="4" />
+      <circle cx="675" cy="22.5" r="4" />
+      <circle cx="625" cy="52.5" r="4" />
+      <circle cx="675" cy="52.5" r="4" />
+      <circle cx="625" cy="82.5" r="4" />
+      <circle cx="675" cy="82.5" r="4" />
+      <circle cx="625" cy="112.5" r="4" />
+      <circle cx="675" cy="112.5" r="4" />
+      <circle cx="625" cy="142.5" r="4" />
+      <circle cx="675" cy="142.5" r="4" />
+      <circle cx="625" cy="172.5" r="4" />
+      <circle cx="675" cy="172.5" r="4" />
+      <circle cx="625" cy="202.5" r="4" />
+      <circle cx="675" cy="202.5" r="4" />
+      <circle cx="625" cy="232.5" r="4" />
+      <circle cx="675" cy="232.5" r="4" />
+      <circle cx="625" cy="262.5" r="4" />
+      <circle cx="675" cy="262.5" r="4" />
+      <circle cx="625" cy="292.5" r="4" />
+      <circle cx="675" cy="292.5" r="4" />
+      <circle cx="625" cy="322.5" r="4" />
+      <circle cx="675" cy="322.5" r="4" />
+      <circle cx="625" cy="352.5" r="4" />
+      <circle cx="675" cy="352.5" r="4" />
+      <circle cx="625" cy="382.5" r="4" />
+      <circle cx="675" cy="382.5" r="4" />
+      <circle cx="625" cy="412.5" r="4" />
+      <circle cx="675" cy="412.5" r="4" />
+      <circle cx="625" cy="442.5" r="4" />
+      <circle cx="675" cy="442.5" r="4" />
+      <circle cx="625" cy="472.5" r="4" />
+      <circle cx="675" cy="472.5" r="4" />
+      <circle cx="625" cy="502.5" r="4" />
+      <circle cx="675" cy="502.5" r="4" />
+      <circle cx="625" cy="532.5" r="4" />
+      <circle cx="675" cy="532.5" r="4" />
+      <circle cx="625" cy="562.5" r="4" />
+      <circle cx="675" cy="562.5" r="4" />
+      <circle cx="625" cy="592.5" r="4" />
+      <circle cx="675" cy="592.5" r="4" />
+      <circle cx="625" cy="622.5" r="4" />
+      <circle cx="675" cy="622.5" r="4" />
+      <circle cx="625" cy="652.5" r="4" />
+      <circle cx="675" cy="652.5" r="4" />
+      <circle cx="625" cy="682.5" r="4" />
+      <circle cx="675" cy="682.5" r="4" />
+      <circle cx="625" cy="712.5" r="4" />
+      <circle cx="675" cy="712.5" r="4" />
+      <circle cx="625" cy="742.5" r="4" />
+      <circle cx="675" cy="742.5" r="4" />
+      <circle cx="625" cy="772.5" r="4" />
+      <circle cx="675" cy="772.5" r="4" />
+      <circle cx="625" cy="802.5" r="4" />
+      <circle cx="675" cy="802.5" r="4" />
+      <circle cx="625" cy="832.5" r="4" />
+      <circle cx="675" cy="832.5" r="4" />
+      <circle cx="625" cy="862.5" r="4" />
+      <circle cx="675" cy="862.5" r="4" />
+      <circle cx="625" cy="892.5" r="4" />
+      <circle cx="675" cy="892.5" r="4" />
+      <circle cx="625" cy="922.5" r="4" />
+      <circle cx="675" cy="922.5" r="4" />
+      <circle cx="625" cy="952.5" r="4" />
+      <circle cx="675" cy="952.5" r="4" />
+      <circle cx="625" cy="982.5" r="4" />
+      <circle cx="675" cy="982.5" r="4" />
+      <circle cx="625" cy="1012.5" r="4" />
+      <circle cx="675" cy="1012.5" r="4" />
+      <circle cx="625" cy="1042.5" r="4" />
+      <circle cx="675" cy="1042.5" r="4" />
+      <circle cx="625" cy="1072.5" r="4" />
+      <circle cx="675" cy="1072.5" r="4" />
+      <circle cx="625" cy="1102.5" r="4" />
+      <circle cx="675" cy="1102.5" r="4" />
+      <circle cx="625" cy="1132.5" r="4" />
+      <circle cx="675" cy="1132.5" r="4" />
+      <circle cx="625" cy="1162.5" r="4" />
+      <circle cx="675" cy="1162.5" r="4" />
+      <circle cx="625" cy="1192.5" r="4" />
+      <circle cx="675" cy="1192.5" r="4" />
+      <circle cx="625" cy="1222.5" r="4" />
+      <circle cx="675" cy="1222.5" r="4" />
+      <circle cx="625" cy="1252.5" r="4" />
+      <circle cx="675" cy="1252.5" r="4" />
+      <circle cx="625" cy="1282.5" r="4" />
+      <circle cx="675" cy="1282.5" r="4" />
+      <circle cx="625" cy="1312.5" r="4" />
+      <circle cx="675" cy="1312.5" r="4" />
+      <circle cx="625" cy="1342.5" r="4" />
+      <circle cx="675" cy="1342.5" r="4" />
+      <circle cx="625" cy="1372.5" r="4" />
+      <circle cx="675" cy="1372.5" r="4" />
+      <circle cx="625" cy="1402.5" r="4" />
+      <circle cx="675" cy="1402.5" r="4" />
+      <circle cx="625" cy="1432.5" r="4" />
+      <circle cx="675" cy="1432.5" r="4" />
+      <circle cx="625" cy="1462.5" r="4" />
+      <circle cx="675" cy="1462.5" r="4" />
+      <circle cx="625" cy="1492.5" r="4" />
+      <circle cx="675" cy="1492.5" r="4" />
+      <circle cx="625" cy="1522.5" r="4" />
+      <circle cx="675" cy="1522.5" r="4" />
+      <circle cx="625" cy="1552.5" r="4" />
+      <circle cx="675" cy="1552.5" r="4" />
+      <circle cx="625" cy="1582.5" r="4" />
+      <circle cx="675" cy="1582.5" r="4" />
+      <circle cx="625" cy="1612.5" r="4" />
+      <circle cx="675" cy="1612.5" r="4" />
+      <circle cx="625" cy="1642.5" r="4" />
+      <circle cx="675" cy="1642.5" r="4" />
+      <circle cx="625" cy="1672.5" r="4" />
+      <circle cx="675" cy="1672.5" r="4" />
+      <circle cx="625" cy="1702.5" r="4" />
+      <circle cx="675" cy="1702.5" r="4" />
+      <circle cx="625" cy="1732.5" r="4" />
+      <circle cx="675" cy="1732.5" r="4" />
+    </g>
+    <path d="M625 22.5C625 10.5 675 10.5 675 22.5M625 52.5C625 40.5 675 40.5 675 52.5M625 82.5C625 70.5 675 70.5 675 82.5M625 112.5C625 100.5 675 100.5 675 112.5M625 142.5C625 130.5 675 130.5 675 142.5M625 172.5C625 160.5 675 160.5 675 172.5M625 202.5C625 190.5 675 190.5 675 202.5M625 232.5C625 220.5 675 220.5 675 232.5M625 262.5C625 250.5 675 250.5 675 262.5M625 292.5C625 280.5 675 280.5 675 292.5M625 322.5C625 310.5 675 310.5 675 322.5M625 352.5C625 340.5 675 340.5 675 352.5M625 382.5C625 370.5 675 370.5 675 382.5M625 412.5C625 400.5 675 400.5 675 412.5M625 442.5C625 430.5 675 430.5 675 442.5M625 472.5C625 460.5 675 460.5 675 472.5M625 502.5C625 490.5 675 490.5 675 502.5M625 532.5C625 520.5 675 520.5 675 532.5M625 562.5C625 550.5 675 550.5 675 562.5M625 592.5C625 580.5 675 580.5 675 592.5M625 622.5C625 610.5 675 610.5 675 622.5M625 652.5C625 640.5 675 640.5 675 652.5M625 682.5C625 670.5 675 670.5 675 682.5M625 712.5C625 700.5 675 700.5 675 712.5M625 742.5C625 730.5 675 730.5 675 742.5M625 772.5C625 760.5 675 760.5 675 772.5M625 802.5C625 790.5 675 790.5 675 802.5M625 832.5C625 820.5 675 820.5 675 832.5M625 862.5C625 850.5 675 850.5 675 862.5M625 892.5C625 880.5 675 880.5 675 892.5M625 922.5C625 910.5 675 910.5 675 922.5M625 952.5C625 940.5 675 940.5 675 952.5M625 982.5C625 970.5 675 970.5 675 982.5M625 1012.5C625 1000.5 675 1000.5 675 1012.5M625 1042.5C625 1030.5 675 1030.5 675 1042.5M625 1072.5C625 1060.5 675 1060.5 675 1072.5M625 1102.5C625 1090.5 675 1090.5 675 1102.5M625 1132.5C625 1120.5 675 1120.5 675 1132.5M625 1162.5C625 1150.5 675 1150.5 675 1162.5M625 1192.5C625 1180.5 675 1180.5 675 1192.5M625 1222.5C625 1210.5 675 1210.5 675 1222.5M625 1252.5C625 1240.5 675 1240.5 675 1252.5M625 1282.5C625 1270.5 675 1270.5 675 1282.5M625 1312.5C625 1300.5 675 1300.5 675 1312.5M625 1342.5C625 1330.5 675 1330.5 675 1342.5M625 1372.5C625 1360.5 675 1360.5 675 1372.5M625 1402.5C625 1390.5 675 1390.5 675 1402.5M625 1432.5C625 1420.5 675 1420.5 675 1432.5M625 1462.5C625 1450.5 675 1450.5 675 1462.5M625 1492.5C625 1480.5 675 1480.5 675 1492.5M625 1522.5C625 1510.5 675 1510.5 675 1522.5M625 1552.5C625 1540.5 675 1540.5 675 1552.5M625 1582.5C625 1570.5 675 1570.5 675 1582.5M625 1612.5C625 1600.5 675 1600.5 675 1612.5M625 1642.5C625 1630.5 675 1630.5 675 1642.5M625 1672.5C625 1660.5 675 1660.5 675 1672.5M625 1702.5C625 1690.5 675 1690.5 675 1702.5M625 1732.5C625 1720.5 675 1720.5 675 1732.5" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-opacity="0.55" />
+    <g class="scrapbook-left">
+      <g class="scrapbook-doodles">
+        <g class="scrapbook-doodle" transform="rotate(-13.3567 559.282 1268.8381)">
+          <path d="M559.282 1251.8003L564.2893 1261.9462L575.4859 1263.5732L567.3839 1271.4706L569.2965 1282.622L559.282 1277.357L549.2674 1282.622L551.18 1271.4706L543.0781 1263.5732L554.2747 1261.9462Z" fill="none" stroke="#f0764a" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(4.0452 532.1128 772.7209)">
+          <path d="M532.1128 786.3582C511.6567 771.0162 521.8848 755.6741 532.1128 766.7545C542.3408 755.6741 552.5688 771.0162 532.1128 786.3582Z" fill="#a3292b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(6.0966 142.7437 1669.3446)">
+          <path d="M142.7437 1656.0132L145.6766 1666.4117L156.075 1669.3446L145.6766 1672.2775L142.7437 1682.6759L139.8108 1672.2775L129.4124 1669.3446L139.8108 1666.4117Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-6.6348 50.5455 868.2231)">
+          <ellipse cx="46.9795" cy="875.3551" rx="4.5169" ry="3.3283" transform="rotate(-20 46.9795 875.3551)" fill="#f0764a" />
+          <path d="M51.1398 874.7608V857.5252Q52.9228 864.6571 58.2718 865.8458" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-4.5994 442.7264 38.102)">
+          <g fill="#a3292b">
+            <ellipse cx="442.7264" cy="41.7066" rx="5.4069" ry="4.5658" />
+            <circle cx="436.118" cy="36.2997" r="2.1628" />
+            <circle cx="440.0831" cy="31.854" r="2.1628" />
+            <circle cx="445.3698" cy="31.854" r="2.1628" />
+            <circle cx="449.3348" cy="36.2997" r="2.1628" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-6.8476 539.8824 1417.257)">
+          <g fill="#f0764a">
+            <circle cx="539.8824" cy="1411.1488" r="4.6422" />
+            <circle cx="545.6916" cy="1415.3694" r="4.6422" />
+            <circle cx="543.4727" cy="1422.1986" r="4.6422" />
+            <circle cx="536.2921" cy="1422.1986" r="4.6422" />
+            <circle cx="534.0732" cy="1415.3694" r="4.6422" />
+          </g>
+          <circle cx="539.8824" cy="1417.257" r="3.4206" fill="#5a4d7b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(13.4843 582.3226 1078.869)">
+          <path d="M582.3226 1078.869L582.7682 1079.0536L583.0047 1079.5511L582.8763 1080.2058L582.3226 1080.7983L581.3997 1081.097L580.2763 1080.9153L579.2034 1080.161L578.4641 1078.869L578.3122 1077.2078L578.9121 1075.4585L580.2923 1073.9674L582.3226 1073.0812L584.722 1073.0762L587.0973 1074.0943L589.0066 1076.1004L590.0396 1078.869L589.8978 1082.0068L588.4614 1085.0079L585.8295 1087.3354L582.3226 1088.5153L578.4465 1088.2266L574.8195 1086.3721L572.0738 1083.1142L570.747 1078.869L571.1826 1074.2547L573.4553 1070.0018L577.3391 1066.8378L582.3226 1065.3642L587.6752 1065.9466L592.554 1068.6376L596.1362 1073.1472L597.7566 1078.869" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(8.0139 63.1778 1021.4317)">
+          <g fill="#a3292b">
+            <circle cx="53.1584" cy="1026.4414" r="4.3417" />
+            <circle cx="63.1778" cy="1019.7618" r="3.3398" />
+            <circle cx="71.5273" cy="1013.9171" r="2.3379" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-16.0394 560.9206 986.174)">
+          <path d="M560.9206 972.7204L564.8745 980.7319L573.7158 982.0166L567.3182 988.2527L568.8284 997.0583L560.9206 992.9008L553.0127 997.0583L554.523 988.2527L548.1254 982.0166L556.9667 980.7319Z" fill="none" stroke="#f0764a" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(14.7473 37.2565 748.6189)">
+          <path d="M37.2565 759.905C20.3273 747.2082 28.7919 734.5113 37.2565 743.6812C45.7211 734.5113 54.1857 747.2082 37.2565 759.905Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-14.403 86.85 120.4861)">
+          <path d="M86.85 108.4443L89.4992 117.8369L98.8918 120.4861L89.4992 123.1353L86.85 132.5279L84.2008 123.1353L74.8082 120.4861L84.2008 117.8369Z" fill="#a3292b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(5.2225 204.3586 88.4824)">
+          <ellipse cx="198.9268" cy="99.3461" rx="6.8803" ry="5.0697" transform="rotate(-20 198.9268 99.3461)" fill="#f0764a" />
+          <path d="M205.2639 98.4408V72.1869Q207.9798 83.0506 216.1276 84.8612" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(10.7425 425.2858 1238.8218)">
+          <g fill="#f0764a">
+            <ellipse cx="425.2858" cy="1243.8973" rx="7.6132" ry="6.4289" />
+            <circle cx="415.9808" cy="1236.2841" r="3.0453" />
+            <circle cx="421.5638" cy="1230.0243" r="3.0453" />
+            <circle cx="429.0078" cy="1230.0243" r="3.0453" />
+            <circle cx="434.5908" cy="1236.2841" r="3.0453" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(9.4049 114.4239 1531.6963)">
+          <g fill="#a3292b">
+            <circle cx="114.4239" cy="1526.3201" r="4.0859" />
+            <circle cx="119.537" cy="1530.0349" r="4.0859" />
+            <circle cx="117.584" cy="1536.0458" r="4.0859" />
+            <circle cx="111.2639" cy="1536.0458" r="4.0859" />
+            <circle cx="109.3108" cy="1530.0349" r="4.0859" />
+          </g>
+          <circle cx="114.4239" cy="1531.6963" r="3.0107" fill="#5a4d7b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(6.2451 222.791 1646.0123)">
+          <path d="M222.791 1646.0123L223.1051 1646.1424L223.2718 1646.4931L223.1813 1646.9546L222.791 1647.3721L222.1405 1647.5827L221.3487 1647.4546L220.5924 1646.923L220.0713 1646.0123L219.9643 1644.8414L220.3871 1643.6084L221.3599 1642.5574L222.791 1641.9328L224.4823 1641.9292L226.1565 1642.6469L227.5023 1644.0608L228.2304 1646.0123L228.1304 1648.224L227.118 1650.3393L225.2629 1651.9799L222.791 1652.8115L220.059 1652.608L217.5025 1651.3009L215.5671 1649.0045L214.6319 1646.0123L214.9389 1642.7599L216.5409 1639.7622L219.2784 1637.5321L222.791 1636.4934L226.5638 1636.9039L230.0027 1638.8006L232.5276 1641.9793L233.6698 1646.0123" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-13.7198 543.7441 184.4375)">
+          <g fill="#f0764a">
+            <circle cx="537.4289" cy="187.5951" r="2.7366" />
+            <circle cx="543.7441" cy="183.385" r="2.1051" />
+            <circle cx="549.0068" cy="179.7011" r="1.4735" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-11.1268 438.2319 1417.5556)">
+          <path d="M438.2319 1406.5419L441.4688 1413.1005L448.7066 1414.1522L443.4692 1419.2574L444.7056 1426.4659L438.2319 1423.0625L431.7582 1426.4659L432.9946 1419.2574L427.7573 1414.1522L434.9951 1413.1005Z" fill="none" stroke="#a3292b" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-10.9044 215.7054 978.5597)">
+          <path d="M215.7054 987.079C202.9265 977.4948 209.316 967.9106 215.7054 974.8325C222.0949 967.9106 228.4843 977.4948 215.7054 987.079Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-16.4344 205.6806 1531.5973)">
+          <path d="M205.6806 1514.5298L209.4354 1527.8424L222.748 1531.5973L209.4354 1535.3521L205.6806 1548.6647L201.9257 1535.3521L188.6131 1531.5973L201.9257 1527.8424Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(13.5422 75.0897 40.1968)">
+          <ellipse cx="70.0442" cy="50.2877" rx="6.3909" ry="4.7091" transform="rotate(-20 70.0442 50.2877)" fill="#a3292b" />
+          <path d="M75.9306 49.4468V25.0604Q78.4533 35.1513 86.0215 36.8332" fill="none" stroke="#a3292b" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(1.9854 466.015 966.4699)">
+          <g fill="#f0764a">
+            <ellipse cx="466.015" cy="970.6775" rx="6.3113" ry="5.3296" />
+            <circle cx="458.3012" cy="964.3662" r="2.5245" />
+            <circle cx="462.9295" cy="959.1768" r="2.5245" />
+            <circle cx="469.1006" cy="959.1768" r="2.5245" />
+            <circle cx="473.7289" cy="964.3662" r="2.5245" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-16.7423 505.0998 1178.0692)">
+          <g fill="#f0764a">
+            <circle cx="505.0998" cy="1170.3836" r="5.841" />
+            <circle cx="512.4092" cy="1175.6942" r="5.841" />
+            <circle cx="509.6172" cy="1184.287" r="5.841" />
+            <circle cx="500.5823" cy="1184.287" r="5.841" />
+            <circle cx="497.7903" cy="1175.6942" r="5.841" />
+          </g>
+          <circle cx="505.0998" cy="1178.0692" r="4.3039" fill="#5a4d7b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(13.3712 573.7734 845.0802)">
+          <path d="M573.7734 845.0802L574.1838 845.2502L574.4017 845.7084L574.2834 846.3115L573.7734 846.8572L572.9233 847.1324L571.8885 846.965L570.9003 846.2702L570.2193 845.0802L570.0794 843.55L570.632 841.9387L571.9033 840.5653L573.7734 839.749L575.9835 839.7444L578.1714 840.6822L579.9301 842.53L580.8816 845.0802L580.751 847.9704L579.4279 850.7347L577.0036 852.8786L573.7734 853.9654L570.2031 853.6995L566.8623 851.9913L564.3331 848.9904L563.1111 845.0802L563.5122 840.8299L565.6057 836.9125L569.1831 833.9981L573.7734 832.6408L578.7037 833.1772L583.1976 835.6559L586.4972 839.8098L587.9898 845.0802" fill="none" stroke="#a3292b" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-8.8451 60.5958 1547.3593)">
+          <g fill="#f0764a">
+            <circle cx="54.1718" cy="1550.5713" r="2.7837" />
+            <circle cx="60.5958" cy="1546.2886" r="2.1413" />
+            <circle cx="65.949" cy="1542.5414" r="1.4989" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(3.08 41.5691 257.788)">
+          <path d="M41.5691 244.1565L45.5753 252.2739L54.5334 253.5756L48.0513 259.8942L49.5815 268.8162L41.5691 264.6038L33.5566 268.8162L35.0869 259.8942L28.6047 253.5756L37.5629 252.2739Z" fill="none" stroke="#f0764a" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(0.8795 601.1575 1424.9832)">
+          <path d="M601.1575 1433.265C588.7349 1423.948 594.9462 1414.631 601.1575 1421.3599C607.3689 1414.631 613.5802 1423.948 601.1575 1433.265Z" fill="#a3292b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-1.4315 150.8715 198.554)">
+          <path d="M150.8715 183.2724L154.2334 195.192L166.1531 198.554L154.2334 201.9159L150.8715 213.8355L147.5096 201.9159L135.59 198.554L147.5096 195.192Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(6.8901 525.3231 28.6816)">
+          <ellipse cx="521.072" cy="37.1838" rx="5.3847" ry="3.9677" transform="rotate(-20 521.072 37.1838)" fill="#f0764a" />
+          <path d="M526.0316 36.4753V15.9284Q528.1572 24.4306 534.5338 25.8476" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(19.1118 596.3907 29.6495)">
+          <g fill="#a3292b">
+            <ellipse cx="596.3907" cy="33.3721" rx="5.584" ry="4.7154" />
+            <circle cx="589.5659" cy="27.7881" r="2.2336" />
+            <circle cx="593.6608" cy="23.1969" r="2.2336" />
+            <circle cx="599.1207" cy="23.1969" r="2.2336" />
+            <circle cx="603.2156" cy="27.7881" r="2.2336" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-5.7268 303.8718 1465.4954)">
+          <g fill="#f0764a">
+            <circle cx="303.8718" cy="1458.6402" r="5.2099" />
+            <circle cx="310.3915" cy="1463.377" r="5.2099" />
+            <circle cx="307.9012" cy="1471.0413" r="5.2099" />
+            <circle cx="299.8424" cy="1471.0413" r="5.2099" />
+            <circle cx="297.3521" cy="1463.377" r="5.2099" />
+          </g>
+          <circle cx="303.8718" cy="1465.4954" r="3.8389" fill="#5a4d7b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-19.3974 337.3268 32.6535)">
+          <path d="M337.3268 32.6535L337.7884 32.8447L338.0333 33.36L337.9003 34.0382L337.3268 34.6519L336.3709 34.9613L335.2072 34.7731L334.0959 33.9918L333.3301 32.6535L333.1727 30.9328L333.7942 29.1208L335.2238 27.5763L337.3268 26.6584L339.8122 26.6532L342.2725 27.7078L344.2502 29.7857L345.3203 32.6535L345.1733 35.9036L343.6855 39.0122L340.9593 41.4232L337.3268 42.6453L333.3119 42.3463L329.555 40.4253L326.7109 37.0507L325.3366 32.6535L325.7877 27.8739L328.1419 23.4686L332.1648 20.1913L337.3268 18.6649L342.8712 19.2682L347.9247 22.0556L351.6352 26.7267L353.3137 32.6535" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(7.5126 24.4607 1674.6431)">
+          <g fill="#a3292b">
+            <circle cx="17.6633" cy="1678.0418" r="2.9455" />
+            <circle cx="24.4607" cy="1673.5102" r="2.2658" />
+            <circle cx="30.1251" cy="1669.5451" r="1.586" />
+          </g>
+        </g>
+      </g>
+      <g class="scrapbook-header" transform="rotate(-2.7664 320 135.1531)">
+        <g class="scrapbook-logo" transform="rotate(4 320 105.6031)">
+          <rect x="247" y="59.6031" width="150" height="100" rx="2" fill="#000000" fill-opacity="0.36" />
+          <rect x="245" y="55.6031" width="150" height="100" rx="8" fill="#0b0b0f" />
+          <g class="newsletter-picture">
+            <use href="#newsletter-image-1" transform="translate(263 67.6031) scale(1.9)" />
+          </g>
+          <g class="scrapbook-tape" transform="translate(255 63.6031) rotate(-40)">
+            <path d="M-27.3 -11H27.3L24.8 -5.5L27.3 0L24.8 5.5L27.3 11H-27.3L-24.8 5.5L-27.3 0L-24.8 -5.5L-27.3 -11Z" fill="#f0764a" fill-opacity="0.7" />
+            <path d="M-27.3 -11H27.3L24.8 -5.5L27.3 0L24.8 5.5L27.3 11H-27.3L-24.8 5.5L-27.3 0L-24.8 -5.5L-27.3 -11Z" fill="url(#scrapbook-tape)" />
+          </g>
+        </g>
+        <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+          <text class="scrapbook-title" font-size="34" text-anchor="middle" font-weight="bold">
+            <tspan x="320" y="191.3531">Shanghai</tspan>
+          </text>
+        </g>
+        <path d="M239.7274 204.7031q3.9 -2.6 7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0t7.8 0" fill="none" stroke="#f0764a" stroke-width="2.5" stroke-linecap="round" />
+      </g>
+      <g class="scrapbook-hero" transform="rotate(1.7328 323.5661 469.9574)">
+        <rect x="54.8461" y="290.1441" width="541.44" height="367.6267" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="52.8461" y="286.1441" width="541.44" height="367.6267" rx="1.5" fill="#5a4d7b" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1" />
+        <clipPath id="newsletter-clip-1">
+          <rect x="62.8461" y="296.1441" width="521.44" height="347.6267" />
+        </clipPath>
+        <g class="newsletter-picture" clip-path="url(#newsletter-clip-1)">
+          <use href="#newsletter-image-2" transform="translate(62.8461 296.1441) scale(8.6907)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(74.8461 290.1441) rotate(-38)">
+          <path d="M-39 -11H39L36.5 -5.5L39 0L36.5 5.5L39 11H-39L-36.5 5.5L-39 0L-36.5 -5.5L-39 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-39 -11H39L36.5 -5.5L39 0L36.5 5.5L39 11H-39L-36.5 5.5L-39 0L-36.5 -5.5L-39 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(572.2861 290.1441) rotate(38)">
+          <path d="M-39 -11H39L36.5 -5.5L39 0L36.5 5.5L39 11H-39L-36.5 5.5L-39 0L-36.5 -5.5L-39 -11Z" fill="#a3292b" fill-opacity="0.7" />
+          <path d="M-39 -11H39L36.5 -5.5L39 0L36.5 5.5L39 11H-39L-36.5 5.5L-39 0L-36.5 -5.5L-39 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+      </g>
+      <g class="scrapbook-intro" transform="rotate(-2.755 287.958 805.1444)">
+        <rect x="95.2908" y="733.6694" width="389.3344" height="150.95" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="93.2908" y="729.6694" width="389.3344" height="150.95" rx="2" fill="#463a66" />
+        <path d="M99.2908 782.1444H476.6252M99.2908 817.7944H476.6252M99.2908 853.4444H476.6252M117.0908 729.6694V880.6194" fill="none" stroke="#f0764a" stroke-width="1" stroke-linecap="round" stroke-opacity="0.4" />
+        <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+          <text class="scrapbook-intro-lines" font-size="23" text-anchor="middle">
+            <tspan x="293.958" y="776.3944">Hi! Three days and far</tspan>
+            <tspan x="293.958" y="812.0444">too many <tspan class="newsletter-accent" fill="#f0764a" fill-opacity="1">xiaolongbao</tspan>.</tspan>
+            <tspan x="293.958" y="847.6944">Here's the best of it.</tspan>
+          </text>
+        </g>
+        <path class="scrapbook-paperclip" d="M3.5 34V11.5A3.5 3.5 0 0 1 10.5 11.5V42A6 6 0 0 1 -1.5 42V7.5A7.5 7.5 0 0 1 13.5 7.5V34" transform="translate(442.6252 717.6694) rotate(6)" fill="none" stroke="#f0764a" stroke-width="2.4" stroke-linecap="round" />
+      </g>
+      <g class="scrapbook-ribbon">
+        <g class="scrapbook-word" transform="rotate(-8.8836 298.49 966.9235)">
+          <path d="M246.1294 943.2963L351.3623 942.3066L350.1276 991.154L246.7972 992.9571Z" fill="#000000" fill-opacity="0.54" transform="translate(1.5 2.5)" />
+          <path d="M246.1294 943.2963L351.3623 942.3066L350.1276 991.154L246.7972 992.9571Z" fill="#f0764a" />
+          <text x="298.49" y="977.1235" font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive" font-size="34" font-weight="bold" text-anchor="middle" fill="#ffffff">Day</text>
+        </g>
+        <g class="scrapbook-word" transform="rotate(-5.1175 376.2958 970.6429)">
+          <path d="M358.0524 945.9383L395.3439 946.8563L394.4779 996.3134L359.729 995.3813Z" fill="#000000" fill-opacity="0.54" transform="translate(1.5 2.5)" />
+          <path d="M358.0524 945.9383L395.3439 946.8563L394.4779 996.3134L359.729 995.3813Z" fill="#5a4d7b" />
+          <text x="376.2958" y="980.8429" font-family="Georgia, 'Times New Roman', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif CJK SC', serif" font-size="34" font-weight="bold" text-anchor="middle" fill="#ffffff">1</text>
+        </g>
+      </g>
+      <g class="scrapbook-text" transform="rotate(-2.1326 305.9684 1103.9305)">
+        <rect x="142.0236" y="1068.1055" width="331.8896" height="79.65" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="140.0236" y="1064.1055" width="331.8896" height="79.65" rx="2" fill="#463a66" />
+        <path d="M146.0236 1116.5805H465.9132M163.8236 1064.1055V1143.7555" fill="none" stroke="#f0764a" stroke-width="1" stroke-linecap="round" stroke-opacity="0.4" />
+        <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+          <text class="scrapbook-text-lines" font-size="23">
+            <tspan x="174.0236" y="1110.8305">Left-aligned notes.</tspan>
+          </text>
+        </g>
+        <path class="scrapbook-paperclip" d="M3.5 34V11.5A3.5 3.5 0 0 1 10.5 11.5V42A6 6 0 0 1 -1.5 42V7.5A7.5 7.5 0 0 1 13.5 7.5V34" transform="translate(431.9132 1052.1055) rotate(6)" fill="none" stroke="#f0764a" stroke-width="2.4" stroke-linecap="round" />
+      </g>
+      <a href="https://example.com/bund">
+        <g class="scrapbook-card">
+          <g class="scrapbook-polaroid" transform="rotate(-3.5209 191.52 1327.0298)">
+            <rect x="38" y="1221.7748" width="311.04" height="218.51" rx="2" fill="#000000" fill-opacity="0.36" />
+            <rect x="36" y="1217.7748" width="311.04" height="218.51" rx="1.5" fill="#5a4d7b" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1" />
+            <clipPath id="newsletter-clip-2">
+              <rect x="46" y="1227.7748" width="291.04" height="163.71" />
+            </clipPath>
+            <g class="newsletter-picture" clip-path="url(#newsletter-clip-2)">
+              <use href="#newsletter-image-2" transform="translate(46 1212.6164) scale(4.8507)" />
+            </g>
+            <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+              <text class="scrapbook-caption" font-size="19" text-anchor="middle" font-weight="bold">
+                <tspan x="191.52" y="1419.5848">The Bund</tspan>
+              </text>
+            </g>
+            <g class="scrapbook-pin">
+              <ellipse cx="194.52" cy="1228.7748" rx="6" ry="3.375" fill="#000000" fill-opacity="0.6" />
+              <circle cx="191.52" cy="1223.7748" r="7.5" fill="#f0764a" />
+              <circle cx="189.12" cy="1221.3748" r="2.4" fill="#ffffff" fill-opacity="0.75" />
+            </g>
+          </g>
+          <g class="scrapbook-card-note" transform="rotate(2.0371 471.52 1338.3627)">
+            <path d="M335.04 1306.8377L608 1306.8377L608 1369.8877L601 1367.4581L594 1369.8877L587 1369.1984L580 1369.8877L573 1369.1844L566 1369.8877L559 1368.7512L552 1369.8877L545 1369.1684L538 1369.8877L531 1367.8527L524 1369.8877L517 1366.8155L510 1369.8877L503 1368.6971L496 1369.8877L489 1368.6722L482 1369.8877L475 1367.8518L468 1369.8877L461 1366.8327L454 1369.8877L447 1367.8215L440 1369.8877L433 1367.2543L426 1369.8877L419 1369.3561L412 1369.8877L405 1368.9493L398 1369.8877L391 1367.464L384 1369.8877L377 1367.6931L370 1369.8877L363 1367.8053L356 1369.8877L349 1368.4115L342 1369.8877L335.04 1369.8877Z" fill="#000000" fill-opacity="0.36" transform="translate(2 3)" />
+            <path d="M335.04 1306.8377L608 1306.8377L608 1369.8877L601 1367.4581L594 1369.8877L587 1369.1984L580 1369.8877L573 1369.1844L566 1369.8877L559 1368.7512L552 1369.8877L545 1369.1684L538 1369.8877L531 1367.8527L524 1369.8877L517 1366.8155L510 1369.8877L503 1368.6971L496 1369.8877L489 1368.6722L482 1369.8877L475 1367.8518L468 1369.8877L461 1366.8327L454 1369.8877L447 1367.8215L440 1369.8877L433 1367.2543L426 1369.8877L419 1369.3561L412 1369.8877L405 1368.9493L398 1369.8877L391 1367.464L384 1369.8877L377 1367.6931L370 1369.8877L363 1367.8053L356 1369.8877L349 1368.4115L342 1369.8877L335.04 1369.8877Z" fill="#5a4d7b" />
+            <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+              <text class="scrapbook-card-text" font-size="19">
+                <tspan x="351.04" y="1342.3127">Lights at 7 pm.</tspan>
+              </text>
+            </g>
+            <g class="scrapbook-tape" transform="translate(471.52 1306.8377) rotate(3)">
+              <path d="M-23.4 -11H23.4L20.9 -5.5L23.4 0L20.9 5.5L23.4 11H-23.4L-20.9 5.5L-23.4 0L-20.9 -5.5L-23.4 -11Z" fill="#f0764a" fill-opacity="0.7" />
+              <path d="M-23.4 -11H23.4L20.9 -5.5L23.4 0L20.9 5.5L23.4 11H-23.4L-20.9 5.5L-23.4 0L-20.9 -5.5L-23.4 -11Z" fill="url(#scrapbook-tape)" />
+            </g>
+          </g>
+        </g>
+      </a>
+      <g class="scrapbook-card">
+        <g class="scrapbook-polaroid" transform="rotate(3.6453 448.48 1605.0783)">
+          <rect x="294.96" y="1499.8233" width="311.04" height="218.51" rx="2" fill="#000000" fill-opacity="0.36" />
+          <rect x="292.96" y="1495.8233" width="311.04" height="218.51" rx="1.5" fill="#5a4d7b" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1" />
+          <clipPath id="newsletter-clip-3">
+            <rect x="302.96" y="1505.8233" width="291.04" height="163.71" />
+          </clipPath>
+          <g class="newsletter-picture" clip-path="url(#newsletter-clip-3)">
+            <use href="#newsletter-image-3" transform="translate(302.96 1490.6649) scale(4.8507)" />
+          </g>
+          <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+            <text class="scrapbook-caption" font-size="19" text-anchor="middle" font-weight="bold">
+              <tspan x="448.48" y="1697.6333">Yu Garden</tspan>
+            </text>
+          </g>
+          <g class="scrapbook-tape" transform="translate(448.48 1495.8233) rotate(4)">
+            <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#a3292b" fill-opacity="0.7" />
+            <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+          </g>
+        </g>
+      </g>
+    </g>
+    <g class="scrapbook-right" transform="translate(660 0)">
+      <g class="scrapbook-doodles">
+        <g class="scrapbook-doodle" transform="rotate(-11.3806 611.0706 128.0619)">
+          <path d="M611.0706 112.725L615.578 121.858L625.6568 123.3225L618.3637 130.4316L620.0854 140.4696L611.0706 135.7303L602.0558 140.4696L603.7775 130.4316L596.4844 123.3225L606.5632 121.858Z" fill="none" stroke="#f0764a" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-2.6312 425.7816 1602.1686)">
+          <path d="M425.7816 1610.4072C413.4238 1601.1388 419.6027 1591.8705 425.7816 1598.5643C431.9605 1591.8705 438.1394 1601.1388 425.7816 1610.4072Z" fill="#a3292b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(18.8376 264.9956 1602.4421)">
+          <path d="M264.9956 1589.9906L267.7349 1599.7027L277.4471 1602.4421L267.7349 1605.1814L264.9956 1614.8936L262.2562 1605.1814L252.544 1602.4421L262.2562 1599.7027Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-16.0241 600.1791 1686.447)">
+          <ellipse cx="596.1217" cy="1694.5618" rx="5.1394" ry="3.7869" transform="rotate(-20 596.1217 1694.5618)" fill="#f0764a" />
+          <path d="M600.8554 1693.8856V1674.2747Q602.8841 1682.3895 608.9702 1683.742" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(13.0047 608.1707 279.4543)">
+          <g fill="#a3292b">
+            <ellipse cx="608.1707" cy="284.7115" rx="7.8858" ry="6.6592" />
+            <circle cx="598.5324" cy="276.8257" r="3.1543" />
+            <circle cx="604.3154" cy="270.3417" r="3.1543" />
+            <circle cx="612.026" cy="270.3417" r="3.1543" />
+            <circle cx="617.8089" cy="276.8257" r="3.1543" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-8.7552 187.2389 29.4171)">
+          <g fill="#f0764a">
+            <circle cx="187.2389" cy="23.7435" r="4.312" />
+            <circle cx="192.6349" cy="27.6638" r="4.312" />
+            <circle cx="190.5738" cy="34.0071" r="4.312" />
+            <circle cx="183.9041" cy="34.0071" r="4.312" />
+            <circle cx="181.843" cy="27.6638" r="4.312" />
+          </g>
+          <circle cx="187.2389" cy="29.4171" r="3.1772" fill="#5a4d7b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-16.4124 371.7401 847.7074)">
+          <path d="M371.7401 847.7074L372.0749 847.8461L372.2526 848.2199L372.1562 848.7118L371.7401 849.1569L371.0468 849.3814L370.2027 849.2448L369.3966 848.6781L368.8411 847.7074L368.727 846.4593L369.1777 845.145L370.2147 844.0246L371.7401 843.3588L373.5429 843.355L375.3275 844.12L376.7621 845.6272L377.5382 847.7074L377.4317 850.0649L376.3525 852.3197L374.375 854.0685L371.7401 854.955L368.8279 854.7381L366.1028 853.3447L364.0399 850.8969L363.043 847.7074L363.3703 844.2405L365.0779 841.0451L367.9959 838.6679L371.7401 837.5607L375.7618 837.9983L379.4274 840.0201L382.1188 843.4084L383.3363 847.7074" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-13.3167 47.9634 189.8257)">
+          <g fill="#a3292b">
+            <circle cx="37.4035" cy="195.1056" r="4.5759" />
+            <circle cx="47.9634" cy="188.0657" r="3.52" />
+            <circle cx="56.7633" cy="181.9058" r="2.464" />
+          </g>
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-15.9404 55.3292 312.103)">
+          <path d="M55.3292 295.3924L60.2403 305.3434L71.2219 306.9391L63.2756 314.6849L65.1514 325.6222L55.3292 320.4583L45.507 325.6222L47.3828 314.6849L39.4365 306.9391L50.4181 305.3434Z" fill="none" stroke="#f0764a" stroke-width="2" stroke-linejoin="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(6.8205 610.4493 417.3936)">
+          <path d="M610.4493 427.1167C595.8646 416.1782 603.1569 405.2397 610.4493 413.1397C617.7416 405.2397 625.0339 416.1782 610.4493 427.1167Z" fill="#f0764a" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(11.7933 41.0478 1736.7026)">
+          <path d="M41.0478 1723.122L44.0355 1733.7149L54.6285 1736.7026L44.0355 1739.6904L41.0478 1750.2833L38.0601 1739.6904L27.4671 1736.7026L38.0601 1733.7149Z" fill="#a3292b" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(-12.4496 577.4246 669.4598)">
+          <ellipse cx="574.3865" cy="675.5362" rx="3.8484" ry="2.8356" transform="rotate(-20 574.3865 675.5362)" fill="#f0764a" />
+          <path d="M577.931 675.0298V660.3453Q579.4501 666.4216 584.0074 667.4344" fill="none" stroke="#f0764a" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+        <g class="scrapbook-doodle" transform="rotate(0.178 575.3584 1745.2125)">
+          <g fill="#f0764a">
+            <ellipse cx="575.3584" cy="1748.7113" rx="5.2482" ry="4.4318" />
+            <circle cx="568.944" cy="1743.4631" r="2.0993" />
+            <circle cx="572.7926" cy="1739.148" r="2.0993" />
+            <circle cx="577.9242" cy="1739.148" r="2.0993" />
+            <circle cx="581.7728" cy="1743.4631" r="2.0993" />
+          </g>
+        </g>
+      </g>
+      <g class="scrapbook-image" transform="rotate(-0.6405 327.3871 242.2771)">
+        <rect x="81.7071" y="60.7571" width="495.36" height="371.04" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="79.7071" y="56.7571" width="495.36" height="371.04" rx="1.5" fill="#5a4d7b" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1" />
+        <clipPath id="newsletter-clip-4">
+          <rect x="91.7071" y="68.7571" width="471.36" height="314.24" />
+        </clipPath>
+        <g class="newsletter-picture" clip-path="url(#newsletter-clip-4)">
+          <use href="#newsletter-image-3" transform="translate(91.7071 68.7571) scale(7.856)" />
+        </g>
+        <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+          <text class="scrapbook-caption" font-size="19" text-anchor="middle">
+            <tspan x="327.3871" y="411.0971">Worth the queue</tspan>
+          </text>
+        </g>
+        <g class="scrapbook-tape" transform="translate(327.3871 56.7571) rotate(-3)">
+          <path d="M-39 -11H39L36.5 -5.5L39 0L36.5 5.5L39 11H-39L-36.5 5.5L-39 0L-36.5 -5.5L-39 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-39 -11H39L36.5 -5.5L39 0L36.5 5.5L39 11H-39L-36.5 5.5L-39 0L-36.5 -5.5L-39 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+      </g>
+      <g class="scrapbook-button" transform="rotate(-2.4024 320 490.7134)">
+        <a href="https://example.com">
+          <g class="newsletter-button">
+            <rect x="176" y="464.7134" width="288" height="52" rx="26" fill="#a3292b" />
+            <text class="newsletter-button-text" fill="#ffffff" font-size="16" text-anchor="middle" font-weight="bold">
+              <tspan x="320" y="495.5134">Full itinerary</tspan>
+            </text>
+          </g>
+        </a>
+      </g>
+      <g class="scrapbook-stats" transform="rotate(-1.1577 320 600.4828)">
+        <g class="newsletter-stats">
+          <text class="newsletter-stats-label" font-size="12" text-anchor="middle" fill-opacity="0.75">
+            <tspan x="320" y="568.0828">Reader code</tspan>
+          </text>
+          <rect x="147.2" y="582.2828" width="345.6" height="62" rx="6" fill="#463a66" />
+          <a href="https://example.com/redeem">
+            <text class="newsletter-stats-value" font-size="26" text-anchor="middle" text-decoration="underline">
+              <tspan x="320" y="621.0828">CA395VK8</tspan>
+            </text>
+          </a>
+        </g>
+      </g>
+      <g class="scrapbook-callout" transform="rotate(1.3179 320 758.2798)">
+        <rect x="22" y="697.0857" width="600" height="130.3881" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="20" y="693.0857" width="600" height="130.3881" rx="2" fill="#5a4d7b" />
+        <g class="newsletter-callout">
+          <g transform="rotate(-6 98 758.2798)">
+            <svg class="newsletter-sticker-stamp" x="32" y="705.0857" width="132" height="106.3881" viewBox="0 0 67 54">
+              <path class="stamp-paper" d="M0.12 0.12L0.5261 0.12A0.6 0.6 0 0 0 1.7261 0.12L2.5382 0.12A0.6 0.6 0 0 0 3.7382 0.12L4.5503 0.12A0.6 0.6 0 0 0 5.7503 0.12L6.5624 0.12A0.6 0.6 0 0 0 7.7624 0.12L8.5745 0.12A0.6 0.6 0 0 0 9.7745 0.12L10.5867 0.12A0.6 0.6 0 0 0 11.7867 0.12L12.5988 0.12A0.6 0.6 0 0 0 13.7988 0.12L14.6109 0.12A0.6 0.6 0 0 0 15.8109 0.12L16.623 0.12A0.6 0.6 0 0 0 17.823 0.12L18.6352 0.12A0.6 0.6 0 0 0 19.8352 0.12L20.6473 0.12A0.6 0.6 0 0 0 21.8473 0.12L22.6594 0.12A0.6 0.6 0 0 0 23.8594 0.12L24.6715 0.12A0.6 0.6 0 0 0 25.8715 0.12L26.6836 0.12A0.6 0.6 0 0 0 27.8836 0.12L28.6958 0.12A0.6 0.6 0 0 0 29.8958 0.12L30.7079 0.12A0.6 0.6 0 0 0 31.9079 0.12L32.72 0.12A0.6 0.6 0 0 0 33.92 0.12L34.7321 0.12A0.6 0.6 0 0 0 35.9321 0.12L36.7442 0.12A0.6 0.6 0 0 0 37.9442 0.12L38.7564 0.12A0.6 0.6 0 0 0 39.9564 0.12L40.7685 0.12A0.6 0.6 0 0 0 41.9685 0.12L42.7806 0.12A0.6 0.6 0 0 0 43.9806 0.12L44.7927 0.12A0.6 0.6 0 0 0 45.9927 0.12L46.8048 0.12A0.6 0.6 0 0 0 48.0048 0.12L48.817 0.12A0.6 0.6 0 0 0 50.017 0.12L50.8291 0.12A0.6 0.6 0 0 0 52.0291 0.12L52.8412 0.12A0.6 0.6 0 0 0 54.0412 0.12L54.8533 0.12A0.6 0.6 0 0 0 56.0533 0.12L56.8655 0.12A0.6 0.6 0 0 0 58.0655 0.12L58.8776 0.12A0.6 0.6 0 0 0 60.0776 0.12L60.8897 0.12A0.6 0.6 0 0 0 62.0897 0.12L62.9018 0.12A0.6 0.6 0 0 0 64.1018 0.12L64.9139 0.12A0.6 0.6 0 0 0 66.1139 0.12L66.52 0.12L66.52 0.5362A0.6 0.6 0 0 0 66.52 1.7362L66.52 2.5685A0.6 0.6 0 0 0 66.52 3.7685L66.52 4.6008A0.6 0.6 0 0 0 66.52 5.8008L66.52 6.6331A0.6 0.6 0 0 0 66.52 7.8331L66.52 8.6654A0.6 0.6 0 0 0 66.52 9.8654L66.52 10.6977A0.6 0.6 0 0 0 66.52 11.8977L66.52 12.73A0.6 0.6 0 0 0 66.52 13.93L66.52 14.7623A0.6 0.6 0 0 0 66.52 15.9623L66.52 16.7946A0.6 0.6 0 0 0 66.52 17.9946L66.52 18.8269A0.6 0.6 0 0 0 66.52 20.0269L66.52 20.8592A0.6 0.6 0 0 0 66.52 22.0592L66.52 22.8915A0.6 0.6 0 0 0 66.52 24.0915L66.52 24.9238A0.6 0.6 0 0 0 66.52 26.1238L66.52 26.9562A0.6 0.6 0 0 0 66.52 28.1562L66.52 28.9885A0.6 0.6 0 0 0 66.52 30.1885L66.52 31.0208A0.6 0.6 0 0 0 66.52 32.2208L66.52 33.0531A0.6 0.6 0 0 0 66.52 34.2531L66.52 35.0854A0.6 0.6 0 0 0 66.52 36.2854L66.52 37.1177A0.6 0.6 0 0 0 66.52 38.3177L66.52 39.15A0.6 0.6 0 0 0 66.52 40.35L66.52 41.1823A0.6 0.6 0 0 0 66.52 42.3823L66.52 43.2146A0.6 0.6 0 0 0 66.52 44.4146L66.52 45.2469A0.6 0.6 0 0 0 66.52 46.4469L66.52 47.2792A0.6 0.6 0 0 0 66.52 48.4792L66.52 49.3115A0.6 0.6 0 0 0 66.52 50.5115L66.52 51.3438A0.6 0.6 0 0 0 66.52 52.5438L66.52 52.96L66.1139 52.96A0.6 0.6 0 0 0 64.9139 52.96L64.1018 52.96A0.6 0.6 0 0 0 62.9018 52.96L62.0897 52.96A0.6 0.6 0 0 0 60.8897 52.96L60.0776 52.96A0.6 0.6 0 0 0 58.8776 52.96L58.0655 52.96A0.6 0.6 0 0 0 56.8655 52.96L56.0533 52.96A0.6 0.6 0 0 0 54.8533 52.96L54.0412 52.96A0.6 0.6 0 0 0 52.8412 52.96L52.0291 52.96A0.6 0.6 0 0 0 50.8291 52.96L50.017 52.96A0.6 0.6 0 0 0 48.817 52.96L48.0048 52.96A0.6 0.6 0 0 0 46.8048 52.96L45.9927 52.96A0.6 0.6 0 0 0 44.7927 52.96L43.9806 52.96A0.6 0.6 0 0 0 42.7806 52.96L41.9685 52.96A0.6 0.6 0 0 0 40.7685 52.96L39.9564 52.96A0.6 0.6 0 0 0 38.7564 52.96L37.9442 52.96A0.6 0.6 0 0 0 36.7442 52.96L35.9321 52.96A0.6 0.6 0 0 0 34.7321 52.96L33.92 52.96A0.6 0.6 0 0 0 32.72 52.96L31.9079 52.96A0.6 0.6 0 0 0 30.7079 52.96L29.8958 52.96A0.6 0.6 0 0 0 28.6958 52.96L27.8836 52.96A0.6 0.6 0 0 0 26.6836 52.96L25.8715 52.96A0.6 0.6 0 0 0 24.6715 52.96L23.8594 52.96A0.6 0.6 0 0 0 22.6594 52.96L21.8473 52.96A0.6 0.6 0 0 0 20.6473 52.96L19.8352 52.96A0.6 0.6 0 0 0 18.6352 52.96L17.823 52.96A0.6 0.6 0 0 0 16.623 52.96L15.8109 52.96A0.6 0.6 0 0 0 14.6109 52.96L13.7988 52.96A0.6 0.6 0 0 0 12.5988 52.96L11.7867 52.96A0.6 0.6 0 0 0 10.5867 52.96L9.7745 52.96A0.6 0.6 0 0 0 8.5745 52.96L7.7624 52.96A0.6 0.6 0 0 0 6.5624 52.96L5.7503 52.96A0.6 0.6 0 0 0 4.5503 52.96L3.7382 52.96A0.6 0.6 0 0 0 2.5382 52.96L1.7261 52.96A0.6 0.6 0 0 0 0.5261 52.96L0.12 52.96L0.12 52.5438A0.6 0.6 0 0 0 0.12 51.3438L0.12 50.5115A0.6 0.6 0 0 0 0.12 49.3115L0.12 48.4792A0.6 0.6 0 0 0 0.12 47.2792L0.12 46.4469A0.6 0.6 0 0 0 0.12 45.2469L0.12 44.4146A0.6 0.6 0 0 0 0.12 43.2146L0.12 42.3823A0.6 0.6 0 0 0 0.12 41.1823L0.12 40.35A0.6 0.6 0 0 0 0.12 39.15L0.12 38.3177A0.6 0.6 0 0 0 0.12 37.1177L0.12 36.2854A0.6 0.6 0 0 0 0.12 35.0854L0.12 34.2531A0.6 0.6 0 0 0 0.12 33.0531L0.12 32.2208A0.6 0.6 0 0 0 0.12 31.0208L0.12 30.1885A0.6 0.6 0 0 0 0.12 28.9885L0.12 28.1562A0.6 0.6 0 0 0 0.12 26.9562L0.12 26.1238A0.6 0.6 0 0 0 0.12 24.9238L0.12 24.0915A0.6 0.6 0 0 0 0.12 22.8915L0.12 22.0592A0.6 0.6 0 0 0 0.12 20.8592L0.12 20.0269A0.6 0.6 0 0 0 0.12 18.8269L0.12 17.9946A0.6 0.6 0 0 0 0.12 16.7946L0.12 15.9623A0.6 0.6 0 0 0 0.12 14.7623L0.12 13.93A0.6 0.6 0 0 0 0.12 12.73L0.12 11.8977A0.6 0.6 0 0 0 0.12 10.6977L0.12 9.8654A0.6 0.6 0 0 0 0.12 8.6654L0.12 7.8331A0.6 0.6 0 0 0 0.12 6.6331L0.12 5.8008A0.6 0.6 0 0 0 0.12 4.6008L0.12 3.7685A0.6 0.6 0 0 0 0.12 2.5685L0.12 1.7362A0.6 0.6 0 0 0 0.12 0.5362Z" fill="#fff" stroke="#bbb" stroke-width="0.12" />
+              <image class="stamp-picture" x="3.32" y="9.76" width="60" height="40" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAoCAIAAAAt2Q6oAAAAO0lEQVR42u3OQQkAAAgEsItjHGMbyxQ+hMECLNXzTqSlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpS8t1h+4pujAzIsAAAAASUVORK5CYII=" />
+              <g class="stamp-print" fill="#000" font-family="Georgia, 'Times New Roman', serif">
+                <rect x="3.2" y="9.64" width="60.24" height="40.24" fill="none" stroke="#000" stroke-width="0.24" />
+                <text class="stamp-country" x="3.32" y="7.16" font-size="4.8" font-weight="bold">CHINA</text>
+                <text class="stamp-fee" x="63.32" y="7.16" font-size="4.4" font-weight="bold" text-anchor="end">¥1.20</text>
+              </g>
+            </svg>
+          </g>
+          <text class="newsletter-callout-text" font-size="15">
+            <tspan x="186" y="762.7798">Postcards sent.</tspan>
+          </text>
+        </g>
+        <g class="scrapbook-tape" transform="translate(50 695.0857) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#a3292b" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(590 821.4738) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+      </g>
+      <g class="scrapbook-callout" transform="rotate(0.6981 320 932.5632)">
+        <rect x="22" y="874.1173" width="600" height="124.8917" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="20" y="870.1173" width="600" height="124.8917" rx="2" fill="#5a4d7b" />
+        <g class="newsletter-callout">
+          <g transform="rotate(-6 98 932.5632)">
+            <svg class="newsletter-sticker-postmark" x="32" y="882.1173" width="132" height="100.8917" viewBox="0 0 157 120">
+              <defs>
+                <filter id="svgcreator-stamp-1-157x120-0.8-2.5-0.06-0.9" filterUnits="userSpaceOnUse" x="0" y="0" width="157" height="120" color-interpolation-filters="sRGB">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="1" result="edgeNoise" />
+                  <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="2.5" xChannelSelector="R" yChannelSelector="G" result="rough" />
+                  <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="2" result="wearNoise" />
+                  <feColorMatrix in="wearNoise" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -14 0 0 0 9.8" result="wear" />
+                  <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="3" result="speckNoise" />
+                  <feColorMatrix in="speckNoise" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -20 0 0 0 15.6" result="speck" />
+                  <feComposite in="wear" in2="speck" operator="in" result="mask" />
+                  <feComposite in="rough" in2="mask" operator="in" />
+                </filter>
+              </defs>
+              <g fill="#ffffff" fill-rule="evenodd" stroke="none" filter="url(#svgcreator-stamp-1-157x120-0.8-2.5-0.06-0.9)">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#ffffff" stroke-width="6" />
+              </g>
+              <g class="postmark-cancel" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" filter="url(#svgcreator-stamp-1-157x120-0.8-2.5-0.06-0.9)">
+                <path d="M86.5 28.2q4.8-7.6 9.7 0t9.7 0t9.7 0t9.7 0t9.7 0t9.7 0M86.5 40.9q4.8-7.6 9.7 0t9.7 0t9.7 0t9.7 0t9.7 0t9.7 0M86.5 53.6q4.8-7.6 9.7 0t9.7 0t9.7 0t9.7 0t9.7 0t9.7 0M86.5 66.4q4.8-7.6 9.7 0t9.7 0t9.7 0t9.7 0t9.7 0t9.7 0M86.5 79.1q4.8-7.6 9.7 0t9.7 0t9.7 0t9.7 0t9.7 0t9.7 0M86.5 91.8q4.8-7.6 9.7 0t9.7 0t9.7 0t9.7 0t9.7 0t9.7 0" />
+              </g>
+            </svg>
+          </g>
+          <text class="newsletter-callout-text" font-size="15">
+            <tspan x="186" y="937.0632">Sealed.</tspan>
+          </text>
+        </g>
+        <g class="scrapbook-tape" transform="translate(50 872.1173) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#a3292b" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(590 993.0091) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+      </g>
+      <g class="scrapbook-callout" transform="rotate(0.8236 320 1095.0763)">
+        <rect x="22" y="1043.0763" width="600" height="112" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="20" y="1039.0763" width="600" height="112" rx="2" fill="#5a4d7b" />
+        <g class="newsletter-callout">
+          <g class="newsletter-picture">
+            <use href="#newsletter-image-1" transform="translate(32 1051.0763) scale(2.2)" />
+          </g>
+          <text class="newsletter-callout-text" font-size="15">
+            <tspan x="186" y="1099.5763">Plain sticker.</tspan>
+          </text>
+        </g>
+        <g class="scrapbook-tape" transform="translate(50 1041.0763) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#a3292b" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(590 1149.0763) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+      </g>
+      <g class="scrapbook-map" transform="rotate(0.8053 320 1386.1908)">
+        <rect x="22" y="1199.6908" width="600" height="381" rx="2" fill="#000000" fill-opacity="0.36" />
+        <rect x="20" y="1195.6908" width="600" height="381" rx="2" fill="#5a4d7b" />
+        <clipPath id="newsletter-clip-5">
+          <rect x="32" y="1207.6908" width="576" height="357" rx="8" />
+        </clipPath>
+        <g class="newsletter-map" clip-path="url(#newsletter-clip-5)">
+          <svg class="newsletter-map-drawing" x="32" y="1207.6908" width="576" height="357" viewBox="0 0 576 357">
+            <rect class="travel-background" width="576" height="357" fill="#463a66" />
+            <g class="travel-arrows" fill="#ffffff" stroke="#ffffff" stroke-width="2.688" stroke-linecap="round" stroke-linejoin="round">
+              <g class="travel-arrow">
+                <path class="travel-arrow-shaft" d="M363.1535 320.1845L219.1443 48.6886" fill="none" />
+                <path class="travel-arrow-head" d="M212.8465 36.8155L225.6745 45.2248L212.6141 52.1524Z" />
+              </g>
+            </g>
+            <g class="travel-markers" font-family="Helvetica, Arial, sans-serif" font-weight="bold">
+              <g class="travel-marker">
+                <circle cx="369.1365" cy="331.464" r="8.736" fill="#ffffff" />
+                <text x="369.1365" y="334.992" font-size="10.08" fill="#463a66" text-anchor="middle">1</text>
+              </g>
+              <g class="travel-marker">
+                <circle cx="206.8635" cy="25.536" r="8.736" fill="#ffffff" />
+                <text x="206.8635" y="29.064" font-size="10.08" fill="#463a66" text-anchor="middle">2</text>
+              </g>
+            </g>
+            <g class="travel-labels" fill="#ffffff" font-family="Helvetica, Arial, sans-serif">
+              <text class="travel-label" text-anchor="start">
+                <tspan class="travel-name" x="384.5925" y="334.2864" font-size="14.112" font-weight="bold">City Hall</tspan>
+              </text>
+              <text class="travel-label" text-anchor="start">
+                <tspan class="travel-name" x="222.3195" y="28.3584" font-size="14.112" font-weight="bold">Singapore Zoo</tspan>
+              </text>
+            </g>
+          </svg>
+        </g>
+        <g class="scrapbook-tape" transform="translate(50 1197.6908) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#a3292b" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(590 1574.6908) rotate(-30)">
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-31.2 -11H31.2L28.7 -5.5L31.2 0L28.7 5.5L31.2 11H-31.2L-28.7 5.5L-31.2 0L-28.7 -5.5L-31.2 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+      </g>
+      <g class="scrapbook-footer" transform="rotate(-0.7415 320 1674.4994)">
+        <path d="M60.8 1628.3494L67.8 1630.8405L74.8 1628.3494L81.8 1631.3704L88.8 1628.3494L95.8 1629.6404L102.8 1628.3494L109.8 1629.9486L116.8 1628.3494L123.8 1629.5981L130.8 1628.3494L137.8 1629.754L144.8 1628.3494L151.8 1630.458L158.8 1628.3494L165.8 1628.5304L172.8 1628.3494L179.8 1628.9028L186.8 1628.3494L193.8 1631.6217L200.8 1628.3494L207.8 1631.7302L214.8 1628.3494L221.8 1630.9892L228.8 1628.3494L235.8 1629.1376L242.8 1628.3494L249.8 1629.7091L256.8 1628.3494L263.8 1630.234L270.8 1628.3494L277.8 1630.9074L284.8 1628.3494L291.8 1628.4074L298.8 1628.3494L305.8 1629.0102L312.8 1628.3494L319.8 1631.8169L326.8 1628.3494L333.8 1628.7477L340.8 1628.3494L347.8 1628.7617L354.8 1628.3494L361.8 1628.5903L368.8 1628.3494L375.8 1630.0844L382.8 1628.3494L389.8 1631.0061L396.8 1628.3494L403.8 1631.7762L410.8 1628.3494L417.8 1631.7543L424.8 1628.3494L431.8 1631.2248L438.8 1628.3494L445.8 1629.8592L452.8 1628.3494L459.8 1631.8092L466.8 1628.3494L473.8 1629.4176L480.8 1628.3494L487.8 1630.4093L494.8 1628.3494L501.8 1628.5058L508.8 1628.3494L515.8 1629.2509L522.8 1628.3494L529.8 1630.5724L536.8 1628.3494L543.8 1628.4658L550.8 1628.3494L557.8 1630.4539L564.8 1628.3494L571.8 1630.725L578.8 1628.3494L579.2 1628.3494L579.2 1720.6494L572.2 1717.8044L565.2 1720.6494L558.2 1718.7201L551.2 1720.6494L544.2 1719.7193L537.2 1720.6494L530.2 1718.0871L523.2 1720.6494L516.2 1718.9209L509.2 1720.6494L502.2 1720.1928L495.2 1720.6494L488.2 1717.491L481.2 1720.6494L474.2 1719.739L467.2 1720.6494L460.2 1717.1896L453.2 1720.6494L446.2 1719.3208L439.2 1720.6494L432.2 1720.3986L425.2 1720.6494L418.2 1719.0893L411.2 1720.6494L404.2 1719.8775L397.2 1720.6494L390.2 1719.6192L383.2 1720.6494L376.2 1718.5054L369.2 1720.6494L362.2 1719.516L355.2 1720.6494L348.2 1719.1833L341.2 1720.6494L334.2 1718.9553L327.2 1720.6494L320.2 1720.6217L313.2 1720.6494L306.2 1719.1818L299.2 1720.6494L292.2 1719.8422L285.2 1720.6494L278.2 1717.9922L271.2 1720.6494L264.2 1717.6403L257.2 1720.6494L250.2 1718.6336L243.2 1720.6494L236.2 1717.4648L229.2 1720.6494L222.2 1720.2375L215.2 1720.6494L208.2 1717.7948L201.2 1720.6494L194.2 1718.6557L187.2 1720.6494L180.2 1719.7718L173.2 1720.6494L166.2 1717.9262L159.2 1720.6494L152.2 1717.8183L145.2 1720.6494L138.2 1718.2891L131.2 1720.6494L124.2 1720.1286L117.2 1720.6494L110.2 1719.1725L103.2 1720.6494L96.2 1717.9146L89.2 1720.6494L82.2 1719.7072L75.2 1720.6494L68.2 1719.2366L61.2 1720.6494L60.8 1720.6494Z" fill="#000000" fill-opacity="0.36" transform="translate(2 3)" />
+        <path d="M60.8 1628.3494L67.8 1630.8405L74.8 1628.3494L81.8 1631.3704L88.8 1628.3494L95.8 1629.6404L102.8 1628.3494L109.8 1629.9486L116.8 1628.3494L123.8 1629.5981L130.8 1628.3494L137.8 1629.754L144.8 1628.3494L151.8 1630.458L158.8 1628.3494L165.8 1628.5304L172.8 1628.3494L179.8 1628.9028L186.8 1628.3494L193.8 1631.6217L200.8 1628.3494L207.8 1631.7302L214.8 1628.3494L221.8 1630.9892L228.8 1628.3494L235.8 1629.1376L242.8 1628.3494L249.8 1629.7091L256.8 1628.3494L263.8 1630.234L270.8 1628.3494L277.8 1630.9074L284.8 1628.3494L291.8 1628.4074L298.8 1628.3494L305.8 1629.0102L312.8 1628.3494L319.8 1631.8169L326.8 1628.3494L333.8 1628.7477L340.8 1628.3494L347.8 1628.7617L354.8 1628.3494L361.8 1628.5903L368.8 1628.3494L375.8 1630.0844L382.8 1628.3494L389.8 1631.0061L396.8 1628.3494L403.8 1631.7762L410.8 1628.3494L417.8 1631.7543L424.8 1628.3494L431.8 1631.2248L438.8 1628.3494L445.8 1629.8592L452.8 1628.3494L459.8 1631.8092L466.8 1628.3494L473.8 1629.4176L480.8 1628.3494L487.8 1630.4093L494.8 1628.3494L501.8 1628.5058L508.8 1628.3494L515.8 1629.2509L522.8 1628.3494L529.8 1630.5724L536.8 1628.3494L543.8 1628.4658L550.8 1628.3494L557.8 1630.4539L564.8 1628.3494L571.8 1630.725L578.8 1628.3494L579.2 1628.3494L579.2 1720.6494L572.2 1717.8044L565.2 1720.6494L558.2 1718.7201L551.2 1720.6494L544.2 1719.7193L537.2 1720.6494L530.2 1718.0871L523.2 1720.6494L516.2 1718.9209L509.2 1720.6494L502.2 1720.1928L495.2 1720.6494L488.2 1717.491L481.2 1720.6494L474.2 1719.739L467.2 1720.6494L460.2 1717.1896L453.2 1720.6494L446.2 1719.3208L439.2 1720.6494L432.2 1720.3986L425.2 1720.6494L418.2 1719.0893L411.2 1720.6494L404.2 1719.8775L397.2 1720.6494L390.2 1719.6192L383.2 1720.6494L376.2 1718.5054L369.2 1720.6494L362.2 1719.516L355.2 1720.6494L348.2 1719.1833L341.2 1720.6494L334.2 1718.9553L327.2 1720.6494L320.2 1720.6217L313.2 1720.6494L306.2 1719.1818L299.2 1720.6494L292.2 1719.8422L285.2 1720.6494L278.2 1717.9922L271.2 1720.6494L264.2 1717.6403L257.2 1720.6494L250.2 1718.6336L243.2 1720.6494L236.2 1717.4648L229.2 1720.6494L222.2 1720.2375L215.2 1720.6494L208.2 1717.7948L201.2 1720.6494L194.2 1718.6557L187.2 1720.6494L180.2 1719.7718L173.2 1720.6494L166.2 1717.9262L159.2 1720.6494L152.2 1717.8183L145.2 1720.6494L138.2 1718.2891L131.2 1720.6494L124.2 1720.1286L117.2 1720.6494L110.2 1719.1725L103.2 1720.6494L96.2 1717.9146L89.2 1720.6494L82.2 1719.7072L75.2 1720.6494L68.2 1719.2366L61.2 1720.6494L60.8 1720.6494Z" fill="#463a66" />
+        <g class="scrapbook-tape" transform="translate(68.8 1634.3494) rotate(-35)">
+          <path d="M-27.3 -11H27.3L24.8 -5.5L27.3 0L24.8 5.5L27.3 11H-27.3L-24.8 5.5L-27.3 0L-24.8 -5.5L-27.3 -11Z" fill="#a3292b" fill-opacity="0.7" />
+          <path d="M-27.3 -11H27.3L24.8 -5.5L27.3 0L24.8 5.5L27.3 11H-27.3L-24.8 5.5L-27.3 0L-24.8 -5.5L-27.3 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g class="scrapbook-tape" transform="translate(571.2 1634.3494) rotate(35)">
+          <path d="M-27.3 -11H27.3L24.8 -5.5L27.3 0L24.8 5.5L27.3 11H-27.3L-24.8 5.5L-27.3 0L-24.8 -5.5L-27.3 -11Z" fill="#f0764a" fill-opacity="0.7" />
+          <path d="M-27.3 -11H27.3L24.8 -5.5L27.3 0L24.8 5.5L27.3 11H-27.3L-24.8 5.5L-27.3 0L-24.8 -5.5L-27.3 -11Z" fill="url(#scrapbook-tape)" />
+        </g>
+        <g font-family="'Bradley Hand', 'Segoe Print', 'Chalkboard SE', 'Comic Sans MS', 'HanziPen SC', 'Hannotate SC', 'KaiTi', 'STKaiti', cursive">
+          <text class="scrapbook-footer-links" x="320" y="1663.3494" font-size="17" font-weight="bold" text-anchor="middle">
+            <a href="https://example.com">
+              <tspan text-decoration="underline">Home</tspan>
+            </a>
+            <tspan> · </tspan>
+            <a href="mailto:hello@example.com">
+              <tspan text-decoration="underline">Contact</tspan>
+            </a>
+          </text>
+          <text class="scrapbook-footer-text" font-size="15" text-anchor="middle" fill-opacity="0.75">
+            <tspan x="320" y="1695.8994">Copyright</tspan>
+          </text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -58,6 +58,12 @@ public enum NewsletterLayout
     /// doodles in the gaps.
     /// </summary>
     Scrapbook,
+
+    /// <summary>
+    /// The scrapbook over the two pages of an open book, the pieces split between them so the
+    /// pages hold about as much, and end level.
+    /// </summary>
+    Book,
 }
 
 /// <summary>The newsletter's header band.</summary>

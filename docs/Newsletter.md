@@ -140,7 +140,26 @@ The same content, laid out as a scrapbook page instead of a column: a spiral-bou
 
 **Lesson: paper that holds text uses the theme's colours.** Polaroid strips, notes and scraps were white at first, which looked right on the pink sample. On Starlight, though, the light text vanished on white. Anything with text on it is now in the page or panel colour; only highlights (tape stripes, a pin's shine) are fixed white.
 
-A scrapbook can't be made into a template yet, because its photos are turned and a template's holes are cut upright. Asking for one is an error.
+**Lesson: shadows are black on a dark page.** Shadows and punched holes were a faint wash of the text colour, which takes the page's hue on a light page. On a dark theme the text is light, so they glowed instead. Where the page is darker than mid-grey (relative luminance under 0.18), they're now black at three times the opacity, and a dark backdrop's stripes are darker instead of paler. Light pages are untouched, and the Honkai sample came out byte-identical. The polaroids still take the page colour, so they're dark on a dark page; a separate paper colour, for white polaroids in a black album, is a later step.
+
+### Open book
+
+```sh
+svgcreator newsletter trip/book.json -o book.svg   # "layout": "book", or --layout book
+```
+
+The scrapbook over the two pages of an open book: a cover in the band colour, a few page edges peeking out at each side, a shadow into the spine on each page, and the spiral's wire looping across the spine between holes along the inner edges. It's a variant of the scrapbook, not a third composer. Every piece is drawn exactly as on a single page, because each page keeps the 640 px width and the right page is only moved across. That makes the spread about 1,380 px wide and half as tall as the single page, which suits a PNG, print or a desktop screen better than a phone.
+
+- **One cut, the most even one.** The pieces stay in reading order, so splitting them is a single cut. Every cut is tried, and the one that makes the taller page shortest wins. Card rows are separate pieces, so a long set of cards can carry on over the page.
+- **Headings keep with what they head.** A piece can keep with the next one, and the title and ransom-note headings do. A cut is never made straight after them, so a heading never ends the left page with its cards on the right.
+- **The pages end level.** The shorter page's gaps are each widened by the same amount (up to 80 px) until its bottom meets the other's, as a magazine does. Doodles fill whatever's left.
+- **A single page is unchanged.** The levelling and the per-page groups apply only to a book. The Honkai single page came out byte-identical after the change, which is the check that the split didn't move anything.
+
+The Honkai sample's `book.json` is `scrapbook.json` with `"layout": "book"`. The split puts the header, hero and intro on the left, and "Login to Claim" with its three cards and the footer on the right.
+
+Full-width pieces on a backing card (callouts and maps) reach into the binding's margin, so on the right page, and on the single page, their edge touches the spiral's holes. Insetting them is a small fix still to do.
+
+A scrapbook or a book can't be made into a template yet, because its photos are turned and a template's holes are cut upright. Asking for one is an error.
 
 ## Templates
 

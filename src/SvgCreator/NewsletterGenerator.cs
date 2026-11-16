@@ -49,8 +49,8 @@ public sealed class NewsletterGenerator : INewsletterGenerator
 
     // The column or the scrapbook, from the same content.
     private static string Compose(Newsletter newsletter, NewsletterOptions options, Dictionary<string, EncodedImage> images, CancellationToken cancellationToken) =>
-        Layout(newsletter, options) == NewsletterLayout.Scrapbook
-            ? ScrapbookComposer.Compose(newsletter, options, Theme(newsletter, options), images, cancellationToken)
+        Layout(newsletter, options) is NewsletterLayout.Scrapbook or NewsletterLayout.Book
+            ? ScrapbookComposer.Compose(newsletter, options, Theme(newsletter, options), images, Layout(newsletter, options) == NewsletterLayout.Book, cancellationToken)
             : NewsletterComposer.Compose(newsletter, options, Theme(newsletter, options), images, cancellationToken);
 
     private static NewsletterLayout Layout(Newsletter newsletter, NewsletterOptions options) => options.Layout ?? newsletter.Layout;
@@ -113,11 +113,11 @@ public sealed class NewsletterGenerator : INewsletterGenerator
         var layout = Layout(newsletter, options);
         if (!Enum.IsDefined(layout))
         {
-            throw new ArgumentException($"Unknown layout {layout}. Use column or scrapbook.", nameof(newsletter));
+            throw new ArgumentException($"Unknown layout {layout}. Use column, scrapbook or book.", nameof(newsletter));
         }
 
         // A scrapbook tilts its photos, and a template's holes are cut upright.
-        if (layout == NewsletterLayout.Scrapbook && options.Template)
+        if (layout is NewsletterLayout.Scrapbook or NewsletterLayout.Book && options.Template)
         {
             throw new ArgumentException("A scrapbook can't be made into a template yet.", nameof(options));
         }
